@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="language_array_entries">
+        <item>French</item>
+        <item>English</item>
+        <item>Auto</item>
+    </string-array>
+
+    <string-array name="language_array_entryvalues">
+        <item>FR</item>
+        <item>EN</item>
+        <item>Auto</item>
+    </string-array>
+
+</resources>
