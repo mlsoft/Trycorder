@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.SurfaceTexture;
+import android.graphics.Typeface;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -82,6 +83,22 @@ public class TrycorderFragment extends Fragment
 
     // the button for settings
     private Button mSettingsButton;
+
+    // the two status lines
+    private TextView mTextstatus_top;
+    private TextView mTextstatus_bottom;
+
+    // the button to talk to computer
+    private ImageButton mAskButton;
+
+    // the button to start it all
+    private Button mPhotoButton;
+
+    // the button to stop it all
+    private Button mRecordButton;
+
+    // the button for settings
+    private Button mGalleryButton;
 
     // the buttons to switch between sensors
     private Button mSensorButton;
@@ -192,6 +209,51 @@ public class TrycorderFragment extends Fragment
                 settingsactivity();
             }
         });
+
+        // ===================== bottom horizontal button grid ==========================
+        // the ask button
+        mAskButton = (ImageButton) view.findViewById(R.id.ask_button);
+        mAskButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listenandtalk();
+            }
+        });
+
+        // the start button
+        mPhotoButton = (Button) view.findViewById(R.id.photo_button);
+        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+            }
+        });
+
+        // the stop button
+        mRecordButton = (Button) view.findViewById(R.id.record_button);
+        mRecordButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+            }
+        });
+
+        // the settings button
+        mGalleryButton = (Button) view.findViewById(R.id.gallery_button);
+        mGalleryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+            }
+        });
+
+        // ==== the two status lines at top and bottom =====
+
+        mTextstatus_top = (TextView) view.findViewById(R.id.textstatus_top);
+        mTextstatus_top.setText("");
+
+        mTextstatus_bottom = (TextView) view.findViewById(R.id.textstatus_bottom);
+        mTextstatus_bottom.setText("Bottom Status");
 
         // ===================== left vertical button grid ============================
 
@@ -471,6 +533,46 @@ public class TrycorderFragment extends Fragment
     }
 
     @Override
+    public void onActivityCreated(Bundle bundle) {
+        super.onActivityCreated(bundle);
+        Typeface face = Typeface.createFromAsset(getActivity().getAssets(),"sonysketchef.ttf");
+        Typeface face2 = Typeface.createFromAsset(getActivity().getAssets(),"finalold.ttf");
+        Typeface face3 = Typeface.createFromAsset(getActivity().getAssets(),"finalnew.ttf");
+        // status fields
+        mTextstatus_top.setTypeface(face);
+        mTextstatus_bottom.setTypeface(face);
+        // bottom buttons
+        mPhotoButton.setTypeface(face2);
+        mRecordButton.setTypeface(face2);
+        mGalleryButton.setTypeface(face2);
+        // top buttons
+        mStartButton.setTypeface(face2);
+        mStopButton.setTypeface(face2);
+        mSettingsButton.setTypeface(face2);
+        // left column buttons
+        mSensorButton.setTypeface(face2);
+        mCommButton.setTypeface(face2);
+        mShieldButton.setTypeface(face2);
+        mFireButton.setTypeface(face2);
+        mTransporterButton.setTypeface(face2);
+        mViewerButton.setTypeface(face2);
+        mSoundButton.setTypeface(face2);
+        // center buttons
+        mMagneticButton.setTypeface(face3);
+        mOrientationButton.setTypeface(face3);
+        mGravityButton.setTypeface(face3);
+        mAudioButton.setTypeface(face3);
+        mOpenCommButton.setTypeface(face3);
+        mCloseCommButton.setTypeface(face3);
+        mShieldUpButton.setTypeface(face3);
+        mShieldDownButton.setTypeface(face3);
+        mPhaserButton.setTypeface(face3);
+        mTorpedoButton.setTypeface(face3);
+        mTransportOutButton.setTypeface(face3);
+        mTransportInButton.setTypeface(face3);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         startsensors(mSensormode);
@@ -567,10 +669,12 @@ public class TrycorderFragment extends Fragment
             mFederationlogo.setVisibility(View.VISIBLE);
             mTextureView.setVisibility(View.GONE);
             mVieweron = false;
+            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
         } else {
             mFederationlogo.setVisibility(View.GONE);
             mTextureView.setVisibility(View.VISIBLE);
             mVieweron = true;
+            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
         }
     }
 
@@ -590,51 +694,61 @@ public class TrycorderFragment extends Fragment
     private void opencomm() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Healing frequency open");
     }
 
     private void closecomm() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Healing frequency closed");
     }
 
     private void transporterout() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Transport Out");
     }
 
     private void transporterin() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Transport In");
     }
 
     private void longrangesensor() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.long_range_scan);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Long range Sensors");
     }
 
     private void raiseshields() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shieldup);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Raise Shields");
     }
 
     private void lowershields() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shielddown);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Lower Shields");
     }
 
     private void tractorbeam() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_tractor_clean);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Engage Tractor Beam");
     }
 
     private void firephaser() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.phasertype2);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Fire Phaser");
     }
 
     private void firemissiles() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.photorp1);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Fire Torpedo");
     }
 
     // ==========================================================================================
@@ -660,11 +774,13 @@ public class TrycorderFragment extends Fragment
         if(mSoundStatus) {
             mSoundStatus=false;
             stopmusic();
-            mSoundButton.setBackgroundColor(Color.GRAY);
+            mSoundButton.setBackgroundResource(R.drawable.trekbutton);
+            //mSoundButton.setBackgroundColor(Color.GRAY);
         } else {
             mSoundStatus=true;
             if(mRunStatus) startmusic();
-            mSoundButton.setBackgroundColor(Color.GREEN);
+            mSoundButton.setBackgroundResource(R.drawable.trekbutton_yellow);
+            //mSoundButton.setBackgroundColor(Color.YELLOW);
         }
     }
 
@@ -1074,8 +1190,12 @@ public class TrycorderFragment extends Fragment
         if (dutexte != null && dutexte.size() > 0) {
             for(int i=0;i<dutexte.size();++i) {
                 mSentence = dutexte.get(i);
-                if(matchvoice(mSentence)) return;
+                if(matchvoice(mSentence)) {
+                    mTextstatus_top.setText(mSentence);
+                    return;
+                }
             }
+            mTextstatus_top.setText(dutexte.get(0));
             speak("Unknown command.");
         }
     }
@@ -1096,6 +1216,8 @@ public class TrycorderFragment extends Fragment
             // automatic
         }
         mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+        mTextstatus_top.setText("");
+        say("Speak");
     }
 
     private void speak(String texte) {
@@ -1107,23 +1229,38 @@ public class TrycorderFragment extends Fragment
             // default prechoosen language
         }
         tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
+        say(texte);
+    }
+
+    private void say(String texte) {
+        mTextstatus_bottom.setText(texte);
     }
 
     private boolean matchvoice(String texte) {
         if(texte.contains("Martin")) {
+            switchbuttonlayout(0);
             speak("Martin is my Master.");
             return(true);
         }
         if(texte.contains("phaser")) {
+            switchbuttonlayout(4);
             firephaser();
             return(true);
         }
         if(texte.contains("fire") || texte.contains("torpedo")) {
+            switchbuttonlayout(4);
             firemissiles();
             return(true);
         }
-        if(texte.contains("shield")) {
+        if(texte.contains("shield") || texte.contains("raise")) {
+            switchbuttonlayout(3);
             raiseshields();
+            return(true);
+        }
+        if(texte.contains("sensor off")) {
+            switchbuttonlayout(0);
+            switchsensorlayout(0);
+            stopsensors();
             return(true);
         }
         if(texte.contains("sensor") || texte.contains("magnetic")) {
@@ -1136,6 +1273,37 @@ public class TrycorderFragment extends Fragment
             switchbuttonlayout(1);
             switchsensorlayout(2);
             startsensors(2);
+            return(true);
+        }
+        if(texte.contains("gravity") || texte.contains("vibration")) {
+            switchbuttonlayout(1);
+            switchsensorlayout(3);
+            startsensors(3);
+            return(true);
+        }
+        if(texte.contains("hailing") && texte.contains("close")) {
+            switchbuttonlayout(2);
+            closecomm();
+            return(true);
+        }
+        if(texte.contains("hailing") && texte.contains("open")) {
+            switchbuttonlayout(2);
+            opencomm();
+            return(true);
+        }
+        if(texte.contains("beam me up") || texte.contains("scotty")) {
+            switchbuttonlayout(5);
+            transporterin();
+            return(true);
+        }
+        if(texte.contains("beam me down")) {
+            switchbuttonlayout(5);
+            transporterout();
+            return(true);
+        }
+        if(texte.contains("viewer")) {
+            switchbuttonlayout(0);
+            switchviewer();
             return(true);
         }
         return(false);
