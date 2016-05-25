@@ -1,367 +1,429 @@
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index 882e25f..40c2665 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -10,6 +10,10 @@
+     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
++    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
++    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
++
++    <uses-feature android:name="android.hardware.camera" android:required="false" />
+ 
+     <application
+         android:allowBackup="true"
 diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-index b4a8e22..5ae67cb 100644
+index 5ae67cb..cb37319 100644
 --- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
 +++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-@@ -8,6 +8,7 @@ import android.graphics.Canvas;
- import android.graphics.Color;
- import android.graphics.Paint;
- import android.graphics.SurfaceTexture;
-+import android.graphics.Typeface;
- import android.hardware.Camera;
- import android.hardware.Sensor;
- import android.hardware.SensorEvent;
-@@ -83,6 +84,22 @@ public class TrycorderFragment extends Fragment
-     // the button for settings
-     private Button mSettingsButton;
+@@ -1,5 +1,6 @@
+ package net.ddns.mlsoftlaberge.trycorder;
  
-+    // the two status lines
-+    private TextView mTextstatus_top;
-+    private TextView mTextstatus_bottom;
-+
-+    // the button to talk to computer
-+    private ImageButton mAskButton;
-+
-+    // the button to start it all
-+    private Button mPhotoButton;
-+
-+    // the button to stop it all
-+    private Button mRecordButton;
-+
-+    // the button for settings
-+    private Button mGalleryButton;
-+
-     // the buttons to switch between sensors
-     private Button mSensorButton;
++import android.content.ContentValues;
+ import android.content.Context;
+ import android.content.Intent;
+ import android.content.SharedPreferences;
+@@ -16,13 +17,17 @@ import android.hardware.SensorEventListener;
+ import android.hardware.SensorManager;
+ import android.media.AudioManager;
+ import android.media.MediaPlayer;
++import android.net.Uri;
++import android.os.Environment;
+ import android.preference.PreferenceManager;
++import android.provider.MediaStore;
+ import android.speech.RecognitionListener;
+ import android.speech.RecognizerIntent;
+ import android.speech.SpeechRecognizer;
+ import android.speech.tts.TextToSpeech;
+ import android.support.v4.app.Fragment;
+ import android.os.Bundle;
++import android.util.Log;
+ import android.view.LayoutInflater;
+ import android.view.TextureView;
+ import android.view.View;
+@@ -32,10 +37,15 @@ import android.widget.ImageButton;
+ import android.widget.ImageView;
+ import android.widget.LinearLayout;
+ import android.widget.TextView;
++import android.widget.Toast;
+ 
+ 
++import java.io.File;
+ import java.io.IOException;
++import java.io.OutputStream;
++import java.text.SimpleDateFormat;
+ import java.util.ArrayList;
++import java.util.Date;
+ import java.util.Locale;
+ 
+ /**
+@@ -43,7 +53,8 @@ import java.util.Locale;
+  */
+ public class TrycorderFragment extends Fragment
+         implements TextureView.SurfaceTextureListener,
+-                RecognitionListener {
++        RecognitionListener,
++        Camera.PictureCallback {
+ 
+     public TrycorderFragment() {
+     }
+@@ -105,7 +116,7 @@ public class TrycorderFragment extends Fragment
      private Button mMagneticButton;
-@@ -193,6 +210,51 @@ public class TrycorderFragment extends Fragment
+     private Button mOrientationButton;
+     private Button mGravityButton;
+-    private Button mAudioButton;
++    private Button mSensoroffButton;
+     private int mSensormode=0;
+ 
+     // the button to open a channel
+@@ -226,6 +237,7 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
++                takephoto();
              }
          });
  
-+        // ===================== bottom horizontal button grid ==========================
-+        // the ask button
-+        mAskButton = (ImageButton) view.findViewById(R.id.ask_button);
-+        mAskButton.setOnClickListener(new View.OnClickListener() {
-+            @Override
-+            public void onClick(View view) {
-+                listenandtalk();
-+            }
-+        });
-+
-+        // the start button
-+        mPhotoButton = (Button) view.findViewById(R.id.photo_button);
-+        mPhotoButton.setOnClickListener(new View.OnClickListener() {
-+            @Override
-+            public void onClick(View view) {
-+                buttonsound();
-+            }
-+        });
-+
-+        // the stop button
-+        mRecordButton = (Button) view.findViewById(R.id.record_button);
-+        mRecordButton.setOnClickListener(new View.OnClickListener() {
-+            @Override
-+            public void onClick(View view) {
-+                buttonsound();
-+            }
-+        });
-+
-+        // the settings button
-+        mGalleryButton = (Button) view.findViewById(R.id.gallery_button);
-+        mGalleryButton.setOnClickListener(new View.OnClickListener() {
-+            @Override
-+            public void onClick(View view) {
-+                buttonsound();
-+            }
-+        });
-+
-+        // ==== the two status lines at top and bottom =====
-+
-+        mTextstatus_top = (TextView) view.findViewById(R.id.textstatus_top);
-+        mTextstatus_top.setText("");
-+
-+        mTextstatus_bottom = (TextView) view.findViewById(R.id.textstatus_bottom);
-+        mTextstatus_bottom.setText("Bottom Status");
-+
+@@ -235,6 +247,7 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
++                recordvideo();
+             }
+         });
+ 
+@@ -244,6 +257,7 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
++                opengallery();
+             }
+         });
+ 
+@@ -253,7 +267,7 @@ public class TrycorderFragment extends Fragment
+         mTextstatus_top.setText("");
+ 
+         mTextstatus_bottom = (TextView) view.findViewById(R.id.textstatus_bottom);
+-        mTextstatus_bottom.setText("Bottom Status");
++        mTextstatus_bottom.setText("Ready");
+ 
          // ===================== left vertical button grid ============================
  
-         // ===================== sensor buttons group ============================
-@@ -471,6 +533,46 @@ public class TrycorderFragment extends Fragment
+@@ -300,14 +314,14 @@ public class TrycorderFragment extends Fragment
+             }
+         });
+ 
+-        // the audio button
+-        mAudioButton = (Button) view.findViewById(R.id.audio_button);
+-        mAudioButton.setOnClickListener(new View.OnClickListener() {
++        // the sensoroff button
++        mSensoroffButton = (Button) view.findViewById(R.id.sensoroff_button);
++        mSensoroffButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View view) {
+-                longrangesensor();
+-                switchsensorlayout(4);
+-                startsensors(4);
++                buttonsound();
++                switchsensorlayout(0);
++                stopsensors();
+             }
+         });
+ 
+@@ -520,8 +534,7 @@ public class TrycorderFragment extends Fragment
+         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
+         mSpeechRecognizer.setRecognitionListener(this);
+         mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
++        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.mlsoft");
+         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
+         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE,false);
+@@ -561,7 +574,7 @@ public class TrycorderFragment extends Fragment
+         mMagneticButton.setTypeface(face3);
+         mOrientationButton.setTypeface(face3);
+         mGravityButton.setTypeface(face3);
+-        mAudioButton.setTypeface(face3);
++        mSensoroffButton.setTypeface(face3);
+         mOpenCommButton.setTypeface(face3);
+         mCloseCommButton.setTypeface(face3);
+         mShieldUpButton.setTypeface(face3);
+@@ -575,6 +588,7 @@ public class TrycorderFragment extends Fragment
+     @Override
+     public void onResume() {
+         super.onResume();
++        switchbuttonlayout(1);
+         startsensors(mSensormode);
      }
  
-     @Override
-+    public void onActivityCreated(Bundle bundle) {
-+        super.onActivityCreated(bundle);
-+        Typeface face = Typeface.createFromAsset(getActivity().getAssets(),"sonysketchef.ttf");
-+        Typeface face2 = Typeface.createFromAsset(getActivity().getAssets(),"finalold.ttf");
-+        Typeface face3 = Typeface.createFromAsset(getActivity().getAssets(),"finalnew.ttf");
-+        // status fields
-+        mTextstatus_top.setTypeface(face);
-+        mTextstatus_bottom.setTypeface(face);
-+        // bottom buttons
-+        mPhotoButton.setTypeface(face2);
-+        mRecordButton.setTypeface(face2);
-+        mGalleryButton.setTypeface(face2);
-+        // top buttons
-+        mStartButton.setTypeface(face2);
-+        mStopButton.setTypeface(face2);
-+        mSettingsButton.setTypeface(face2);
-+        // left column buttons
-+        mSensorButton.setTypeface(face2);
-+        mCommButton.setTypeface(face2);
-+        mShieldButton.setTypeface(face2);
-+        mFireButton.setTypeface(face2);
-+        mTransporterButton.setTypeface(face2);
-+        mViewerButton.setTypeface(face2);
-+        mSoundButton.setTypeface(face2);
-+        // center buttons
-+        mMagneticButton.setTypeface(face3);
-+        mOrientationButton.setTypeface(face3);
-+        mGravityButton.setTypeface(face3);
-+        mAudioButton.setTypeface(face3);
-+        mOpenCommButton.setTypeface(face3);
-+        mCloseCommButton.setTypeface(face3);
-+        mShieldUpButton.setTypeface(face3);
-+        mShieldDownButton.setTypeface(face3);
-+        mPhaserButton.setTypeface(face3);
-+        mTorpedoButton.setTypeface(face3);
-+        mTransportOutButton.setTypeface(face3);
-+        mTransportInButton.setTypeface(face3);
+@@ -590,14 +604,20 @@ public class TrycorderFragment extends Fragment
+         mSensormode=mode;
+         switch(mode) {
+             case 1:
++                say("Sensors Magnetic");
+                 startmagsensors();
+                 break;
+             case 2:
++                say("Sensors Orientation");
+                 startorisensors();
+                 break;
+             case 3:
++                say("Sensors Gravity");
+                 startgrasensors();
+                 break;
++            default:
++                say("Sensors OFF");
++                break;
+         }
+     }
+ 
+@@ -607,10 +627,10 @@ public class TrycorderFragment extends Fragment
+         stopgrasensors();
+     }
+ 
+-
+     // =====================================================================================
+     // settings activity incorporation in the display
+     public void settingsactivity() {
++        say("Settings");
+         Intent i = new Intent(getActivity(), SettingsActivity.class);
+         startActivity(i);
+     }
+@@ -634,7 +654,6 @@ public class TrycorderFragment extends Fragment
+         }
+     }
+ 
+-
+     // =====================================================================================
+ 
+     private void switchbuttonlayout(int no) {
+@@ -645,39 +664,28 @@ public class TrycorderFragment extends Fragment
+         mSensor2transporterLayout.setVisibility(View.GONE);
+         switch(no) {
+             case 1:
++                say("Sensors Mode");
+                 mSensor2sensorLayout.setVisibility(View.VISIBLE);
+                 break;
+             case 2:
++                say("Communication Mode");
+                 mSensor2commLayout.setVisibility(View.VISIBLE);
+                 break;
+             case 3:
++                say("Shield Mode");
+                 mSensor2shieldLayout.setVisibility(View.VISIBLE);
+                 break;
+             case 4:
++                say("Fire Mode");
+                 mSensor2fireLayout.setVisibility(View.VISIBLE);
+                 break;
+             case 5:
++                say("Transporter Mode");
+                 mSensor2transporterLayout.setVisibility(View.VISIBLE);
+                 break;
+         }
+     }
+ 
+-    // ==========================================================================================
+-    // switch the viewer on/off
+-    private void switchviewer() {
+-        if(mVieweron) {
+-            mFederationlogo.setVisibility(View.VISIBLE);
+-            mTextureView.setVisibility(View.GONE);
+-            mVieweron = false;
+-            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
+-        } else {
+-            mFederationlogo.setVisibility(View.GONE);
+-            mTextureView.setVisibility(View.VISIBLE);
+-            mVieweron = true;
+-            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
+-        }
+-    }
+-
+     // =====================================================================================
+ 
+     private void listenandtalk() {
+@@ -1128,6 +1136,9 @@ public class TrycorderFragment extends Fragment
+         try {
+             mCamera = Camera.open();
+             mCamera.setPreviewTexture(surface);
++            Camera.Parameters parameters = mCamera.getParameters();
++            parameters.set("orientation", "portrait");
++            mCamera.setParameters(parameters);
+             mCamera.setDisplayOrientation(90);
+             mCamera.startPreview();
+         } catch (IOException ioe) {
+@@ -1149,6 +1160,164 @@ public class TrycorderFragment extends Fragment
+         // Invoked every time there's a new Camera preview frame
+     }
+ 
++    // ==========================================================================================
++    // switch the viewer on/off
++    private void switchviewer() {
++        if(mVieweron) {
++            say("Viewer OFF");
++            mFederationlogo.setVisibility(View.VISIBLE);
++            mTextureView.setVisibility(View.GONE);
++            mVieweron = false;
++            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
++        } else {
++            say("Viewer ON");
++            mFederationlogo.setVisibility(View.GONE);
++            mTextureView.setVisibility(View.VISIBLE);
++            mVieweron = true;
++            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
++        }
++    }
++
++    // =====================================================================================
++    // ask the camera to take a photo, and pass it to onPictureTaken
++
++
++    private void snapphoto() {
++        if(mVieweron) {
++            mCamera.takePicture(null, null, this);
++        }
++    }
++
++    // photo saving of picture taken callback
++    public void onPictureTaken(byte[] data, Camera camera) {
++        Uri imageFileUri = getActivity().getContentResolver().insert(
++                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
++        try {
++            OutputStream imageFileOS = getActivity().getContentResolver().openOutputStream(
++                    imageFileUri);
++            imageFileOS.write(data);
++            imageFileOS.flush();
++            imageFileOS.close();
++        } catch (Exception e) {
++            Toast t = Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT);
++            t.show();
++        }
++        camera.startPreview();
++        say("Picture taken !");
++    }
++
++    // ===================================================================================
++    // common functions to obtain a media uri
++
++    public static final int MEDIA_TYPE_IMAGE = 1;
++    public static final int MEDIA_TYPE_VIDEO = 2;
++
++    /** Create a file Uri for saving an image or video */
++    private static Uri getOutputMediaFileUri(int type){
++        return Uri.fromFile(getOutputMediaFile(type));
++    }
++
++    /** Create a File for saving an image or video */
++    private static File getOutputMediaFile(int type){
++        // To be safe, you should check that the SDCard is mounted
++        // using Environment.getExternalStorageState() before doing this.
++
++        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
++                Environment.DIRECTORY_DCIM), "Camera");
++        // This location works best if you want the created images to be shared
++        // between applications and persist after your app has been uninstalled.
++
++        // Create the storage directory if it does not exist
++        if (! mediaStorageDir.exists()){
++            if (! mediaStorageDir.mkdirs()){
++                Log.d("Trycorder", "failed to create directory");
++                return null;
++            }
++        }
++
++        // Create a media file name
++        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
++        File mediaFile;
++        if (type == MEDIA_TYPE_IMAGE){
++            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
++                    "IMG_"+ timeStamp + ".jpg");
++        } else if(type == MEDIA_TYPE_VIDEO) {
++            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
++                    "VID_"+ timeStamp + ".mp4");
++        } else {
++            return null;
++        }
++
++        return mediaFile;
++    }
++
++
++    // ==========================================================================================
++    // call camera and gallery application
++
++    private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
++    private static final int CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE = 200;
++    private Uri fileUri;
++
++    private void takephoto() {
++        say("Open Photo application");
++        // create Intent to take a picture and return control to the calling application
++        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
++        fileUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);  // create a file to save the picture
++        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
++        // start the image capture Intent
++        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
++    }
++
++    private void recordvideo() {
++        say("Open Video application");
++        //create new Intent
++        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
++        fileUri = getOutputMediaFileUri(MEDIA_TYPE_VIDEO);  // create a file to save the video
++        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);  // set the image file name
++        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1); // set the video image quality to high
++        // start the Video Capture Intent
++        startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
 +    }
 +
 +    @Override
-     public void onResume() {
-         super.onResume();
-         startsensors(mSensormode);
-@@ -567,10 +669,12 @@ public class TrycorderFragment extends Fragment
-             mFederationlogo.setVisibility(View.VISIBLE);
-             mTextureView.setVisibility(View.GONE);
-             mVieweron = false;
-+            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
-         } else {
-             mFederationlogo.setVisibility(View.GONE);
-             mTextureView.setVisibility(View.VISIBLE);
-             mVieweron = true;
-+            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
-         }
-     }
- 
-@@ -590,51 +694,61 @@ public class TrycorderFragment extends Fragment
-     private void opencomm() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Healing frequency open");
-     }
- 
-     private void closecomm() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Healing frequency closed");
-     }
- 
-     private void transporterout() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Transport Out");
-     }
- 
-     private void transporterin() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Transport In");
-     }
- 
-     private void longrangesensor() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.long_range_scan);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Long range Sensors");
-     }
- 
-     private void raiseshields() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shieldup);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Raise Shields");
-     }
- 
-     private void lowershields() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shielddown);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Lower Shields");
-     }
- 
-     private void tractorbeam() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_tractor_clean);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Engage Tractor Beam");
-     }
- 
-     private void firephaser() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.phasertype2);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Fire Phaser");
-     }
- 
-     private void firemissiles() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.photorp1);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-+        say("Fire Torpedo");
-     }
- 
-     // ==========================================================================================
-@@ -660,11 +774,13 @@ public class TrycorderFragment extends Fragment
-         if(mSoundStatus) {
-             mSoundStatus=false;
-             stopmusic();
--            mSoundButton.setBackgroundColor(Color.GRAY);
-+            mSoundButton.setBackgroundResource(R.drawable.trekbutton);
-+            //mSoundButton.setBackgroundColor(Color.GRAY);
-         } else {
-             mSoundStatus=true;
-             if(mRunStatus) startmusic();
--            mSoundButton.setBackgroundColor(Color.GREEN);
-+            mSoundButton.setBackgroundResource(R.drawable.trekbutton_yellow);
-+            //mSoundButton.setBackgroundColor(Color.YELLOW);
-         }
-     }
- 
-@@ -1074,8 +1190,12 @@ public class TrycorderFragment extends Fragment
-         if (dutexte != null && dutexte.size() > 0) {
-             for(int i=0;i<dutexte.size();++i) {
-                 mSentence = dutexte.get(i);
--                if(matchvoice(mSentence)) return;
-+                if(matchvoice(mSentence)) {
-+                    mTextstatus_top.setText(mSentence);
-+                    return;
-+                }
-             }
-+            mTextstatus_top.setText(dutexte.get(0));
-             speak("Unknown command.");
-         }
-     }
-@@ -1096,6 +1216,8 @@ public class TrycorderFragment extends Fragment
-             // automatic
-         }
-         mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
-+        mTextstatus_top.setText("");
-+        say("Speak");
-     }
- 
-     private void speak(String texte) {
-@@ -1107,25 +1229,40 @@ public class TrycorderFragment extends Fragment
-             // default prechoosen language
-         }
-         tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
-+        say(texte);
++    public void onActivityResult(int requestCode, int resultCode, Intent data) {
++        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
++            if (resultCode == getActivity().RESULT_OK) {
++                // Image captured and saved to fileUri specified in the Intent
++                say(fileUri.toString());
++            } else if (resultCode == getActivity().RESULT_CANCELED) {
++                // User cancelled the image capture
++                say("Cancelled Photo");
++            } else {
++                // Image capture failed, advise user
++                say("Failed Saving Photo");
++            }
++        }
++
++        if (requestCode == CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE) {
++            if (resultCode == getActivity().RESULT_OK) {
++                // Video captured and saved to fileUri specified in the Intent
++                say("" + data.getData());
++            } else if (resultCode == getActivity().RESULT_CANCELED) {
++                // User cancelled the video capture
++                say("Cancelled Video");
++            } else {
++                // Video capture failed, advise user
++                say("Failed Saving Video");
++            }
++        }
 +    }
 +
-+    private void say(String texte) {
-+        mTextstatus_bottom.setText(texte);
-     }
++    private void opengallery() {
++        say("Open Gallery application");
++        Intent intent = new Intent();
++        intent.setAction(android.content.Intent.ACTION_VIEW);
++        intent.setType("image/*");
++        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++        startActivity(intent);
++    }
++
+     // ========================================================================================
+     // functions to listen to the voice recognition callbacks
  
-     private boolean matchvoice(String texte) {
-         if(texte.contains("Martin")) {
-+            switchbuttonlayout(0);
-             speak("Martin is my Master.");
-             return(true);
-         }
-         if(texte.contains("phaser")) {
-+            switchbuttonlayout(4);
-             firephaser();
-             return(true);
-         }
-         if(texte.contains("fire") || texte.contains("torpedo")) {
-+            switchbuttonlayout(4);
-             firemissiles();
-             return(true);
-         }
--        if(texte.contains("shield")) {
-+        if(texte.contains("shield") || texte.contains("raise")) {
-+            switchbuttonlayout(3);
-             raiseshields();
-             return(true);
-         }
-+        if(texte.contains("sensor off")) {
-+            switchbuttonlayout(0);
-+            switchsensorlayout(0);
-+            stopsensors();
-+            return(true);
-+        }
-         if(texte.contains("sensor") || texte.contains("magnetic")) {
-             switchbuttonlayout(1);
-             switchsensorlayout(1);
-@@ -1138,6 +1275,37 @@ public class TrycorderFragment extends Fragment
-             startsensors(2);
-             return(true);
-         }
-+        if(texte.contains("gravity") || texte.contains("vibration")) {
-+            switchbuttonlayout(1);
-+            switchsensorlayout(3);
-+            startsensors(3);
-+            return(true);
-+        }
-+        if(texte.contains("hailing") && texte.contains("close")) {
-+            switchbuttonlayout(2);
-+            closecomm();
-+            return(true);
-+        }
-+        if(texte.contains("hailing") && texte.contains("open")) {
-+            switchbuttonlayout(2);
-+            opencomm();
-+            return(true);
-+        }
-+        if(texte.contains("beam me up") || texte.contains("scotty")) {
-+            switchbuttonlayout(5);
-+            transporterin();
-+            return(true);
-+        }
-+        if(texte.contains("beam me down")) {
-+            switchbuttonlayout(5);
-+            transporterout();
-+            return(true);
-+        }
-+        if(texte.contains("viewer")) {
-+            switchbuttonlayout(0);
-+            switchviewer();
-+            return(true);
-+        }
-         return(false);
-     }
- }
-diff --git a/app/src/main/res/drawable/trekbutton.xml b/app/src/main/res/drawable/trekbutton.xml
-index a8b409b..e6d39d1 100644
---- a/app/src/main/res/drawable/trekbutton.xml
-+++ b/app/src/main/res/drawable/trekbutton.xml
-@@ -1,4 +1,24 @@
- <?xml version="1.0" encoding="utf-8"?>
- <selector xmlns:android="http://schemas.android.com/apk/res/android">
--
-+    <item android:state_pressed="true">
-+        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
-+        </shape>
-+    </item>
-+    <item android:state_focused="true">
-+        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <solid android:color="#58857e" />
-+        </shape>
-+    </item>
-+    <item>
-+        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#58857e" android:startColor="#8dbab3" />
-+        </shape>
-+    </item>
- </selector>
-\ No newline at end of file
-diff --git a/app/src/main/res/drawable/trekbutton_blue.xml b/app/src/main/res/drawable/trekbutton_blue.xml
-index a8b409b..d02bf02 100644
---- a/app/src/main/res/drawable/trekbutton_blue.xml
-+++ b/app/src/main/res/drawable/trekbutton_blue.xml
-@@ -1,4 +1,24 @@
+diff --git a/app/src/main/res/drawable/trekbutton_blue_center.xml b/app/src/main/res/drawable/trekbutton_blue_center.xml
+index a8b409b..30a8099 100644
+--- a/app/src/main/res/drawable/trekbutton_blue_center.xml
++++ b/app/src/main/res/drawable/trekbutton_blue_center.xml
+@@ -1,4 +1,21 @@
  <?xml version="1.0" encoding="utf-8"?>
  <selector xmlns:android="http://schemas.android.com/apk/res/android">
 -
@@ -369,30 +431,27 @@ index a8b409b..d02bf02 100644
 \ No newline at end of file
 +    <item android:state_pressed="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
 +        </shape>
 +    </item>
 +    <item android:state_focused="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <solid android:color="#58857e" />
 +        </shape>
 +    </item>
 +    <item>
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#b39ddb" android:startColor="#e1bee7" />
 +        </shape>
 +    </item>
 +</selector>
-diff --git a/app/src/main/res/drawable/trekbutton_blue_right.xml b/app/src/main/res/drawable/trekbutton_blue_right.xml
-index a8b409b..11cd594 100644
---- a/app/src/main/res/drawable/trekbutton_blue_right.xml
-+++ b/app/src/main/res/drawable/trekbutton_blue_right.xml
+diff --git a/app/src/main/res/drawable/trekbutton_blue_left.xml b/app/src/main/res/drawable/trekbutton_blue_left.xml
+index a8b409b..7ae6877 100644
+--- a/app/src/main/res/drawable/trekbutton_blue_left.xml
++++ b/app/src/main/res/drawable/trekbutton_blue_left.xml
 @@ -1,4 +1,24 @@
  <?xml version="1.0" encoding="utf-8"?>
  <selector xmlns:android="http://schemas.android.com/apk/res/android">
@@ -401,31 +460,31 @@ index a8b409b..11cd594 100644
 \ No newline at end of file
 +    <item android:state_pressed="true">
 +        <shape android:shape="rectangle">
-+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
++            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
 +        </shape>
 +    </item>
 +    <item android:state_focused="true">
 +        <shape android:shape="rectangle">
-+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
++            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <solid android:color="#58857e" />
 +        </shape>
 +    </item>
 +    <item>
 +        <shape android:shape="rectangle">
-+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
++            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#b39ddb" android:startColor="#e1bee7" />
 +        </shape>
 +    </item>
 +</selector>
-diff --git a/app/src/main/res/drawable/trekbutton_green.xml b/app/src/main/res/drawable/trekbutton_green.xml
-index a8b409b..d4df2dc 100644
---- a/app/src/main/res/drawable/trekbutton_green.xml
-+++ b/app/src/main/res/drawable/trekbutton_green.xml
-@@ -1,4 +1,24 @@
+diff --git a/app/src/main/res/drawable/trekbutton_yellow_center.xml b/app/src/main/res/drawable/trekbutton_yellow_center.xml
+index a8b409b..6a6bbbe 100644
+--- a/app/src/main/res/drawable/trekbutton_yellow_center.xml
++++ b/app/src/main/res/drawable/trekbutton_yellow_center.xml
+@@ -1,4 +1,21 @@
  <?xml version="1.0" encoding="utf-8"?>
  <selector xmlns:android="http://schemas.android.com/apk/res/android">
 -
@@ -433,30 +492,27 @@ index a8b409b..d4df2dc 100644
 \ No newline at end of file
 +    <item android:state_pressed="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
 +        </shape>
 +    </item>
 +    <item android:state_focused="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <solid android:color="#58857e" />
 +        </shape>
 +    </item>
 +    <item>
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
 +            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#ffa000" android:startColor="#ffd54f" />
++            <gradient android:angle="-90" android:endColor="#ffea00" android:startColor="#fff9c4" />
 +        </shape>
 +    </item>
 +</selector>
-diff --git a/app/src/main/res/drawable/trekbutton_orange.xml b/app/src/main/res/drawable/trekbutton_orange.xml
-index a8b409b..e8d2301 100644
---- a/app/src/main/res/drawable/trekbutton_orange.xml
-+++ b/app/src/main/res/drawable/trekbutton_orange.xml
+diff --git a/app/src/main/res/drawable/trekbutton_yellow_left.xml b/app/src/main/res/drawable/trekbutton_yellow_left.xml
+index a8b409b..b51a120 100644
+--- a/app/src/main/res/drawable/trekbutton_yellow_left.xml
++++ b/app/src/main/res/drawable/trekbutton_yellow_left.xml
 @@ -1,4 +1,24 @@
  <?xml version="1.0" encoding="utf-8"?>
  <selector xmlns:android="http://schemas.android.com/apk/res/android">
@@ -465,30 +521,30 @@ index a8b409b..e8d2301 100644
 \ No newline at end of file
 +    <item android:state_pressed="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
++            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
 +        </shape>
 +    </item>
 +    <item android:state_focused="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
++            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <solid android:color="#58857e" />
 +        </shape>
 +    </item>
 +    <item>
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
++            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#e65100" android:startColor="#ff7043" />
++            <gradient android:angle="-90" android:endColor="#ffea00" android:startColor="#fff9c4" />
 +        </shape>
 +    </item>
 +</selector>
-diff --git a/app/src/main/res/drawable/trekbutton_red.xml b/app/src/main/res/drawable/trekbutton_red.xml
-index a8b409b..197da5f 100644
---- a/app/src/main/res/drawable/trekbutton_red.xml
-+++ b/app/src/main/res/drawable/trekbutton_red.xml
+diff --git a/app/src/main/res/drawable/trekbutton_yellow_right.xml b/app/src/main/res/drawable/trekbutton_yellow_right.xml
+index a8b409b..c729c5e 100644
+--- a/app/src/main/res/drawable/trekbutton_yellow_right.xml
++++ b/app/src/main/res/drawable/trekbutton_yellow_right.xml
 @@ -1,4 +1,24 @@
  <?xml version="1.0" encoding="utf-8"?>
  <selector xmlns:android="http://schemas.android.com/apk/res/android">
@@ -497,684 +553,1378 @@ index a8b409b..197da5f 100644
 \ No newline at end of file
 +    <item android:state_pressed="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
++            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
 +        </shape>
 +    </item>
 +    <item android:state_focused="true">
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
++            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <solid android:color="#58857e" />
 +        </shape>
 +    </item>
 +    <item>
 +        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#d50000" android:startColor="#ec407a" />
-+        </shape>
-+    </item>
-+</selector>
-diff --git a/app/src/main/res/drawable/trekbutton_yellow.xml b/app/src/main/res/drawable/trekbutton_yellow.xml
-index a8b409b..713d006 100644
---- a/app/src/main/res/drawable/trekbutton_yellow.xml
-+++ b/app/src/main/res/drawable/trekbutton_yellow.xml
-@@ -1,4 +1,24 @@
- <?xml version="1.0" encoding="utf-8"?>
- <selector xmlns:android="http://schemas.android.com/apk/res/android">
--
--</selector>
-\ No newline at end of file
-+    <item android:state_pressed="true">
-+        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
-+        </shape>
-+    </item>
-+    <item android:state_focused="true">
-+        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <solid android:color="#58857e" />
-+        </shape>
-+    </item>
-+    <item>
-+        <shape android:shape="rectangle">
-+            <corners android:radius="20dp" />
++            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
 +            <stroke android:width="1dip" android:color="#5e7974" />
 +            <gradient android:angle="-90" android:endColor="#ffea00" android:startColor="#fff9c4" />
 +        </shape>
 +    </item>
 +</selector>
 diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
-index 0048c37..c982d73 100644
+index c982d73..7702301 100644
 --- a/app/src/main/res/layout/trycorder_fragment.xml
 +++ b/app/src/main/res/layout/trycorder_fragment.xml
-@@ -2,11 +2,13 @@
- <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-     android:layout_width="match_parent"
-     android:layout_height="match_parent"
--    android:orientation="vertical">
-+    android:orientation="vertical"
-+    android:weightSum="100">
- 
-     <LinearLayout
-         android:layout_width="match_parent"
--        android:layout_height="wrap_content"
-+        android:layout_height="0dp"
-+        android:layout_weight="10"
-         android:background="@android:color/black"
-         android:orientation="horizontal"
-         android:weightSum="10">
-@@ -14,60 +16,99 @@
-         <ImageButton
-             android:id="@+id/talk_button"
-             android:layout_width="0dp"
--            android:layout_height="80dp"
--            android:layout_marginBottom="@dimen/button_margin"
-+            android:layout_height="match_parent"
-             android:layout_marginEnd="@dimen/button_margin"
-             android:layout_marginStart="@dimen/button_margin"
--            android:layout_marginTop="@dimen/button_margin"
-             android:layout_weight="4"
-             android:background="@android:color/black"
-             android:scaleType="fitXY"
-             android:src="@drawable/trek_topleft"
-             android:text="TALK" />
- 
--        <Button
--            android:id="@+id/start_button"
-+        <LinearLayout
-             android:layout_width="0dp"
--            android:layout_height="32dp"
--            android:layout_marginBottom="@dimen/button_margin"
--            android:layout_marginEnd="@dimen/button_margin"
--            android:layout_marginStart="@dimen/button_margin"
--            android:layout_marginTop="10dp"
--            android:layout_weight="2"
--            android:background="@android:color/holo_green_dark"
--            android:text="START" />
-+            android:layout_height="match_parent"
-+            android:layout_weight="6"
-+            android:background="@android:color/black"
-+            android:orientation="vertical"
-+            android:weightSum="2">
- 
--        <Button
--            android:id="@+id/stop_button"
--            android:layout_width="0dp"
--            android:layout_height="32dp"
--            android:layout_marginBottom="@dimen/button_margin"
--            android:layout_marginEnd="@dimen/button_margin"
--            android:layout_marginStart="@dimen/button_margin"
--            android:layout_marginTop="10dp"
--            android:layout_weight="2"
--            android:background="@android:color/holo_red_dark"
--            android:minHeight="48dp"
--            android:text="STOP" />
-+            <LinearLayout
-+                android:layout_width="match_parent"
-+                android:layout_height="0dp"
-+                android:layout_weight="1"
-+                android:background="@android:color/black"
-+                android:orientation="horizontal"
-+                android:weightSum="6">
-+
-+                <Button
-+                    android:id="@+id/start_button"
-+                    android:layout_width="0dp"
-+                    android:layout_height="32dp"
-+                    android:layout_marginEnd="@dimen/button_margin"
-+                    android:layout_marginStart="@dimen/button_margin"
-+                    android:layout_weight="2"
-+                    android:background="@android:color/holo_green_dark"
-+                    android:maxLines="1"
-+                    android:textStyle="bold"
-+                    android:textSize="18sp"
-+                    android:text="START" />
-+
-+                <Button
-+                    android:id="@+id/stop_button"
-+                    android:layout_width="0dp"
-+                    android:layout_height="32dp"
-+                    android:layout_marginEnd="@dimen/button_margin"
-+                    android:layout_marginStart="@dimen/button_margin"
-+                    android:layout_weight="2"
-+                    android:background="@android:color/holo_red_dark"
-+                    android:maxLines="1"
-+                    android:textStyle="bold"
-+                    android:textSize="18sp"
-+                    android:text="STOP" />
-+
-+                <Button
-+                    android:id="@+id/settings_button"
-+                    android:layout_width="0dp"
-+                    android:layout_height="32dp"
-+                    android:layout_marginEnd="@dimen/button_margin"
-+                    android:layout_marginStart="@dimen/button_margin"
-+                    android:layout_weight="2"
-+                    android:background="@drawable/trekbutton_blue_right"
-+                    android:maxLines="1"
-+                    android:textStyle="bold"
-+                    android:textSize="18sp"
-+                    android:text="SETUP" />
- 
--        <Button
--            android:id="@+id/settings_button"
--            android:layout_width="0dp"
--            android:layout_height="32dp"
--            android:layout_marginBottom="@dimen/button_margin"
--            android:layout_marginEnd="@dimen/button_margin"
--            android:layout_marginStart="@dimen/button_margin"
--            android:layout_marginTop="10dp"
--            android:layout_weight="2"
--            android:background="@android:color/holo_blue_bright"
--            android:minHeight="48dp"
--            android:text="SETUP" />
-+            </LinearLayout>
-+
-+            <LinearLayout
-+                android:layout_width="match_parent"
-+                android:layout_height="0dp"
-+                android:layout_weight="1"
-+                android:background="@android:color/black"
-+                android:orientation="horizontal"
-+                android:weightSum="6">
-+
-+                <TextView
-+                    android:id="@+id/textstatus_top"
-+                    android:layout_width="match_parent"
-+                    android:layout_height="match_parent"
-+                    android:text="top status"
-+                    android:textStyle="bold"
-+                    android:textColor="@android:color/holo_green_light"
-+                    android:textSize="18sp" />
-+
-+            </LinearLayout>
-+
-+        </LinearLayout>
- 
-     </LinearLayout>
- 
-     <LinearLayout
-         android:layout_width="match_parent"
--        android:layout_height="match_parent"
-+        android:layout_height="0dp"
-+        android:layout_weight="80"
-         android:background="@android:color/black"
-         android:orientation="horizontal"
-         android:weightSum="10">
-@@ -93,7 +134,10 @@
+@@ -134,7 +134,7 @@
                  android:layout_marginStart="@dimen/button_margin"
                  android:layout_marginTop="@dimen/button_margin"
                  android:layout_weight="1"
--                android:background="@android:color/holo_orange_light"
-+                android:background="@drawable/trekbutton_yellow"
-+                android:maxLines="1"
-+                android:textStyle="bold"
-+                android:textSize="18sp"
-                 android:text="SENSORS" />
- 
-             <TextView
-@@ -110,7 +154,10 @@
+-                android:background="@drawable/trekbutton_yellow"
++                android:background="@drawable/trekbutton_yellow_right"
+                 android:maxLines="1"
+                 android:textStyle="bold"
+                 android:textSize="18sp"
+@@ -154,7 +154,7 @@
                  android:layout_marginStart="@dimen/button_margin"
                  android:layout_marginTop="@dimen/button_margin"
                  android:layout_weight="1"
--                android:background="@android:color/holo_green_light"
-+                android:background="@drawable/trekbutton_green"
-+                android:maxLines="1"
-+                android:textStyle="bold"
-+                android:textSize="18sp"
-                 android:text="COMM" />
- 
-             <TextView
-@@ -127,9 +174,11 @@
+-                android:background="@drawable/trekbutton_green"
++                android:background="@drawable/trekbutton_green_right"
+                 android:maxLines="1"
+                 android:textStyle="bold"
+                 android:textSize="18sp"
+@@ -174,7 +174,7 @@
                  android:layout_marginStart="@dimen/button_margin"
                  android:layout_marginTop="@dimen/button_margin"
                  android:layout_weight="1"
--                android:background="@android:color/holo_orange_dark"
--                android:text="SHIELD"
--                android:textColor="@android:color/black" />
-+                android:background="@drawable/trekbutton_orange"
-+                android:maxLines="1"
-+                android:textStyle="bold"
-+                android:textSize="18sp"
-+                android:text="SHIELD" />
- 
-             <TextView
-                 android:layout_width="match_parent"
-@@ -145,9 +194,11 @@
+-                android:background="@drawable/trekbutton_orange"
++                android:background="@drawable/trekbutton_orange_right"
+                 android:maxLines="1"
+                 android:textStyle="bold"
+                 android:textSize="18sp"
+@@ -194,7 +194,7 @@
                  android:layout_marginStart="@dimen/button_margin"
                  android:layout_marginTop="@dimen/button_margin"
                  android:layout_weight="1"
--                android:background="@android:color/holo_red_light"
--                android:text="FIRE"
--                android:textColor="@android:color/black" />
-+                android:background="@drawable/trekbutton_red"
-+                android:maxLines="1"
-+                android:textStyle="bold"
-+                android:textSize="18sp"
-+                android:text="FIRE" />
- 
-             <TextView
-                 android:layout_width="match_parent"
-@@ -163,9 +214,11 @@
+-                android:background="@drawable/trekbutton_red"
++                android:background="@drawable/trekbutton_red_right"
+                 android:maxLines="1"
+                 android:textStyle="bold"
+                 android:textSize="18sp"
+@@ -214,7 +214,7 @@
                  android:layout_marginStart="@dimen/button_margin"
                  android:layout_marginTop="@dimen/button_margin"
                  android:layout_weight="1"
--                android:background="@android:color/holo_blue_bright"
--                android:text="TRANSP"
--                android:textColor="@android:color/black" />
-+                android:background="@drawable/trekbutton_blue"
-+                android:maxLines="1"
-+                android:textStyle="bold"
-+                android:textSize="18sp"
-+                android:text="TRANSP" />
- 
-             <TextView
-                 android:layout_width="match_parent"
-@@ -181,7 +234,10 @@
-                 android:layout_marginStart="@dimen/button_margin"
-                 android:layout_marginTop="@dimen/button_margin"
-                 android:layout_weight="1"
--                android:background="@android:color/holo_purple"
-+                android:background="@drawable/trekbutton"
-+                android:maxLines="1"
-+                android:textStyle="bold"
-+                android:textSize="18sp"
-                 android:text="VIEWER" />
- 
-             <TextView
-@@ -199,7 +255,10 @@
-                 android:layout_marginStart="@dimen/button_margin"
-                 android:layout_marginTop="@dimen/button_margin"
-                 android:layout_weight="1"
--                android:background="@android:color/holo_blue_bright"
-+                android:background="@drawable/trekbutton"
-+                android:maxLines="1"
-+                android:textStyle="bold"
-+                android:textSize="18sp"
-                 android:text="SOUND" />
- 
- 
-@@ -260,9 +319,9 @@
-                 <LinearLayout
-                     android:layout_width="match_parent"
-                     android:layout_height="0dp"
-+                    android:layout_weight="8"
-                     android:background="@android:color/black"
-                     android:orientation="horizontal"
--                    android:layout_weight="8"
-                     android:weightSum="100">
- 
-                     <ImageView
-@@ -279,8 +338,7 @@
-                         android:layout_width="0dp"
-                         android:layout_height="match_parent"
-                         android:layout_weight="94"
--                        android:orientation="horizontal">
--                    </LinearLayout>
-+                        android:orientation="horizontal"/>
- 
-                     <ImageView
-                         android:layout_width="0dp"
-@@ -343,32 +401,32 @@
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:background="@android:color/black"
--                    android:orientation="horizontal"
-                     android:gravity="center"
--                    android:weightSum="100"
--                    android:visibility="gone">
-+                    android:orientation="horizontal"
-+                    android:visibility="gone"
-+                    android:weightSum="100">
- 
-                     <Button
-                         android:id="@+id/opencomm_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+-                android:background="@drawable/trekbutton_blue"
++                android:background="@drawable/trekbutton_blue_right"
+                 android:maxLines="1"
+                 android:textStyle="bold"
+                 android:textSize="18sp"
+@@ -414,7 +414,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_green_dark"
--                        android:text="OPEN COMM"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_green"
-+                        android:text="OPEN COMM" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_green"
++                        android:background="@drawable/trekbutton_green_left"
+                         android:text="OPEN COMM" />
  
                      <Button
-                         android:id="@+id/closecomm_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+@@ -425,7 +425,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_red_dark"
--                        android:text="CLOSE COMM"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_green"
-+                        android:text="CLOSE COMM" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_green"
++                        android:background="@drawable/trekbutton_green_right"
+                         android:text="CLOSE COMM" />
  
                  </LinearLayout>
- 
-@@ -378,54 +436,54 @@
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:background="@android:color/black"
--                    android:orientation="horizontal"
-                     android:gravity="center"
--                    android:weightSum="100"
--                    android:visibility="gone">
-+                    android:orientation="horizontal"
-+                    android:visibility="gone"
-+                    android:weightSum="100">
- 
-                     <Button
-                         android:id="@+id/magnetic_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
+@@ -448,8 +448,8 @@
+                         android:layout_gravity="center"
+                         android:layout_marginLeft="2dp"
+                         android:layout_marginRight="2dp"
 -                        android:layout_weight="25"
+-                        android:background="@drawable/trekbutton_yellow"
++                        android:layout_weight="28"
++                        android:background="@drawable/trekbutton_yellow_left"
+                         android:text="MAG" />
+ 
+                     <Button
+@@ -459,8 +459,8 @@
                          android:layout_gravity="center"
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_green_light"
--                        android:text="MAG"/>
-+                        android:layout_weight="25"
-+                        android:background="@drawable/trekbutton_yellow"
-+                        android:text="MAG" />
- 
-                     <Button
-                         android:id="@+id/orientation_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
 -                        android:layout_weight="25"
+-                        android:background="@drawable/trekbutton_yellow"
++                        android:layout_weight="28"
++                        android:background="@drawable/trekbutton_yellow_center"
+                         android:text="ORI" />
+ 
+                     <Button
+@@ -470,20 +470,20 @@
                          android:layout_gravity="center"
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_green_light"
--                        android:text="ORI"/>
-+                        android:layout_weight="25"
-+                        android:background="@drawable/trekbutton_yellow"
-+                        android:text="ORI" />
- 
-                     <Button
-                         android:id="@+id/gravity_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
 -                        android:layout_weight="25"
+-                        android:background="@drawable/trekbutton_yellow"
++                        android:layout_weight="28"
++                        android:background="@drawable/trekbutton_yellow_center"
+                         android:text="GRA" />
+ 
+                     <Button
+-                        android:id="@+id/audio_button"
++                        android:id="@+id/sensoroff_button"
+                         android:layout_width="0dp"
+                         android:layout_height="48dp"
                          android:layout_gravity="center"
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_green_light"
--                        android:text="GRA"/>
-+                        android:layout_weight="25"
-+                        android:background="@drawable/trekbutton_yellow"
-+                        android:text="GRA" />
- 
-                     <Button
-                         android:id="@+id/audio_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
 -                        android:layout_weight="25"
-                         android:layout_gravity="center"
-                         android:layout_marginLeft="2dp"
-                         android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_green_light"
--                        android:text="AUD"/>
-+                        android:layout_weight="25"
-+                        android:background="@drawable/trekbutton_yellow"
-+                        android:text="AUD" />
+-                        android:background="@drawable/trekbutton_yellow"
+-                        android:text="AUD" />
++                        android:layout_weight="16"
++                        android:background="@drawable/trekbutton_yellow_right"
++                        android:text="OFF" />
  
                  </LinearLayout>
  
-@@ -435,32 +493,32 @@
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:background="@android:color/black"
--                    android:orientation="horizontal"
-                     android:gravity="center"
--                    android:weightSum="100"
--                    android:visibility="gone">
-+                    android:orientation="horizontal"
-+                    android:visibility="gone"
-+                    android:weightSum="100">
- 
-                     <Button
-                         android:id="@+id/shield_up_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+@@ -506,7 +506,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_orange_dark"
--                        android:text="SHIELDS UP"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_orange"
-+                        android:text="SHIELDS UP" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_orange"
++                        android:background="@drawable/trekbutton_orange_left"
+                         android:text="SHIELDS UP" />
  
                      <Button
-                         android:id="@+id/shield_down_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+@@ -517,7 +517,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_orange_dark"
--                        android:text="SHIELDS DOWN"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_orange"
-+                        android:text="SHIELDS DOWN" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_orange"
++                        android:background="@drawable/trekbutton_orange_right"
+                         android:text="SHIELDS DOWN" />
  
                  </LinearLayout>
- 
-@@ -470,32 +528,32 @@
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:background="@android:color/black"
--                    android:orientation="horizontal"
-                     android:gravity="center"
--                    android:weightSum="100"
--                    android:visibility="gone">
-+                    android:orientation="horizontal"
-+                    android:visibility="gone"
-+                    android:weightSum="100">
- 
-                     <Button
-                         android:id="@+id/phaser_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+@@ -541,7 +541,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_red_light"
--                        android:text="PHASER"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_red"
-+                        android:text="PHASER" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_red"
++                        android:background="@drawable/trekbutton_red_left"
+                         android:text="PHASER" />
  
                      <Button
-                         android:id="@+id/torpedo_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+@@ -552,7 +552,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_red_light"
--                        android:text="TORPEDO"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_red"
-+                        android:text="TORPEDO" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_red"
++                        android:background="@drawable/trekbutton_red_right"
+                         android:text="TORPEDO" />
  
                  </LinearLayout>
- 
-@@ -505,32 +563,32 @@
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:background="@android:color/black"
--                    android:orientation="horizontal"
-                     android:gravity="center"
--                    android:weightSum="100"
--                    android:visibility="gone">
-+                    android:orientation="horizontal"
-+                    android:visibility="gone"
-+                    android:weightSum="100">
- 
-                     <Button
-                         android:id="@+id/transport_out_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+@@ -576,7 +576,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_blue_bright"
--                        android:text="TRANSPORT OUT"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_blue"
-+                        android:text="TRANSPORT OUT" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_blue"
++                        android:background="@drawable/trekbutton_blue_left"
+                         android:text="TRANSPORT OUT" />
  
                      <Button
-                         android:id="@+id/transport_in_button"
-                         android:layout_width="0dp"
-                         android:layout_height="48dp"
--                        android:layout_weight="50"
-                         android:layout_gravity="center"
+@@ -587,7 +587,7 @@
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
--                        android:background="@android:color/holo_blue_bright"
--                        android:text="TRANSPORT IN"/>
-+                        android:layout_weight="50"
-+                        android:background="@drawable/trekbutton_blue"
-+                        android:text="TRANSPORT IN" />
+                         android:layout_weight="50"
+-                        android:background="@drawable/trekbutton_blue"
++                        android:background="@drawable/trekbutton_blue_right"
+                         android:text="TRANSPORT IN" />
  
                  </LinearLayout>
- 
-@@ -590,8 +648,7 @@
-                         android:layout_width="match_parent"
-                         android:layout_height="match_parent"
-                         android:src="@drawable/federation_logo"
--                        android:visibility="visible"/>
--
-+                        android:visibility="visible" />
- 
-                 </LinearLayout>
- 
-@@ -632,4 +689,108 @@
- 
-     </LinearLayout>
- 
-+    <LinearLayout
-+        android:layout_width="match_parent"
-+        android:layout_height="0dp"
-+        android:layout_weight="10"
-+        android:background="@android:color/black"
-+        android:orientation="horizontal"
-+        android:weightSum="10">
-+
-+        <ImageButton
-+            android:id="@+id/ask_button"
-+            android:layout_width="0dp"
-+            android:layout_height="match_parent"
-+            android:layout_marginEnd="@dimen/button_margin"
-+            android:layout_marginStart="@dimen/button_margin"
-+            android:layout_weight="4"
-+            android:background="@android:color/black"
-+            android:scaleType="fitXY"
-+            android:src="@drawable/trek_bottomleft"
-+            android:text="ASK" />
-+
-+        <LinearLayout
-+            android:layout_width="0dp"
-+            android:layout_height="match_parent"
-+            android:layout_weight="6"
-+            android:background="@android:color/black"
-+            android:orientation="vertical"
-+            android:weightSum="2">
-+
-+            <LinearLayout
-+                android:layout_width="match_parent"
-+                android:layout_height="0dp"
-+                android:layout_weight="1"
-+                android:background="@android:color/black"
-+                android:orientation="horizontal"
-+                android:weightSum="6">
-+
-+                <TextView
-+                    android:id="@+id/textstatus_bottom"
-+                    android:layout_width="match_parent"
-+                    android:layout_height="match_parent"
-+                    android:text="bottom status"
-+                    android:textStyle="bold"
-+                    android:textColor="@android:color/holo_green_light"
-+                    android:textSize="18sp" />
-+
-+            </LinearLayout>
-+
-+
-+            <LinearLayout
-+                android:layout_width="match_parent"
-+                android:layout_height="0dp"
-+                android:layout_weight="1"
-+                android:background="@android:color/black"
-+                android:orientation="horizontal"
-+                android:weightSum="6">
-+
-+                <Button
-+                    android:id="@+id/photo_button"
-+                    android:layout_width="0dp"
-+                    android:layout_height="32dp"
-+                    android:layout_gravity="bottom"
-+                    android:layout_marginEnd="@dimen/button_margin"
-+                    android:layout_marginStart="@dimen/button_margin"
-+                    android:layout_weight="2"
-+                    android:background="@android:color/holo_green_dark"
-+                    android:maxLines="1"
-+                    android:textStyle="bold"
-+                    android:textSize="18sp"
-+                    android:text="PHOTO" />
-+
-+                <Button
-+                    android:id="@+id/record_button"
-+                    android:layout_width="0dp"
-+                    android:layout_height="32dp"
-+                    android:layout_gravity="bottom"
-+                    android:layout_marginEnd="@dimen/button_margin"
-+                    android:layout_marginStart="@dimen/button_margin"
-+                    android:layout_weight="2"
-+                    android:background="@android:color/holo_red_dark"
-+                    android:maxLines="1"
-+                    android:textStyle="bold"
-+                    android:textSize="18sp"
-+                    android:text="RECORD" />
-+
-+                <Button
-+                    android:id="@+id/gallery_button"
-+                    android:layout_width="0dp"
-+                    android:layout_height="32dp"
-+                    android:layout_gravity="bottom"
-+                    android:layout_marginEnd="@dimen/button_margin"
-+                    android:layout_marginStart="@dimen/button_margin"
-+                    android:layout_weight="2"
-+                    android:background="@drawable/trekbutton_blue_right"
-+                    android:maxLines="1"
-+                    android:textStyle="bold"
-+                    android:textSize="18sp"
-+                    android:text="GALLERY" />
-+
-+            </LinearLayout>
-+
-+        </LinearLayout>
-+
-+    </LinearLayout>
-+
- </LinearLayout>
+diff --git a/gitdiff.txt b/gitdiff.txt
+index 076e2c8..36327f3 100644
+--- a/gitdiff.txt
++++ b/gitdiff.txt
+@@ -1,1180 +0,0 @@
+-diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+-index b4a8e22..5ae67cb 100644
+---- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+-+++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+-@@ -8,6 +8,7 @@ import android.graphics.Canvas;
+- import android.graphics.Color;
+- import android.graphics.Paint;
+- import android.graphics.SurfaceTexture;
+-+import android.graphics.Typeface;
+- import android.hardware.Camera;
+- import android.hardware.Sensor;
+- import android.hardware.SensorEvent;
+-@@ -83,6 +84,22 @@ public class TrycorderFragment extends Fragment
+-     // the button for settings
+-     private Button mSettingsButton;
+- 
+-+    // the two status lines
+-+    private TextView mTextstatus_top;
+-+    private TextView mTextstatus_bottom;
+-+
+-+    // the button to talk to computer
+-+    private ImageButton mAskButton;
+-+
+-+    // the button to start it all
+-+    private Button mPhotoButton;
+-+
+-+    // the button to stop it all
+-+    private Button mRecordButton;
+-+
+-+    // the button for settings
+-+    private Button mGalleryButton;
+-+
+-     // the buttons to switch between sensors
+-     private Button mSensorButton;
+-     private Button mMagneticButton;
+-@@ -193,6 +210,51 @@ public class TrycorderFragment extends Fragment
+-             }
+-         });
+- 
+-+        // ===================== bottom horizontal button grid ==========================
+-+        // the ask button
+-+        mAskButton = (ImageButton) view.findViewById(R.id.ask_button);
+-+        mAskButton.setOnClickListener(new View.OnClickListener() {
+-+            @Override
+-+            public void onClick(View view) {
+-+                listenandtalk();
+-+            }
+-+        });
+-+
+-+        // the start button
+-+        mPhotoButton = (Button) view.findViewById(R.id.photo_button);
+-+        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+-+            @Override
+-+            public void onClick(View view) {
+-+                buttonsound();
+-+            }
+-+        });
+-+
+-+        // the stop button
+-+        mRecordButton = (Button) view.findViewById(R.id.record_button);
+-+        mRecordButton.setOnClickListener(new View.OnClickListener() {
+-+            @Override
+-+            public void onClick(View view) {
+-+                buttonsound();
+-+            }
+-+        });
+-+
+-+        // the settings button
+-+        mGalleryButton = (Button) view.findViewById(R.id.gallery_button);
+-+        mGalleryButton.setOnClickListener(new View.OnClickListener() {
+-+            @Override
+-+            public void onClick(View view) {
+-+                buttonsound();
+-+            }
+-+        });
+-+
+-+        // ==== the two status lines at top and bottom =====
+-+
+-+        mTextstatus_top = (TextView) view.findViewById(R.id.textstatus_top);
+-+        mTextstatus_top.setText("");
+-+
+-+        mTextstatus_bottom = (TextView) view.findViewById(R.id.textstatus_bottom);
+-+        mTextstatus_bottom.setText("Bottom Status");
+-+
+-         // ===================== left vertical button grid ============================
+- 
+-         // ===================== sensor buttons group ============================
+-@@ -471,6 +533,46 @@ public class TrycorderFragment extends Fragment
+-     }
+- 
+-     @Override
+-+    public void onActivityCreated(Bundle bundle) {
+-+        super.onActivityCreated(bundle);
+-+        Typeface face = Typeface.createFromAsset(getActivity().getAssets(),"sonysketchef.ttf");
+-+        Typeface face2 = Typeface.createFromAsset(getActivity().getAssets(),"finalold.ttf");
+-+        Typeface face3 = Typeface.createFromAsset(getActivity().getAssets(),"finalnew.ttf");
+-+        // status fields
+-+        mTextstatus_top.setTypeface(face);
+-+        mTextstatus_bottom.setTypeface(face);
+-+        // bottom buttons
+-+        mPhotoButton.setTypeface(face2);
+-+        mRecordButton.setTypeface(face2);
+-+        mGalleryButton.setTypeface(face2);
+-+        // top buttons
+-+        mStartButton.setTypeface(face2);
+-+        mStopButton.setTypeface(face2);
+-+        mSettingsButton.setTypeface(face2);
+-+        // left column buttons
+-+        mSensorButton.setTypeface(face2);
+-+        mCommButton.setTypeface(face2);
+-+        mShieldButton.setTypeface(face2);
+-+        mFireButton.setTypeface(face2);
+-+        mTransporterButton.setTypeface(face2);
+-+        mViewerButton.setTypeface(face2);
+-+        mSoundButton.setTypeface(face2);
+-+        // center buttons
+-+        mMagneticButton.setTypeface(face3);
+-+        mOrientationButton.setTypeface(face3);
+-+        mGravityButton.setTypeface(face3);
+-+        mAudioButton.setTypeface(face3);
+-+        mOpenCommButton.setTypeface(face3);
+-+        mCloseCommButton.setTypeface(face3);
+-+        mShieldUpButton.setTypeface(face3);
+-+        mShieldDownButton.setTypeface(face3);
+-+        mPhaserButton.setTypeface(face3);
+-+        mTorpedoButton.setTypeface(face3);
+-+        mTransportOutButton.setTypeface(face3);
+-+        mTransportInButton.setTypeface(face3);
+-+    }
+-+
+-+    @Override
+-     public void onResume() {
+-         super.onResume();
+-         startsensors(mSensormode);
+-@@ -567,10 +669,12 @@ public class TrycorderFragment extends Fragment
+-             mFederationlogo.setVisibility(View.VISIBLE);
+-             mTextureView.setVisibility(View.GONE);
+-             mVieweron = false;
+-+            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
+-         } else {
+-             mFederationlogo.setVisibility(View.GONE);
+-             mTextureView.setVisibility(View.VISIBLE);
+-             mVieweron = true;
+-+            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
+-         }
+-     }
+- 
+-@@ -590,51 +694,61 @@ public class TrycorderFragment extends Fragment
+-     private void opencomm() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Healing frequency open");
+-     }
+- 
+-     private void closecomm() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Healing frequency closed");
+-     }
+- 
+-     private void transporterout() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Transport Out");
+-     }
+- 
+-     private void transporterin() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Transport In");
+-     }
+- 
+-     private void longrangesensor() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.long_range_scan);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Long range Sensors");
+-     }
+- 
+-     private void raiseshields() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shieldup);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Raise Shields");
+-     }
+- 
+-     private void lowershields() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shielddown);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Lower Shields");
+-     }
+- 
+-     private void tractorbeam() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_tractor_clean);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Engage Tractor Beam");
+-     }
+- 
+-     private void firephaser() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.phasertype2);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Fire Phaser");
+-     }
+- 
+-     private void firemissiles() {
+-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.photorp1);
+-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-+        say("Fire Torpedo");
+-     }
+- 
+-     // ==========================================================================================
+-@@ -660,11 +774,13 @@ public class TrycorderFragment extends Fragment
+-         if(mSoundStatus) {
+-             mSoundStatus=false;
+-             stopmusic();
+--            mSoundButton.setBackgroundColor(Color.GRAY);
+-+            mSoundButton.setBackgroundResource(R.drawable.trekbutton);
+-+            //mSoundButton.setBackgroundColor(Color.GRAY);
+-         } else {
+-             mSoundStatus=true;
+-             if(mRunStatus) startmusic();
+--            mSoundButton.setBackgroundColor(Color.GREEN);
+-+            mSoundButton.setBackgroundResource(R.drawable.trekbutton_yellow);
+-+            //mSoundButton.setBackgroundColor(Color.YELLOW);
+-         }
+-     }
+- 
+-@@ -1074,8 +1190,12 @@ public class TrycorderFragment extends Fragment
+-         if (dutexte != null && dutexte.size() > 0) {
+-             for(int i=0;i<dutexte.size();++i) {
+-                 mSentence = dutexte.get(i);
+--                if(matchvoice(mSentence)) return;
+-+                if(matchvoice(mSentence)) {
+-+                    mTextstatus_top.setText(mSentence);
+-+                    return;
+-+                }
+-             }
+-+            mTextstatus_top.setText(dutexte.get(0));
+-             speak("Unknown command.");
+-         }
+-     }
+-@@ -1096,6 +1216,8 @@ public class TrycorderFragment extends Fragment
+-             // automatic
+-         }
+-         mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+-+        mTextstatus_top.setText("");
+-+        say("Speak");
+-     }
+- 
+-     private void speak(String texte) {
+-@@ -1107,25 +1229,40 @@ public class TrycorderFragment extends Fragment
+-             // default prechoosen language
+-         }
+-         tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
+-+        say(texte);
+-+    }
+-+
+-+    private void say(String texte) {
+-+        mTextstatus_bottom.setText(texte);
+-     }
+- 
+-     private boolean matchvoice(String texte) {
+-         if(texte.contains("Martin")) {
+-+            switchbuttonlayout(0);
+-             speak("Martin is my Master.");
+-             return(true);
+-         }
+-         if(texte.contains("phaser")) {
+-+            switchbuttonlayout(4);
+-             firephaser();
+-             return(true);
+-         }
+-         if(texte.contains("fire") || texte.contains("torpedo")) {
+-+            switchbuttonlayout(4);
+-             firemissiles();
+-             return(true);
+-         }
+--        if(texte.contains("shield")) {
+-+        if(texte.contains("shield") || texte.contains("raise")) {
+-+            switchbuttonlayout(3);
+-             raiseshields();
+-             return(true);
+-         }
+-+        if(texte.contains("sensor off")) {
+-+            switchbuttonlayout(0);
+-+            switchsensorlayout(0);
+-+            stopsensors();
+-+            return(true);
+-+        }
+-         if(texte.contains("sensor") || texte.contains("magnetic")) {
+-             switchbuttonlayout(1);
+-             switchsensorlayout(1);
+-@@ -1138,6 +1275,37 @@ public class TrycorderFragment extends Fragment
+-             startsensors(2);
+-             return(true);
+-         }
+-+        if(texte.contains("gravity") || texte.contains("vibration")) {
+-+            switchbuttonlayout(1);
+-+            switchsensorlayout(3);
+-+            startsensors(3);
+-+            return(true);
+-+        }
+-+        if(texte.contains("hailing") && texte.contains("close")) {
+-+            switchbuttonlayout(2);
+-+            closecomm();
+-+            return(true);
+-+        }
+-+        if(texte.contains("hailing") && texte.contains("open")) {
+-+            switchbuttonlayout(2);
+-+            opencomm();
+-+            return(true);
+-+        }
+-+        if(texte.contains("beam me up") || texte.contains("scotty")) {
+-+            switchbuttonlayout(5);
+-+            transporterin();
+-+            return(true);
+-+        }
+-+        if(texte.contains("beam me down")) {
+-+            switchbuttonlayout(5);
+-+            transporterout();
+-+            return(true);
+-+        }
+-+        if(texte.contains("viewer")) {
+-+            switchbuttonlayout(0);
+-+            switchviewer();
+-+            return(true);
+-+        }
+-         return(false);
+-     }
+- }
+-diff --git a/app/src/main/res/drawable/trekbutton.xml b/app/src/main/res/drawable/trekbutton.xml
+-index a8b409b..e6d39d1 100644
+---- a/app/src/main/res/drawable/trekbutton.xml
+-+++ b/app/src/main/res/drawable/trekbutton.xml
+-@@ -1,4 +1,24 @@
+- <?xml version="1.0" encoding="utf-8"?>
+- <selector xmlns:android="http://schemas.android.com/apk/res/android">
+--
+-+    <item android:state_pressed="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
+-+        </shape>
+-+    </item>
+-+    <item android:state_focused="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <solid android:color="#58857e" />
+-+        </shape>
+-+    </item>
+-+    <item>
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#58857e" android:startColor="#8dbab3" />
+-+        </shape>
+-+    </item>
+- </selector>
+-\ No newline at end of file
+-diff --git a/app/src/main/res/drawable/trekbutton_blue.xml b/app/src/main/res/drawable/trekbutton_blue.xml
+-index a8b409b..d02bf02 100644
+---- a/app/src/main/res/drawable/trekbutton_blue.xml
+-+++ b/app/src/main/res/drawable/trekbutton_blue.xml
+-@@ -1,4 +1,24 @@
+- <?xml version="1.0" encoding="utf-8"?>
+- <selector xmlns:android="http://schemas.android.com/apk/res/android">
+--
+--</selector>
+-\ No newline at end of file
+-+    <item android:state_pressed="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
+-+        </shape>
+-+    </item>
+-+    <item android:state_focused="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <solid android:color="#58857e" />
+-+        </shape>
+-+    </item>
+-+    <item>
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#b39ddb" android:startColor="#e1bee7" />
+-+        </shape>
+-+    </item>
+-+</selector>
+-diff --git a/app/src/main/res/drawable/trekbutton_blue_right.xml b/app/src/main/res/drawable/trekbutton_blue_right.xml
+-index a8b409b..11cd594 100644
+---- a/app/src/main/res/drawable/trekbutton_blue_right.xml
+-+++ b/app/src/main/res/drawable/trekbutton_blue_right.xml
+-@@ -1,4 +1,24 @@
+- <?xml version="1.0" encoding="utf-8"?>
+- <selector xmlns:android="http://schemas.android.com/apk/res/android">
+--
+--</selector>
+-\ No newline at end of file
+-+    <item android:state_pressed="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
+-+        </shape>
+-+    </item>
+-+    <item android:state_focused="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <solid android:color="#58857e" />
+-+        </shape>
+-+    </item>
+-+    <item>
+-+        <shape android:shape="rectangle">
+-+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#b39ddb" android:startColor="#e1bee7" />
+-+        </shape>
+-+    </item>
+-+</selector>
+-diff --git a/app/src/main/res/drawable/trekbutton_green.xml b/app/src/main/res/drawable/trekbutton_green.xml
+-index a8b409b..d4df2dc 100644
+---- a/app/src/main/res/drawable/trekbutton_green.xml
+-+++ b/app/src/main/res/drawable/trekbutton_green.xml
+-@@ -1,4 +1,24 @@
+- <?xml version="1.0" encoding="utf-8"?>
+- <selector xmlns:android="http://schemas.android.com/apk/res/android">
+--
+--</selector>
+-\ No newline at end of file
+-+    <item android:state_pressed="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
+-+        </shape>
+-+    </item>
+-+    <item android:state_focused="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <solid android:color="#58857e" />
+-+        </shape>
+-+    </item>
+-+    <item>
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#ffa000" android:startColor="#ffd54f" />
+-+        </shape>
+-+    </item>
+-+</selector>
+-diff --git a/app/src/main/res/drawable/trekbutton_orange.xml b/app/src/main/res/drawable/trekbutton_orange.xml
+-index a8b409b..e8d2301 100644
+---- a/app/src/main/res/drawable/trekbutton_orange.xml
+-+++ b/app/src/main/res/drawable/trekbutton_orange.xml
+-@@ -1,4 +1,24 @@
+- <?xml version="1.0" encoding="utf-8"?>
+- <selector xmlns:android="http://schemas.android.com/apk/res/android">
+--
+--</selector>
+-\ No newline at end of file
+-+    <item android:state_pressed="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
+-+        </shape>
+-+    </item>
+-+    <item android:state_focused="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <solid android:color="#58857e" />
+-+        </shape>
+-+    </item>
+-+    <item>
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#e65100" android:startColor="#ff7043" />
+-+        </shape>
+-+    </item>
+-+</selector>
+-diff --git a/app/src/main/res/drawable/trekbutton_red.xml b/app/src/main/res/drawable/trekbutton_red.xml
+-index a8b409b..197da5f 100644
+---- a/app/src/main/res/drawable/trekbutton_red.xml
+-+++ b/app/src/main/res/drawable/trekbutton_red.xml
+-@@ -1,4 +1,24 @@
+- <?xml version="1.0" encoding="utf-8"?>
+- <selector xmlns:android="http://schemas.android.com/apk/res/android">
+--
+--</selector>
+-\ No newline at end of file
+-+    <item android:state_pressed="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
+-+        </shape>
+-+    </item>
+-+    <item android:state_focused="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <solid android:color="#58857e" />
+-+        </shape>
+-+    </item>
+-+    <item>
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#d50000" android:startColor="#ec407a" />
+-+        </shape>
+-+    </item>
+-+</selector>
+-diff --git a/app/src/main/res/drawable/trekbutton_yellow.xml b/app/src/main/res/drawable/trekbutton_yellow.xml
+-index a8b409b..713d006 100644
+---- a/app/src/main/res/drawable/trekbutton_yellow.xml
+-+++ b/app/src/main/res/drawable/trekbutton_yellow.xml
+-@@ -1,4 +1,24 @@
+- <?xml version="1.0" encoding="utf-8"?>
+- <selector xmlns:android="http://schemas.android.com/apk/res/android">
+--
+--</selector>
+-\ No newline at end of file
+-+    <item android:state_pressed="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
+-+        </shape>
+-+    </item>
+-+    <item android:state_focused="true">
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <solid android:color="#58857e" />
+-+        </shape>
+-+    </item>
+-+    <item>
+-+        <shape android:shape="rectangle">
+-+            <corners android:radius="20dp" />
+-+            <stroke android:width="1dip" android:color="#5e7974" />
+-+            <gradient android:angle="-90" android:endColor="#ffea00" android:startColor="#fff9c4" />
+-+        </shape>
+-+    </item>
+-+</selector>
+-diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
+-index 0048c37..c982d73 100644
+---- a/app/src/main/res/layout/trycorder_fragment.xml
+-+++ b/app/src/main/res/layout/trycorder_fragment.xml
+-@@ -2,11 +2,13 @@
+- <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+-     android:layout_width="match_parent"
+-     android:layout_height="match_parent"
+--    android:orientation="vertical">
+-+    android:orientation="vertical"
+-+    android:weightSum="100">
+- 
+-     <LinearLayout
+-         android:layout_width="match_parent"
+--        android:layout_height="wrap_content"
+-+        android:layout_height="0dp"
+-+        android:layout_weight="10"
+-         android:background="@android:color/black"
+-         android:orientation="horizontal"
+-         android:weightSum="10">
+-@@ -14,60 +16,99 @@
+-         <ImageButton
+-             android:id="@+id/talk_button"
+-             android:layout_width="0dp"
+--            android:layout_height="80dp"
+--            android:layout_marginBottom="@dimen/button_margin"
+-+            android:layout_height="match_parent"
+-             android:layout_marginEnd="@dimen/button_margin"
+-             android:layout_marginStart="@dimen/button_margin"
+--            android:layout_marginTop="@dimen/button_margin"
+-             android:layout_weight="4"
+-             android:background="@android:color/black"
+-             android:scaleType="fitXY"
+-             android:src="@drawable/trek_topleft"
+-             android:text="TALK" />
+- 
+--        <Button
+--            android:id="@+id/start_button"
+-+        <LinearLayout
+-             android:layout_width="0dp"
+--            android:layout_height="32dp"
+--            android:layout_marginBottom="@dimen/button_margin"
+--            android:layout_marginEnd="@dimen/button_margin"
+--            android:layout_marginStart="@dimen/button_margin"
+--            android:layout_marginTop="10dp"
+--            android:layout_weight="2"
+--            android:background="@android:color/holo_green_dark"
+--            android:text="START" />
+-+            android:layout_height="match_parent"
+-+            android:layout_weight="6"
+-+            android:background="@android:color/black"
+-+            android:orientation="vertical"
+-+            android:weightSum="2">
+- 
+--        <Button
+--            android:id="@+id/stop_button"
+--            android:layout_width="0dp"
+--            android:layout_height="32dp"
+--            android:layout_marginBottom="@dimen/button_margin"
+--            android:layout_marginEnd="@dimen/button_margin"
+--            android:layout_marginStart="@dimen/button_margin"
+--            android:layout_marginTop="10dp"
+--            android:layout_weight="2"
+--            android:background="@android:color/holo_red_dark"
+--            android:minHeight="48dp"
+--            android:text="STOP" />
+-+            <LinearLayout
+-+                android:layout_width="match_parent"
+-+                android:layout_height="0dp"
+-+                android:layout_weight="1"
+-+                android:background="@android:color/black"
+-+                android:orientation="horizontal"
+-+                android:weightSum="6">
+-+
+-+                <Button
+-+                    android:id="@+id/start_button"
+-+                    android:layout_width="0dp"
+-+                    android:layout_height="32dp"
+-+                    android:layout_marginEnd="@dimen/button_margin"
+-+                    android:layout_marginStart="@dimen/button_margin"
+-+                    android:layout_weight="2"
+-+                    android:background="@android:color/holo_green_dark"
+-+                    android:maxLines="1"
+-+                    android:textStyle="bold"
+-+                    android:textSize="18sp"
+-+                    android:text="START" />
+-+
+-+                <Button
+-+                    android:id="@+id/stop_button"
+-+                    android:layout_width="0dp"
+-+                    android:layout_height="32dp"
+-+                    android:layout_marginEnd="@dimen/button_margin"
+-+                    android:layout_marginStart="@dimen/button_margin"
+-+                    android:layout_weight="2"
+-+                    android:background="@android:color/holo_red_dark"
+-+                    android:maxLines="1"
+-+                    android:textStyle="bold"
+-+                    android:textSize="18sp"
+-+                    android:text="STOP" />
+-+
+-+                <Button
+-+                    android:id="@+id/settings_button"
+-+                    android:layout_width="0dp"
+-+                    android:layout_height="32dp"
+-+                    android:layout_marginEnd="@dimen/button_margin"
+-+                    android:layout_marginStart="@dimen/button_margin"
+-+                    android:layout_weight="2"
+-+                    android:background="@drawable/trekbutton_blue_right"
+-+                    android:maxLines="1"
+-+                    android:textStyle="bold"
+-+                    android:textSize="18sp"
+-+                    android:text="SETUP" />
+- 
+--        <Button
+--            android:id="@+id/settings_button"
+--            android:layout_width="0dp"
+--            android:layout_height="32dp"
+--            android:layout_marginBottom="@dimen/button_margin"
+--            android:layout_marginEnd="@dimen/button_margin"
+--            android:layout_marginStart="@dimen/button_margin"
+--            android:layout_marginTop="10dp"
+--            android:layout_weight="2"
+--            android:background="@android:color/holo_blue_bright"
+--            android:minHeight="48dp"
+--            android:text="SETUP" />
+-+            </LinearLayout>
+-+
+-+            <LinearLayout
+-+                android:layout_width="match_parent"
+-+                android:layout_height="0dp"
+-+                android:layout_weight="1"
+-+                android:background="@android:color/black"
+-+                android:orientation="horizontal"
+-+                android:weightSum="6">
+-+
+-+                <TextView
+-+                    android:id="@+id/textstatus_top"
+-+                    android:layout_width="match_parent"
+-+                    android:layout_height="match_parent"
+-+                    android:text="top status"
+-+                    android:textStyle="bold"
+-+                    android:textColor="@android:color/holo_green_light"
+-+                    android:textSize="18sp" />
+-+
+-+            </LinearLayout>
+-+
+-+        </LinearLayout>
+- 
+-     </LinearLayout>
+- 
+-     <LinearLayout
+-         android:layout_width="match_parent"
+--        android:layout_height="match_parent"
+-+        android:layout_height="0dp"
+-+        android:layout_weight="80"
+-         android:background="@android:color/black"
+-         android:orientation="horizontal"
+-         android:weightSum="10">
+-@@ -93,7 +134,10 @@
+-                 android:layout_marginStart="@dimen/button_margin"
+-                 android:layout_marginTop="@dimen/button_margin"
+-                 android:layout_weight="1"
+--                android:background="@android:color/holo_orange_light"
+-+                android:background="@drawable/trekbutton_yellow"
+-+                android:maxLines="1"
+-+                android:textStyle="bold"
+-+                android:textSize="18sp"
+-                 android:text="SENSORS" />
+- 
+-             <TextView
+-@@ -110,7 +154,10 @@
+-                 android:layout_marginStart="@dimen/button_margin"
+-                 android:layout_marginTop="@dimen/button_margin"
+-                 android:layout_weight="1"
+--                android:background="@android:color/holo_green_light"
+-+                android:background="@drawable/trekbutton_green"
+-+                android:maxLines="1"
+-+                android:textStyle="bold"
+-+                android:textSize="18sp"
+-                 android:text="COMM" />
+- 
+-             <TextView
+-@@ -127,9 +174,11 @@
+-                 android:layout_marginStart="@dimen/button_margin"
+-                 android:layout_marginTop="@dimen/button_margin"
+-                 android:layout_weight="1"
+--                android:background="@android:color/holo_orange_dark"
+--                android:text="SHIELD"
+--                android:textColor="@android:color/black" />
+-+                android:background="@drawable/trekbutton_orange"
+-+                android:maxLines="1"
+-+                android:textStyle="bold"
+-+                android:textSize="18sp"
+-+                android:text="SHIELD" />
+- 
+-             <TextView
+-                 android:layout_width="match_parent"
+-@@ -145,9 +194,11 @@
+-                 android:layout_marginStart="@dimen/button_margin"
+-                 android:layout_marginTop="@dimen/button_margin"
+-                 android:layout_weight="1"
+--                android:background="@android:color/holo_red_light"
+--                android:text="FIRE"
+--                android:textColor="@android:color/black" />
+-+                android:background="@drawable/trekbutton_red"
+-+                android:maxLines="1"
+-+                android:textStyle="bold"
+-+                android:textSize="18sp"
+-+                android:text="FIRE" />
+- 
+-             <TextView
+-                 android:layout_width="match_parent"
+-@@ -163,9 +214,11 @@
+-                 android:layout_marginStart="@dimen/button_margin"
+-                 android:layout_marginTop="@dimen/button_margin"
+-                 android:layout_weight="1"
+--                android:background="@android:color/holo_blue_bright"
+--                android:text="TRANSP"
+--                android:textColor="@android:color/black" />
+-+                android:background="@drawable/trekbutton_blue"
+-+                android:maxLines="1"
+-+                android:textStyle="bold"
+-+                android:textSize="18sp"
+-+                android:text="TRANSP" />
+- 
+-             <TextView
+-                 android:layout_width="match_parent"
+-@@ -181,7 +234,10 @@
+-                 android:layout_marginStart="@dimen/button_margin"
+-                 android:layout_marginTop="@dimen/button_margin"
+-                 android:layout_weight="1"
+--                android:background="@android:color/holo_purple"
+-+                android:background="@drawable/trekbutton"
+-+                android:maxLines="1"
+-+                android:textStyle="bold"
+-+                android:textSize="18sp"
+-                 android:text="VIEWER" />
+- 
+-             <TextView
+-@@ -199,7 +255,10 @@
+-                 android:layout_marginStart="@dimen/button_margin"
+-                 android:layout_marginTop="@dimen/button_margin"
+-                 android:layout_weight="1"
+--                android:background="@android:color/holo_blue_bright"
+-+                android:background="@drawable/trekbutton"
+-+                android:maxLines="1"
+-+                android:textStyle="bold"
+-+                android:textSize="18sp"
+-                 android:text="SOUND" />
+- 
+- 
+-@@ -260,9 +319,9 @@
+-                 <LinearLayout
+-                     android:layout_width="match_parent"
+-                     android:layout_height="0dp"
+-+                    android:layout_weight="8"
+-                     android:background="@android:color/black"
+-                     android:orientation="horizontal"
+--                    android:layout_weight="8"
+-                     android:weightSum="100">
+- 
+-                     <ImageView
+-@@ -279,8 +338,7 @@
+-                         android:layout_width="0dp"
+-                         android:layout_height="match_parent"
+-                         android:layout_weight="94"
+--                        android:orientation="horizontal">
+--                    </LinearLayout>
+-+                        android:orientation="horizontal"/>
+- 
+-                     <ImageView
+-                         android:layout_width="0dp"
+-@@ -343,32 +401,32 @@
+-                     android:layout_width="match_parent"
+-                     android:layout_height="match_parent"
+-                     android:background="@android:color/black"
+--                    android:orientation="horizontal"
+-                     android:gravity="center"
+--                    android:weightSum="100"
+--                    android:visibility="gone">
+-+                    android:orientation="horizontal"
+-+                    android:visibility="gone"
+-+                    android:weightSum="100">
+- 
+-                     <Button
+-                         android:id="@+id/opencomm_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_green_dark"
+--                        android:text="OPEN COMM"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_green"
+-+                        android:text="OPEN COMM" />
+- 
+-                     <Button
+-                         android:id="@+id/closecomm_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_red_dark"
+--                        android:text="CLOSE COMM"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_green"
+-+                        android:text="CLOSE COMM" />
+- 
+-                 </LinearLayout>
+- 
+-@@ -378,54 +436,54 @@
+-                     android:layout_width="match_parent"
+-                     android:layout_height="match_parent"
+-                     android:background="@android:color/black"
+--                    android:orientation="horizontal"
+-                     android:gravity="center"
+--                    android:weightSum="100"
+--                    android:visibility="gone">
+-+                    android:orientation="horizontal"
+-+                    android:visibility="gone"
+-+                    android:weightSum="100">
+- 
+-                     <Button
+-                         android:id="@+id/magnetic_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="25"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_green_light"
+--                        android:text="MAG"/>
+-+                        android:layout_weight="25"
+-+                        android:background="@drawable/trekbutton_yellow"
+-+                        android:text="MAG" />
+- 
+-                     <Button
+-                         android:id="@+id/orientation_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="25"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_green_light"
+--                        android:text="ORI"/>
+-+                        android:layout_weight="25"
+-+                        android:background="@drawable/trekbutton_yellow"
+-+                        android:text="ORI" />
+- 
+-                     <Button
+-                         android:id="@+id/gravity_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="25"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_green_light"
+--                        android:text="GRA"/>
+-+                        android:layout_weight="25"
+-+                        android:background="@drawable/trekbutton_yellow"
+-+                        android:text="GRA" />
+- 
+-                     <Button
+-                         android:id="@+id/audio_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="25"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_green_light"
+--                        android:text="AUD"/>
+-+                        android:layout_weight="25"
+-+                        android:background="@drawable/trekbutton_yellow"
+-+                        android:text="AUD" />
+- 
+-                 </LinearLayout>
+- 
+-@@ -435,32 +493,32 @@
+-                     android:layout_width="match_parent"
+-                     android:layout_height="match_parent"
+-                     android:background="@android:color/black"
+--                    android:orientation="horizontal"
+-                     android:gravity="center"
+--                    android:weightSum="100"
+--                    android:visibility="gone">
+-+                    android:orientation="horizontal"
+-+                    android:visibility="gone"
+-+                    android:weightSum="100">
+- 
+-                     <Button
+-                         android:id="@+id/shield_up_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_orange_dark"
+--                        android:text="SHIELDS UP"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_orange"
+-+                        android:text="SHIELDS UP" />
+- 
+-                     <Button
+-                         android:id="@+id/shield_down_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_orange_dark"
+--                        android:text="SHIELDS DOWN"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_orange"
+-+                        android:text="SHIELDS DOWN" />
+- 
+-                 </LinearLayout>
+- 
+-@@ -470,32 +528,32 @@
+-                     android:layout_width="match_parent"
+-                     android:layout_height="match_parent"
+-                     android:background="@android:color/black"
+--                    android:orientation="horizontal"
+-                     android:gravity="center"
+--                    android:weightSum="100"
+--                    android:visibility="gone">
+-+                    android:orientation="horizontal"
+-+                    android:visibility="gone"
+-+                    android:weightSum="100">
+- 
+-                     <Button
+-                         android:id="@+id/phaser_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_red_light"
+--                        android:text="PHASER"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_red"
+-+                        android:text="PHASER" />
+- 
+-                     <Button
+-                         android:id="@+id/torpedo_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_red_light"
+--                        android:text="TORPEDO"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_red"
+-+                        android:text="TORPEDO" />
+- 
+-                 </LinearLayout>
+- 
+-@@ -505,32 +563,32 @@
+-                     android:layout_width="match_parent"
+-                     android:layout_height="match_parent"
+-                     android:background="@android:color/black"
+--                    android:orientation="horizontal"
+-                     android:gravity="center"
+--                    android:weightSum="100"
+--                    android:visibility="gone">
+-+                    android:orientation="horizontal"
+-+                    android:visibility="gone"
+-+                    android:weightSum="100">
+- 
+-                     <Button
+-                         android:id="@+id/transport_out_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_blue_bright"
+--                        android:text="TRANSPORT OUT"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_blue"
+-+                        android:text="TRANSPORT OUT" />
+- 
+-                     <Button
+-                         android:id="@+id/transport_in_button"
+-                         android:layout_width="0dp"
+-                         android:layout_height="48dp"
+--                        android:layout_weight="50"
+-                         android:layout_gravity="center"
+-                         android:layout_marginLeft="2dp"
+-                         android:layout_marginRight="2dp"
+--                        android:background="@android:color/holo_blue_bright"
+--                        android:text="TRANSPORT IN"/>
+-+                        android:layout_weight="50"
+-+                        android:background="@drawable/trekbutton_blue"
+-+                        android:text="TRANSPORT IN" />
+- 
+-                 </LinearLayout>
+- 
+-@@ -590,8 +648,7 @@
+-                         android:layout_width="match_parent"
+-                         android:layout_height="match_parent"
+-                         android:src="@drawable/federation_logo"
+--                        android:visibility="visible"/>
+--
+-+                        android:visibility="visible" />
+- 
+-                 </LinearLayout>
+- 
+-@@ -632,4 +689,108 @@
+- 
+-     </LinearLayout>
+- 
+-+    <LinearLayout
+-+        android:layout_width="match_parent"
+-+        android:layout_height="0dp"
+-+        android:layout_weight="10"
+-+        android:background="@android:color/black"
+-+        android:orientation="horizontal"
+-+        android:weightSum="10">
+-+
+-+        <ImageButton
+-+            android:id="@+id/ask_button"
+-+            android:layout_width="0dp"
+-+            android:layout_height="match_parent"
+-+            android:layout_marginEnd="@dimen/button_margin"
+-+            android:layout_marginStart="@dimen/button_margin"
+-+            android:layout_weight="4"
+-+            android:background="@android:color/black"
+-+            android:scaleType="fitXY"
+-+            android:src="@drawable/trek_bottomleft"
+-+            android:text="ASK" />
+-+
+-+        <LinearLayout
+-+            android:layout_width="0dp"
+-+            android:layout_height="match_parent"
+-+            android:layout_weight="6"
+-+            android:background="@android:color/black"
+-+            android:orientation="vertical"
+-+            android:weightSum="2">
+-+
+-+            <LinearLayout
+-+                android:layout_width="match_parent"
+-+                android:layout_height="0dp"
+-+                android:layout_weight="1"
+-+                android:background="@android:color/black"
+-+                android:orientation="horizontal"
+-+                android:weightSum="6">
+-+
+-+                <TextView
+-+                    android:id="@+id/textstatus_bottom"
+-+                    android:layout_width="match_parent"
+-+                    android:layout_height="match_parent"
+-+                    android:text="bottom status"
+-+                    android:textStyle="bold"
+-+                    android:textColor="@android:color/holo_green_light"
+-+                    android:textSize="18sp" />
+-+
+-+            </LinearLayout>
+-+
+-+
+-+            <LinearLayout
+-+                android:layout_width="match_parent"
+-+                android:layout_height="0dp"
+-+                android:layout_weight="1"
+-+                android:background="@android:color/black"
+-+                android:orientation="horizontal"
+-+                android:weightSum="6">
+-+
+-+                <Button
+-+                    android:id="@+id/photo_button"
+-+                    android:layout_width="0dp"
+-+                    android:layout_height="32dp"
+-+                    android:layout_gravity="bottom"
+-+                    android:layout_marginEnd="@dimen/button_margin"
+-+                    android:layout_marginStart="@dimen/button_margin"
+-+                    android:layout_weight="2"
+-+                    android:background="@android:color/holo_green_dark"
+-+                    android:maxLines="1"
+-+                    android:textStyle="bold"
+-+                    android:textSize="18sp"
+-+                    android:text="PHOTO" />
+-+
+-+                <Button
+-+                    android:id="@+id/record_button"
+-+                    android:layout_width="0dp"
+-+                    android:layout_height="32dp"
+-+                    android:layout_gravity="bottom"
+-+                    android:layout_marginEnd="@dimen/button_margin"
+-+                    android:layout_marginStart="@dimen/button_margin"
+-+                    android:layout_weight="2"
+-+                    android:background="@android:color/holo_red_dark"
+-+                    android:maxLines="1"
+-+                    android:textStyle="bold"
+-+                    android:textSize="18sp"
+-+                    android:text="RECORD" />
+-+
+-+                <Button
+-+                    android:id="@+id/gallery_button"
+-+                    android:layout_width="0dp"
+-+                    android:layout_height="32dp"
+-+                    android:layout_gravity="bottom"
+-+                    android:layout_marginEnd="@dimen/button_margin"
+-+                    android:layout_marginStart="@dimen/button_margin"
+-+                    android:layout_weight="2"
+-+                    android:background="@drawable/trekbutton_blue_right"
+-+                    android:maxLines="1"
+-+                    android:textStyle="bold"
+-+                    android:textSize="18sp"
+-+                    android:text="GALLERY" />
+-+
+-+            </LinearLayout>
+-+
+-+        </LinearLayout>
+-+
+-+    </LinearLayout>
+-+
+- </LinearLayout>

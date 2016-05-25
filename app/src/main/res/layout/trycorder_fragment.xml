@@ -134,7 +134,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_yellow"
+                android:background="@drawable/trekbutton_yellow_right"
                 android:maxLines="1"
                 android:textStyle="bold"
                 android:textSize="18sp"
@@ -154,7 +154,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_green"
+                android:background="@drawable/trekbutton_green_right"
                 android:maxLines="1"
                 android:textStyle="bold"
                 android:textSize="18sp"
@@ -174,7 +174,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_orange"
+                android:background="@drawable/trekbutton_orange_right"
                 android:maxLines="1"
                 android:textStyle="bold"
                 android:textSize="18sp"
@@ -194,7 +194,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_red"
+                android:background="@drawable/trekbutton_red_right"
                 android:maxLines="1"
                 android:textStyle="bold"
                 android:textSize="18sp"
@@ -214,7 +214,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_blue"
+                android:background="@drawable/trekbutton_blue_right"
                 android:maxLines="1"
                 android:textStyle="bold"
                 android:textSize="18sp"
@@ -414,7 +414,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_green"
+                        android:background="@drawable/trekbutton_green_left"
                         android:text="OPEN COMM" />
 
                     <Button
@@ -425,7 +425,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_green"
+                        android:background="@drawable/trekbutton_green_right"
                         android:text="CLOSE COMM" />
 
                 </LinearLayout>
@@ -448,8 +448,8 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
-                        android:background="@drawable/trekbutton_yellow"
+                        android:layout_weight="28"
+                        android:background="@drawable/trekbutton_yellow_left"
                         android:text="MAG" />
 
                     <Button
@@ -459,8 +459,8 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
-                        android:background="@drawable/trekbutton_yellow"
+                        android:layout_weight="28"
+                        android:background="@drawable/trekbutton_yellow_center"
                         android:text="ORI" />
 
                     <Button
@@ -470,20 +470,20 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
-                        android:background="@drawable/trekbutton_yellow"
+                        android:layout_weight="28"
+                        android:background="@drawable/trekbutton_yellow_center"
                         android:text="GRA" />
 
                     <Button
-                        android:id="@+id/audio_button"
+                        android:id="@+id/sensoroff_button"
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
-                        android:background="@drawable/trekbutton_yellow"
-                        android:text="AUD" />
+                        android:layout_weight="16"
+                        android:background="@drawable/trekbutton_yellow_right"
+                        android:text="OFF" />
 
                 </LinearLayout>
 
@@ -506,7 +506,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_orange"
+                        android:background="@drawable/trekbutton_orange_left"
                         android:text="SHIELDS UP" />
 
                     <Button
@@ -517,7 +517,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_orange"
+                        android:background="@drawable/trekbutton_orange_right"
                         android:text="SHIELDS DOWN" />
 
                 </LinearLayout>
@@ -541,7 +541,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_red"
+                        android:background="@drawable/trekbutton_red_left"
                         android:text="PHASER" />
 
                     <Button
@@ -552,7 +552,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_red"
+                        android:background="@drawable/trekbutton_red_right"
                         android:text="TORPEDO" />
 
                 </LinearLayout>
@@ -576,7 +576,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_blue"
+                        android:background="@drawable/trekbutton_blue_left"
                         android:text="TRANSPORT OUT" />
 
                     <Button
@@ -587,7 +587,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_blue"
+                        android:background="@drawable/trekbutton_blue_right"
                         android:text="TRANSPORT IN" />
 
                 </LinearLayout>

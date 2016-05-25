@@ -1,5 +1,6 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,13 +17,17 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.TextureView;
 import android.view.View;
@@ -32,10 +37,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
+import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 
 /**
@@ -43,7 +53,8 @@ import java.util.Locale;
  */
 public class TrycorderFragment extends Fragment
         implements TextureView.SurfaceTextureListener,
-                RecognitionListener {
+        RecognitionListener,
+        Camera.PictureCallback {
 
     public TrycorderFragment() {
     }
@@ -105,7 +116,7 @@ public class TrycorderFragment extends Fragment
     private Button mMagneticButton;
     private Button mOrientationButton;
     private Button mGravityButton;
-    private Button mAudioButton;
+    private Button mSensoroffButton;
     private int mSensormode=0;
 
     // the button to open a channel
@@ -226,6 +237,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                takephoto();
             }
         });
 
@@ -235,6 +247,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                recordvideo();
             }
         });
 
@@ -244,6 +257,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                opengallery();
             }
         });
 
@@ -253,7 +267,7 @@ public class TrycorderFragment extends Fragment
         mTextstatus_top.setText("");
 
         mTextstatus_bottom = (TextView) view.findViewById(R.id.textstatus_bottom);
-        mTextstatus_bottom.setText("Bottom Status");
+        mTextstatus_bottom.setText("Ready");
 
         // ===================== left vertical button grid ============================
 
@@ -300,14 +314,14 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        // the audio button
-        mAudioButton = (Button) view.findViewById(R.id.audio_button);
-        mAudioButton.setOnClickListener(new View.OnClickListener() {
+        // the sensoroff button
+        mSensoroffButton = (Button) view.findViewById(R.id.sensoroff_button);
+        mSensoroffButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                longrangesensor();
-                switchsensorlayout(4);
-                startsensors(4);
+                buttonsound();
+                switchsensorlayout(0);
+                stopsensors();
             }
         });
 
@@ -520,8 +534,7 @@ public class TrycorderFragment extends Fragment
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
         mSpeechRecognizer.setRecognitionListener(this);
         mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.mlsoft");
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE,false);
@@ -561,7 +574,7 @@ public class TrycorderFragment extends Fragment
         mMagneticButton.setTypeface(face3);
         mOrientationButton.setTypeface(face3);
         mGravityButton.setTypeface(face3);
-        mAudioButton.setTypeface(face3);
+        mSensoroffButton.setTypeface(face3);
         mOpenCommButton.setTypeface(face3);
         mCloseCommButton.setTypeface(face3);
         mShieldUpButton.setTypeface(face3);
@@ -575,6 +588,7 @@ public class TrycorderFragment extends Fragment
     @Override
     public void onResume() {
         super.onResume();
+        switchbuttonlayout(1);
         startsensors(mSensormode);
     }
 
@@ -590,13 +604,19 @@ public class TrycorderFragment extends Fragment
         mSensormode=mode;
         switch(mode) {
             case 1:
+                say("Sensors Magnetic");
                 startmagsensors();
                 break;
             case 2:
+                say("Sensors Orientation");
                 startorisensors();
                 break;
             case 3:
+                say("Sensors Gravity");
                 startgrasensors();
+                break;
+            default:
+                say("Sensors OFF");
                 break;
         }
     }
@@ -607,10 +627,10 @@ public class TrycorderFragment extends Fragment
         stopgrasensors();
     }
 
-
     // =====================================================================================
     // settings activity incorporation in the display
     public void settingsactivity() {
+        say("Settings");
         Intent i = new Intent(getActivity(), SettingsActivity.class);
         startActivity(i);
     }
@@ -634,7 +654,6 @@ public class TrycorderFragment extends Fragment
         }
     }
 
-
     // =====================================================================================
 
     private void switchbuttonlayout(int no) {
@@ -645,36 +664,25 @@ public class TrycorderFragment extends Fragment
         mSensor2transporterLayout.setVisibility(View.GONE);
         switch(no) {
             case 1:
+                say("Sensors Mode");
                 mSensor2sensorLayout.setVisibility(View.VISIBLE);
                 break;
             case 2:
+                say("Communication Mode");
                 mSensor2commLayout.setVisibility(View.VISIBLE);
                 break;
             case 3:
+                say("Shield Mode");
                 mSensor2shieldLayout.setVisibility(View.VISIBLE);
                 break;
             case 4:
+                say("Fire Mode");
                 mSensor2fireLayout.setVisibility(View.VISIBLE);
                 break;
             case 5:
+                say("Transporter Mode");
                 mSensor2transporterLayout.setVisibility(View.VISIBLE);
                 break;
-        }
-    }
-
-    // ==========================================================================================
-    // switch the viewer on/off
-    private void switchviewer() {
-        if(mVieweron) {
-            mFederationlogo.setVisibility(View.VISIBLE);
-            mTextureView.setVisibility(View.GONE);
-            mVieweron = false;
-            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
-        } else {
-            mFederationlogo.setVisibility(View.GONE);
-            mTextureView.setVisibility(View.VISIBLE);
-            mVieweron = true;
-            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
         }
     }
 
@@ -1128,6 +1136,9 @@ public class TrycorderFragment extends Fragment
         try {
             mCamera = Camera.open();
             mCamera.setPreviewTexture(surface);
+            Camera.Parameters parameters = mCamera.getParameters();
+            parameters.set("orientation", "portrait");
+            mCamera.setParameters(parameters);
             mCamera.setDisplayOrientation(90);
             mCamera.startPreview();
         } catch (IOException ioe) {
@@ -1147,6 +1158,164 @@ public class TrycorderFragment extends Fragment
 
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
         // Invoked every time there's a new Camera preview frame
+    }
+
+    // ==========================================================================================
+    // switch the viewer on/off
+    private void switchviewer() {
+        if(mVieweron) {
+            say("Viewer OFF");
+            mFederationlogo.setVisibility(View.VISIBLE);
+            mTextureView.setVisibility(View.GONE);
+            mVieweron = false;
+            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
+        } else {
+            say("Viewer ON");
+            mFederationlogo.setVisibility(View.GONE);
+            mTextureView.setVisibility(View.VISIBLE);
+            mVieweron = true;
+            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
+        }
+    }
+
+    // =====================================================================================
+    // ask the camera to take a photo, and pass it to onPictureTaken
+
+
+    private void snapphoto() {
+        if(mVieweron) {
+            mCamera.takePicture(null, null, this);
+        }
+    }
+
+    // photo saving of picture taken callback
+    public void onPictureTaken(byte[] data, Camera camera) {
+        Uri imageFileUri = getActivity().getContentResolver().insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
+        try {
+            OutputStream imageFileOS = getActivity().getContentResolver().openOutputStream(
+                    imageFileUri);
+            imageFileOS.write(data);
+            imageFileOS.flush();
+            imageFileOS.close();
+        } catch (Exception e) {
+            Toast t = Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT);
+            t.show();
+        }
+        camera.startPreview();
+        say("Picture taken !");
+    }
+
+    // ===================================================================================
+    // common functions to obtain a media uri
+
+    public static final int MEDIA_TYPE_IMAGE = 1;
+    public static final int MEDIA_TYPE_VIDEO = 2;
+
+    /** Create a file Uri for saving an image or video */
+    private static Uri getOutputMediaFileUri(int type){
+        return Uri.fromFile(getOutputMediaFile(type));
+    }
+
+    /** Create a File for saving an image or video */
+    private static File getOutputMediaFile(int type){
+        // To be safe, you should check that the SDCard is mounted
+        // using Environment.getExternalStorageState() before doing this.
+
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DCIM), "Camera");
+        // This location works best if you want the created images to be shared
+        // between applications and persist after your app has been uninstalled.
+
+        // Create the storage directory if it does not exist
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                Log.d("Trycorder", "failed to create directory");
+                return null;
+            }
+        }
+
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File mediaFile;
+        if (type == MEDIA_TYPE_IMAGE){
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "IMG_"+ timeStamp + ".jpg");
+        } else if(type == MEDIA_TYPE_VIDEO) {
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "VID_"+ timeStamp + ".mp4");
+        } else {
+            return null;
+        }
+
+        return mediaFile;
+    }
+
+
+    // ==========================================================================================
+    // call camera and gallery application
+
+    private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
+    private static final int CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE = 200;
+    private Uri fileUri;
+
+    private void takephoto() {
+        say("Open Photo application");
+        // create Intent to take a picture and return control to the calling application
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        fileUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);  // create a file to save the picture
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image file name
+        // start the image capture Intent
+        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+    }
+
+    private void recordvideo() {
+        say("Open Video application");
+        //create new Intent
+        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        fileUri = getOutputMediaFileUri(MEDIA_TYPE_VIDEO);  // create a file to save the video
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);  // set the image file name
+        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1); // set the video image quality to high
+        // start the Video Capture Intent
+        startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == getActivity().RESULT_OK) {
+                // Image captured and saved to fileUri specified in the Intent
+                say(fileUri.toString());
+            } else if (resultCode == getActivity().RESULT_CANCELED) {
+                // User cancelled the image capture
+                say("Cancelled Photo");
+            } else {
+                // Image capture failed, advise user
+                say("Failed Saving Photo");
+            }
+        }
+
+        if (requestCode == CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == getActivity().RESULT_OK) {
+                // Video captured and saved to fileUri specified in the Intent
+                say("" + data.getData());
+            } else if (resultCode == getActivity().RESULT_CANCELED) {
+                // User cancelled the video capture
+                say("Cancelled Video");
+            } else {
+                // Video capture failed, advise user
+                say("Failed Saving Video");
+            }
+        }
+    }
+
+    private void opengallery() {
+        say("Open Gallery application");
+        Intent intent = new Intent();
+        intent.setAction(android.content.Intent.ACTION_VIEW);
+        intent.setType("image/*");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     // ========================================================================================
