@@ -61,7 +61,8 @@ public class TrycorderFragment extends Fragment
 
     // handles to camera and textureview
     private Camera mCamera;
-    private TextureView mTextureView;
+    private TextureView mViewerWindow;
+    private TextView mLogsConsole;
 
     // handles for the conversation functions
     private TextToSpeech tts;
@@ -143,7 +144,9 @@ public class TrycorderFragment extends Fragment
     private Button mViewerButton;
     private Button mViewerOnButton;
     private Button mViewerOffButton;
+    private Button mViewerLogsButton;
     private boolean mVieweron;
+    private int mViewermode=0;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -158,6 +161,7 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mSensor2shieldLayout;
     private LinearLayout mSensor2fireLayout;
     private LinearLayout mSensor2transporterLayout;
+    private LinearLayout mSensor2viewerLayout;
 
     private LinearLayout mSensor3Layout;
     private ImageView mFederationlogo;
@@ -444,7 +448,34 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchviewer();
+                switchbuttonlayout(6);
+            }
+        });
+
+        mViewerOnButton = (Button) view.findViewById(R.id.vieweron_button);
+        mViewerOnButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchviewer(1);
+            }
+        });
+
+        mViewerOffButton = (Button) view.findViewById(R.id.vieweroff_button);
+        mViewerOffButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchviewer(0);
+            }
+        });
+
+        mViewerLogsButton = (Button) view.findViewById(R.id.viewerlogs_button);
+        mViewerLogsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchviewer(2);
             }
         });
 
@@ -469,10 +500,21 @@ public class TrycorderFragment extends Fragment
         mSensor2shieldLayout = (LinearLayout) view.findViewById(R.id.sensor2_shield_layout);
         mSensor2fireLayout = (LinearLayout) view.findViewById(R.id.sensor2_fire_layout);
         mSensor2transporterLayout = (LinearLayout) view.findViewById(R.id.sensor2_transporter_layout);
+        mSensor2viewerLayout = (LinearLayout) view.findViewById(R.id.sensor2_viewer_layout);
 
         // the sensor layout, to contain my surfaceview
         mSensor3Layout = (LinearLayout) view.findViewById(R.id.sensor3_layout);
         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
+        mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
+        // create and activate a textureview to contain camera display
+        mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
+        mViewerWindow.setSurfaceTextureListener(this);
+
+        mFederationlogo.setVisibility(View.VISIBLE);
+        mViewerWindow.setVisibility(View.GONE);
+        mLogsConsole.setVisibility(View.GONE);
+        mVieweron=false;
+        mViewermode=0;
 
         // ==============================================================================
         // create layout params for the created views
@@ -504,19 +546,6 @@ public class TrycorderFragment extends Fragment
 
         // set the sensors invisible
         switchsensorlayout(0);
-
-        // ============== create a camera display and incorporate in layout ==============
-
-        // create and activate a textureview to contain camera display
-        mTextureView = new TextureView(getContext());
-        mTextureView.setSurfaceTextureListener(this);
-
-        // add the textureview to the layout 3
-        mSensor3Layout.addView(mTextureView,tlayoutParams);
-
-        mFederationlogo.setVisibility(View.VISIBLE);
-        mTextureView.setVisibility(View.GONE);
-        mVieweron=false;
 
         // ============== initialize the audio listener and talker ==============
 
@@ -581,8 +610,11 @@ public class TrycorderFragment extends Fragment
         mShieldDownButton.setTypeface(face3);
         mPhaserButton.setTypeface(face3);
         mTorpedoButton.setTypeface(face3);
-        mTransportOutButton.setTypeface(face3);
-        mTransportInButton.setTypeface(face3);
+        mTransportOutButton.setTypeface(face);
+        mTransportInButton.setTypeface(face);
+        mViewerOnButton.setTypeface(face3);
+        mViewerOffButton.setTypeface(face3);
+        mViewerLogsButton.setTypeface(face3);
     }
 
     @Override
@@ -662,6 +694,7 @@ public class TrycorderFragment extends Fragment
         mSensor2shieldLayout.setVisibility(View.GONE);
         mSensor2fireLayout.setVisibility(View.GONE);
         mSensor2transporterLayout.setVisibility(View.GONE);
+        mSensor2viewerLayout.setVisibility(View.GONE);
         switch(no) {
             case 1:
                 say("Sensors Mode");
@@ -682,6 +715,10 @@ public class TrycorderFragment extends Fragment
             case 5:
                 say("Transporter Mode");
                 mSensor2transporterLayout.setVisibility(View.VISIBLE);
+                break;
+            case 6:
+                say("Viewer Mode");
+                mSensor2viewerLayout.setVisibility(View.VISIBLE);
                 break;
         }
     }
@@ -1162,20 +1199,28 @@ public class TrycorderFragment extends Fragment
 
     // ==========================================================================================
     // switch the viewer on/off
-    private void switchviewer() {
-        if(mVieweron) {
-            say("Viewer OFF");
-            mFederationlogo.setVisibility(View.VISIBLE);
-            mTextureView.setVisibility(View.GONE);
-            mVieweron = false;
-            mViewerButton.setBackgroundResource(R.drawable.trekbutton);
-        } else {
-            say("Viewer ON");
-            mFederationlogo.setVisibility(View.GONE);
-            mTextureView.setVisibility(View.VISIBLE);
-            mVieweron = true;
-            mViewerButton.setBackgroundResource(R.drawable.trekbutton_blue);
+    private void switchviewer(int no) {
+        mViewerWindow.setVisibility(View.GONE);
+        mFederationlogo.setVisibility(View.GONE);
+        mLogsConsole.setVisibility(View.GONE);
+        switch(no) {
+            case 0:
+                say("Viewer OFF");
+                mFederationlogo.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
+            case 1:
+                say("Viewer ON");
+                mViewerWindow.setVisibility(View.VISIBLE);
+                mVieweron = true;
+                break;
+            case 2:
+                say("Logs Console");
+                mLogsConsole.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
         }
+        mViewermode=no;
     }
 
     // =====================================================================================
@@ -1401,8 +1446,12 @@ public class TrycorderFragment extends Fragment
         say(texte);
     }
 
+    private StringBuffer logbuffer=new StringBuffer(500);
+
     private void say(String texte) {
         mTextstatus_bottom.setText(texte);
+        logbuffer.insert(0,texte + "\n");
+        mLogsConsole.setText(logbuffer);
     }
 
     private boolean matchvoice(String texte) {
@@ -1471,8 +1520,8 @@ public class TrycorderFragment extends Fragment
             return(true);
         }
         if(texte.contains("viewer")) {
-            switchbuttonlayout(0);
-            switchviewer();
+            switchbuttonlayout(6);
+            switchviewer(1);
             return(true);
         }
         return(false);

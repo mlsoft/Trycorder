@@ -50,9 +50,9 @@
                     android:layout_weight="2"
                     android:background="@android:color/holo_green_dark"
                     android:maxLines="1"
-                    android:textStyle="bold"
+                    android:text="START"
                     android:textSize="18sp"
-                    android:text="START" />
+                    android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/stop_button"
@@ -63,9 +63,9 @@
                     android:layout_weight="2"
                     android:background="@android:color/holo_red_dark"
                     android:maxLines="1"
-                    android:textStyle="bold"
+                    android:text="STOP"
                     android:textSize="18sp"
-                    android:text="STOP" />
+                    android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/settings_button"
@@ -76,9 +76,9 @@
                     android:layout_weight="2"
                     android:background="@drawable/trekbutton_blue_right"
                     android:maxLines="1"
-                    android:textStyle="bold"
+                    android:text="SETUP"
                     android:textSize="18sp"
-                    android:text="SETUP" />
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -95,9 +95,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="top status"
-                    android:textStyle="bold"
                     android:textColor="@android:color/holo_green_light"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -136,9 +136,9 @@
                 android:layout_weight="1"
                 android:background="@drawable/trekbutton_yellow_right"
                 android:maxLines="1"
-                android:textStyle="bold"
+                android:text="SENSORS"
                 android:textSize="18sp"
-                android:text="SENSORS" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -156,9 +156,9 @@
                 android:layout_weight="1"
                 android:background="@drawable/trekbutton_green_right"
                 android:maxLines="1"
-                android:textStyle="bold"
+                android:text="COMM"
                 android:textSize="18sp"
-                android:text="COMM" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -176,9 +176,9 @@
                 android:layout_weight="1"
                 android:background="@drawable/trekbutton_orange_right"
                 android:maxLines="1"
-                android:textStyle="bold"
+                android:text="SHIELD"
                 android:textSize="18sp"
-                android:text="SHIELD" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -196,9 +196,9 @@
                 android:layout_weight="1"
                 android:background="@drawable/trekbutton_red_right"
                 android:maxLines="1"
-                android:textStyle="bold"
+                android:text="FIRE"
                 android:textSize="18sp"
-                android:text="FIRE" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -216,9 +216,9 @@
                 android:layout_weight="1"
                 android:background="@drawable/trekbutton_blue_right"
                 android:maxLines="1"
-                android:textStyle="bold"
+                android:text="TRANSP"
                 android:textSize="18sp"
-                android:text="TRANSP" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -234,11 +234,11 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton"
+                android:background="@drawable/trekbutton_blue_right"
                 android:maxLines="1"
-                android:textStyle="bold"
+                android:text="VIEWER"
                 android:textSize="18sp"
-                android:text="VIEWER" />
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -257,9 +257,9 @@
                 android:layout_weight="1"
                 android:background="@drawable/trekbutton"
                 android:maxLines="1"
-                android:textStyle="bold"
+                android:text="SOUND"
                 android:textSize="18sp"
-                android:text="SOUND" />
+                android:textStyle="bold" />
 
 
         </LinearLayout>
@@ -338,7 +338,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="94"
-                        android:orientation="horizontal"/>
+                        android:orientation="horizontal" />
 
                     <ImageView
                         android:layout_width="0dp"
@@ -592,6 +592,52 @@
 
                 </LinearLayout>
 
+                <!-- ========== button layout for viewer ============== -->
+                <LinearLayout
+                    android:id="@+id/sensor2_viewer_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="100">
+
+                    <Button
+                        android:id="@+id/vieweron_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_blue_left"
+                        android:text="VIEWER ON" />
+
+                    <Button
+                        android:id="@+id/vieweroff_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_blue_right"
+                        android:text="VIEWER OFF" />
+
+                    <Button
+                        android:id="@+id/viewerlogs_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="34"
+                        android:background="@drawable/trekbutton_blue"
+                        android:text="LOGS" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
             <!-- ================== layout no 3 ============== -->
@@ -648,7 +694,29 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/federation_logo"
-                        android:visibility="visible" />
+                        android:visibility="gone" />
+
+                    <TextureView
+                        android:id="@+id/viewer_window"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone" />
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:id="@+id/logs_console"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Console log"
+                            android:textColor="@android:color/holo_green_light"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:visibility="visible" />
+
+                    </ScrollView>
 
                 </LinearLayout>
 
@@ -730,9 +798,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="bottom status"
-                    android:textStyle="bold"
                     android:textColor="@android:color/holo_green_light"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
@@ -755,9 +823,9 @@
                     android:layout_weight="2"
                     android:background="@android:color/holo_green_dark"
                     android:maxLines="1"
-                    android:textStyle="bold"
+                    android:text="PHOTO"
                     android:textSize="18sp"
-                    android:text="PHOTO" />
+                    android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/record_button"
@@ -769,9 +837,9 @@
                     android:layout_weight="2"
                     android:background="@android:color/holo_red_dark"
                     android:maxLines="1"
-                    android:textStyle="bold"
+                    android:text="RECORD"
                     android:textSize="18sp"
-                    android:text="RECORD" />
+                    android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/gallery_button"
@@ -783,9 +851,9 @@
                     android:layout_weight="2"
                     android:background="@drawable/trekbutton_blue_right"
                     android:maxLines="1"
-                    android:textStyle="bold"
+                    android:text="GALLERY"
                     android:textSize="18sp"
-                    android:text="GALLERY" />
+                    android:textStyle="bold" />
 
             </LinearLayout>
 
