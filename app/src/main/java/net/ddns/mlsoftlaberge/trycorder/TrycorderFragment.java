@@ -15,12 +15,17 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -231,7 +236,7 @@ public class TrycorderFragment extends Fragment
         mAskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listenandtalk();
+                snapphoto();
             }
         });
 
@@ -849,10 +854,14 @@ public class TrycorderFragment extends Fragment
 
     // ==========================================================================================
 
-    public class OriSensorView extends TextView implements SensorEventListener {
+    public class OriSensorView extends TextView implements SensorEventListener , LocationListener {
 
         private Paint paint;
         private float position = 0;
+
+        private LocationManager locationManager;
+        private String locationProvider;
+        private Location location=null;
 
         public OriSensorView(Context context) {
             super(context);
@@ -860,20 +869,53 @@ public class TrycorderFragment extends Fragment
         }
 
         private void init() {
+            // initialize the paint object
             paint = new Paint();
             paint.setAntiAlias(true);
             paint.setStrokeWidth(2);
             paint.setTextSize(25);
             paint.setStyle(Paint.Style.STROKE);
             paint.setColor(Color.WHITE);
+            // initialize the gps service
+            locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+            boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            // check if enabled and if not send user to the GSP settings
+            // Better solution would be to display a dialog and suggesting to
+            // go to the settings
+            if (!enabled) {
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
+            // Define the criteria how to select the locatioin provider -> use
+            // default
+            Criteria criteria = new Criteria();
+            locationProvider = locationManager.getBestProvider(criteria, false);
+            try {
+                location = locationManager.getLastKnownLocation(locationProvider);
+                locationManager.requestLocationUpdates(locationProvider, 400, 1, this);
+            } catch (SecurityException e) {
+                say("No GPS available");
+            }
+            // Initialize the location fields
+            if (location != null) {
+                say("Provider " + locationProvider + " has been selected.");
+            } else {
+                say("No location available. " + locationProvider);
+            }
+
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             int xPoint = getMeasuredWidth() / 2;
             int yPoint = getMeasuredHeight() / 2;
+            if(yPoint>xPoint) {
+                yPoint=xPoint;
+            } else {
+                xPoint=yPoint;
+            }
 
-            float radius = (float) (Math.max(xPoint, yPoint) * 0.6);
+            float radius = (float) (Math.min(xPoint, yPoint) * 0.9);
             canvas.drawCircle(xPoint, yPoint, radius, paint);
             canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
 
@@ -885,7 +927,18 @@ public class TrycorderFragment extends Fragment
                     (float) (yPoint - radius
                             * Math.cos((double) (-position) / 180 * 3.1416)), paint);
 
-            canvas.drawText(String.valueOf(position), xPoint, yPoint, paint);
+            canvas.drawText("ORI: "+String.valueOf(position), xPoint*2.0f, yPoint*2.0f-32.0f, paint);
+
+            // draw the longitude and latitude
+            if(location!=null) {
+                float lat = (float) (location.getLatitude());
+                float lng = (float) (location.getLongitude());
+                canvas.drawText("LAT: "+String.valueOf(lat),xPoint*2.0f,32.0f,paint);
+                canvas.drawText("LON: "+String.valueOf(lng),xPoint*2.0f,64.0f,paint);
+            } else {
+                canvas.drawText("LAT: "+"Not avalaible",xPoint*2.0f,32.0f,paint);
+                canvas.drawText("LON: "+"Not avalaible",xPoint*2.0f,64.0f,paint);
+            }
         }
 
         public void updateData(float position) {
@@ -904,6 +957,30 @@ public class TrycorderFragment extends Fragment
             float azimuth = event.values[0];
             updateData(azimuth);
         }
+
+        // ============ callbacks for the location listener ===============
+
+        @Override
+        public void onLocationChanged(Location location) {
+            this.location=location;
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            // TODO Auto-generated method stub
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+            say("Enabled new provider " + provider);
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+            say("Disabled new provider " + provider);
+        }
+
 
     }
 
@@ -1229,6 +1306,7 @@ public class TrycorderFragment extends Fragment
 
     private void snapphoto() {
         if(mVieweron) {
+            say("Picture Taken !");
             mCamera.takePicture(null, null, this);
         }
     }
@@ -1330,7 +1408,11 @@ public class TrycorderFragment extends Fragment
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
             if (resultCode == getActivity().RESULT_OK) {
                 // Image captured and saved to fileUri specified in the Intent
-                say(fileUri.toString());
+                say("Saved to " + fileUri.toString());
+                // inform the media manager to scan our new file
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(fileUri);
+                getActivity().sendBroadcast(intent);
             } else if (resultCode == getActivity().RESULT_CANCELED) {
                 // User cancelled the image capture
                 say("Cancelled Photo");
@@ -1343,7 +1425,12 @@ public class TrycorderFragment extends Fragment
         if (requestCode == CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE) {
             if (resultCode == getActivity().RESULT_OK) {
                 // Video captured and saved to fileUri specified in the Intent
-                say("" + data.getData());
+                //say("" + data.getData());
+                say("Saved to " + fileUri.toString());
+                // inform the media manager to scan our new file
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                intent.setData(fileUri);
+                getActivity().sendBroadcast(intent);
             } else if (resultCode == getActivity().RESULT_CANCELED) {
                 // User cancelled the video capture
                 say("Cancelled Video");
