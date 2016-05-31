@@ -223,7 +223,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1.5" />
+                android:layout_weight="0.5" />
 
             <Button
                 android:id="@+id/viewer_button"
@@ -243,7 +243,27 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1.5"
+                android:layout_weight="0.5" />
+
+            <Button
+                android:id="@+id/logs_button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginBottom="@dimen/button_margin"
+                android:layout_marginEnd="@dimen/button_margin"
+                android:layout_marginStart="@dimen/button_margin"
+                android:layout_marginTop="@dimen/button_margin"
+                android:layout_weight="1"
+                android:background="@drawable/trekbutton_blue_right"
+                android:maxLines="1"
+                android:text="LOGS"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
                 android:ellipsize="middle" />
 
             <Button
@@ -600,7 +620,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
                     <Button
@@ -612,7 +632,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
                         android:background="@drawable/trekbutton_blue_left"
-                        android:text="VIEWER ON" />
+                        android:text="Viewer On" />
 
                     <Button
                         android:id="@+id/vieweroff_button"
@@ -623,18 +643,43 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
                         android:background="@drawable/trekbutton_blue_right"
-                        android:text="VIEWER OFF" />
+                        android:text="Viewer Off" />
+
+                </LinearLayout>
+
+                <!-- ========== button layout for logs ============== -->
+                <LinearLayout
+                    android:id="@+id/sensor2_logs_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="100">
+
 
                     <Button
-                        android:id="@+id/viewerlogs_button"
+                        android:id="@+id/logsconsole_button"
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="34"
+                        android:layout_weight="33"
                         android:background="@drawable/trekbutton_blue"
-                        android:text="LOGS" />
+                        android:text="Console log" />
+
+                    <Button
+                        android:id="@+id/logsinfo_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_blue"
+                        android:text="Info log" />
 
                 </LinearLayout>
 
@@ -704,13 +749,29 @@
 
                     <ScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent">
+                        android:layout_height="wrap_content">
 
                         <TextView
                             android:id="@+id/logs_console"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Console log"
+                            android:textColor="@android:color/holo_green_light"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                    </ScrollView>
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/logs_info"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Info log"
                             android:textColor="@android:color/holo_green_light"
                             android:textSize="18sp"
                             android:textStyle="bold"

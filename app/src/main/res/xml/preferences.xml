@@ -15,21 +15,21 @@
             android:entryValues="@array/language_array_entryvalues"
             android:summary="Language used to display to the user"
             android:title="Display Language"
-            android:defaultValue="FR"/>
+            android:defaultValue="EN"/>
         <ListPreference
             android:key="pref_key_listen_language"
             android:entries="@array/language_array_entries"
             android:entryValues="@array/language_array_entryvalues"
             android:summary="Language used to listen to the user"
             android:title="Listen Language"
-            android:defaultValue="FR"/>
+            android:defaultValue="EN"/>
         <ListPreference
             android:key="pref_key_speak_language"
             android:entries="@array/language_array_entries"
             android:entryValues="@array/language_array_entryvalues"
             android:summary="Language used to pronounce text to speak"
             android:title="Speak Language"
-            android:defaultValue="FR"/>
+            android:defaultValue="EN"/>
     </PreferenceCategory>
 
 </PreferenceScreen>

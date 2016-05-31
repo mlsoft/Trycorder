@@ -1,201 +1,817 @@
-diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
-index 40c2665..e08807c 100644
---- a/app/src/main/AndroidManifest.xml
-+++ b/app/src/main/AndroidManifest.xml
-@@ -12,6 +12,8 @@
-     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
- 
-     <uses-feature android:name="android.hardware.camera" android:required="false" />
- 
 diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-index cd8b44f..7a758ab 100644
+index 7a758ab..5c5e38c 100644
 --- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
 +++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-@@ -15,12 +15,17 @@ import android.hardware.Sensor;
- import android.hardware.SensorEvent;
- import android.hardware.SensorEventListener;
- import android.hardware.SensorManager;
-+import android.location.Criteria;
-+import android.location.Location;
-+import android.location.LocationListener;
-+import android.location.LocationManager;
- import android.media.AudioManager;
- import android.media.MediaPlayer;
- import android.net.Uri;
- import android.os.Environment;
- import android.preference.PreferenceManager;
- import android.provider.MediaStore;
-+import android.provider.Settings;
- import android.speech.RecognitionListener;
- import android.speech.RecognizerIntent;
- import android.speech.SpeechRecognizer;
-@@ -231,7 +236,7 @@ public class TrycorderFragment extends Fragment
-         mAskButton.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
--                listenandtalk();
-+                snapphoto();
+@@ -67,7 +67,10 @@ public class TrycorderFragment extends Fragment
+     // handles to camera and textureview
+     private Camera mCamera;
+     private TextureView mViewerWindow;
++
++    // handles for the 2 logs pages
+     private TextView mLogsConsole;
++    private TextView mLogsInfo;
+ 
+     // handles for the conversation functions
+     private TextToSpeech tts;
+@@ -76,6 +79,10 @@ public class TrycorderFragment extends Fragment
+     private Intent mSpeechRecognizerIntent;
+     private String mSentence;
+ 
++    // handle for the gps
++    private LocationManager locationManager;
++    private String locationProvider;
++
+     // the handle to the sensors
+     private SensorManager mSensorManager;
+ 
+@@ -149,10 +156,13 @@ public class TrycorderFragment extends Fragment
+     private Button mViewerButton;
+     private Button mViewerOnButton;
+     private Button mViewerOffButton;
+-    private Button mViewerLogsButton;
+     private boolean mVieweron;
+     private int mViewermode=0;
+ 
++    private Button mLogsButton;
++    private Button mLogsConsoleButton;
++    private Button mLogsInfoButton;
++
+     // the button to control sound-effects
+     private Button mSoundButton;
+     private boolean mSoundStatus=false;
+@@ -167,6 +177,8 @@ public class TrycorderFragment extends Fragment
+     private LinearLayout mSensor2fireLayout;
+     private LinearLayout mSensor2transporterLayout;
+     private LinearLayout mSensor2viewerLayout;
++    private LinearLayout mSensor2logsLayout;
++    private int mSensor2mode=0;
+ 
+     private LinearLayout mSensor3Layout;
+     private ImageView mFederationlogo;
+@@ -180,16 +192,25 @@ public class TrycorderFragment extends Fragment
+     String listenLanguage;
+     String displayLanguage;
+ 
++    // the preferences holder
++    SharedPreferences sharedPref;
++
+     @Override
+     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+         View view = inflater.inflate(R.layout.trycorder_fragment, container, false);
+ 
+-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
++        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences, false);
++
++        sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+         autoListen = sharedPref.getBoolean("pref_key_auto_listen",false);
+         speakLanguage = sharedPref.getString("pref_key_speak_language", "");
+         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
+         displayLanguage = sharedPref.getString("pref_key_display_language", "");
+ 
++        //mSensormode = sharedPref.getInt("pref_key_sensor_mode",0);
++        //mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode",0);
++        //mViewermode = sharedPref.getInt("pref_key_viewer_mode",0);
++
+         // ===================== top horizontal button grid ==========================
+         // the start button
+         mTalkButton = (ImageButton) view.findViewById(R.id.talk_button);
+@@ -475,8 +496,19 @@ public class TrycorderFragment extends Fragment
              }
          });
  
-@@ -849,31 +854,68 @@ public class TrycorderFragment extends Fragment
+-        mViewerLogsButton = (Button) view.findViewById(R.id.viewerlogs_button);
+-        mViewerLogsButton.setOnClickListener(new View.OnClickListener() {
++        // ===================== viewer buttons group ============================
++        // the viewer button
++        mLogsButton = (Button) view.findViewById(R.id.logs_button);
++        mLogsButton.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
++                buttonsound();
++                switchbuttonlayout(7);
++            }
++        });
++
++        mLogsConsoleButton = (Button) view.findViewById(R.id.logsconsole_button);
++        mLogsConsoleButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
+@@ -484,6 +516,15 @@ public class TrycorderFragment extends Fragment
+             }
+         });
+ 
++        mLogsInfoButton = (Button) view.findViewById(R.id.logsinfo_button);
++        mLogsInfoButton.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
++                buttonsound();
++                switchviewer(3);
++            }
++        });
++
+         // ===================== sound buttons group ============================
+         // the sound-effect button
+         mSoundButton = (Button) view.findViewById(R.id.sound_button);
+@@ -506,11 +547,14 @@ public class TrycorderFragment extends Fragment
+         mSensor2fireLayout = (LinearLayout) view.findViewById(R.id.sensor2_fire_layout);
+         mSensor2transporterLayout = (LinearLayout) view.findViewById(R.id.sensor2_transporter_layout);
+         mSensor2viewerLayout = (LinearLayout) view.findViewById(R.id.sensor2_viewer_layout);
++        mSensor2logsLayout = (LinearLayout) view.findViewById(R.id.sensor2_logs_layout);
+ 
+         // the sensor layout, to contain my surfaceview
+         mSensor3Layout = (LinearLayout) view.findViewById(R.id.sensor3_layout);
+         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
+         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
++        mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
++
+         // create and activate a textureview to contain camera display
+         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
+         mViewerWindow.setSurfaceTextureListener(this);
+@@ -518,8 +562,8 @@ public class TrycorderFragment extends Fragment
+         mFederationlogo.setVisibility(View.VISIBLE);
+         mViewerWindow.setVisibility(View.GONE);
+         mLogsConsole.setVisibility(View.GONE);
++        mLogsInfo.setVisibility(View.GONE);
+         mVieweron=false;
+-        mViewermode=0;
+ 
+         // ==============================================================================
+         // create layout params for the created views
+@@ -550,7 +594,36 @@ public class TrycorderFragment extends Fragment
+         mSensorLayout.addView(mGraSensorView,tlayoutParams);
+ 
+         // set the sensors invisible
+-        switchsensorlayout(0);
++        //switchsensorlayout(0);
++
++        // initialize the gps service
++        locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
++        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
++        // check if enabled and if not send user to the GSP settings
++        // Better solution would be to display a dialog and suggesting to
++        // go to the settings
++        if (!enabled) {
++            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
++            startActivity(intent);
++        }
++        // Define the criteria how to select the locatioin provider -> use
++        // default
++        Location location=null;
++        //Criteria criteria = new Criteria();
++        //locationProvider = locationManager.getBestProvider(criteria, false);
++        locationProvider="gps";
++        try {
++            location = locationManager.getLastKnownLocation(locationProvider);
++        } catch (SecurityException e) {
++            say("No GPS available");
++        }
++        // Initialize the location fields
++        if (location != null) {
++            say("Provider " + locationProvider + " has been selected.");
++            mOriSensorView.setLocation(location);
++        } else {
++            say("No location available. " + locationProvider);
++        }
+ 
+         // ============== initialize the audio listener and talker ==============
+ 
+@@ -603,7 +676,9 @@ public class TrycorderFragment extends Fragment
+         mFireButton.setTypeface(face2);
+         mTransporterButton.setTypeface(face2);
+         mViewerButton.setTypeface(face2);
++        mLogsButton.setTypeface(face2);
+         mSoundButton.setTypeface(face2);
++
+         // center buttons
+         mMagneticButton.setTypeface(face3);
+         mOrientationButton.setTypeface(face3);
+@@ -619,19 +694,31 @@ public class TrycorderFragment extends Fragment
+         mTransportInButton.setTypeface(face);
+         mViewerOnButton.setTypeface(face3);
+         mViewerOffButton.setTypeface(face3);
+-        mViewerLogsButton.setTypeface(face3);
++        mLogsConsoleButton.setTypeface(face3);
++        mLogsInfoButton.setTypeface(face3);
+     }
+ 
+     @Override
+     public void onResume() {
+         super.onResume();
+-        switchbuttonlayout(1);
++        mSensormode = sharedPref.getInt("pref_key_sensor_mode",0);
++        mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode",0);
++        mViewermode = sharedPref.getInt("pref_key_viewer_mode",0);
++
++        switchbuttonlayout(mSensor2mode);
++        switchsensorlayout(mSensormode);
+         startsensors(mSensormode);
++        switchviewer(mViewermode);
+     }
+ 
+     @Override
+     public void onPause() {
+         stopsensors();
++        SharedPreferences.Editor editor = sharedPref.edit();
++        editor.putInt("pref_key_sensor_mode", mSensormode);
++        editor.putInt("pref_key_sensor2_mode", mSensor2mode);
++        editor.putInt("pref_key_viewer_mode", mViewermode);
++        editor.commit();
+         super.onPause();
+     }
+ 
+@@ -700,6 +787,7 @@ public class TrycorderFragment extends Fragment
+         mSensor2fireLayout.setVisibility(View.GONE);
+         mSensor2transporterLayout.setVisibility(View.GONE);
+         mSensor2viewerLayout.setVisibility(View.GONE);
++        mSensor2logsLayout.setVisibility(View.GONE);
+         switch(no) {
+             case 1:
+                 say("Sensors Mode");
+@@ -725,7 +813,12 @@ public class TrycorderFragment extends Fragment
+                 say("Viewer Mode");
+                 mSensor2viewerLayout.setVisibility(View.VISIBLE);
+                 break;
++            case 7:
++                say("Logs Mode");
++                mSensor2logsLayout.setVisibility(View.VISIBLE);
++                break;
+         }
++        mSensor2mode=no;
+     }
+ 
+     // =====================================================================================
+@@ -840,6 +933,11 @@ public class TrycorderFragment extends Fragment
+         stopmusic();
+         mSensorManager.unregisterListener(mOriSensorView);
+         mRunStatus=false;
++        try {
++            locationManager.removeUpdates(mOriSensorView);
++        } catch (SecurityException e) {
++            say("Error closing GPS");
++        }
+     }
+ 
+     // here we start the sensor reading
+@@ -850,6 +948,13 @@ public class TrycorderFragment extends Fragment
+                 mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
+                 SensorManager.SENSOR_DELAY_NORMAL);
+         if(mSoundStatus) startmusic();
++        // start gps location updates
++        try {
++            locationManager.requestLocationUpdates(locationProvider, 400, 1, mOriSensorView);
++        } catch (SecurityException e) {
++            say("No GPS avalaible.");
++        }
++
+     }
  
      // ==========================================================================================
- 
--    public class OriSensorView extends TextView implements SensorEventListener {
-+    public class OriSensorView extends TextView implements SensorEventListener , LocationListener {
- 
+@@ -859,8 +964,6 @@ public class TrycorderFragment extends Fragment
          private Paint paint;
          private float position = 0;
  
-+        private LocationManager locationManager;
-+        private String locationProvider;
-+        private Location location=null;
-+
-         public OriSensorView(Context context) {
-             super(context);
-             init();
-         }
+-        private LocationManager locationManager;
+-        private String locationProvider;
+         private Location location=null;
  
-         private void init() {
-+            // initialize the paint object
-             paint = new Paint();
-             paint.setAntiAlias(true);
-             paint.setStrokeWidth(2);
+         public OriSensorView(Context context) {
+@@ -876,33 +979,6 @@ public class TrycorderFragment extends Fragment
              paint.setTextSize(25);
              paint.setStyle(Paint.Style.STROKE);
              paint.setColor(Color.WHITE);
-+            // initialize the gps service
-+            locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
-+            boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-+            // check if enabled and if not send user to the GSP settings
-+            // Better solution would be to display a dialog and suggesting to
-+            // go to the settings
-+            if (!enabled) {
-+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-+                startActivity(intent);
-+            }
-+            // Define the criteria how to select the locatioin provider -> use
-+            // default
-+            Criteria criteria = new Criteria();
-+            locationProvider = locationManager.getBestProvider(criteria, false);
-+            try {
-+                location = locationManager.getLastKnownLocation(locationProvider);
-+                locationManager.requestLocationUpdates(locationProvider, 400, 1, this);
-+            } catch (SecurityException e) {
-+                say("No GPS available");
-+            }
-+            // Initialize the location fields
-+            if (location != null) {
-+                say("Provider " + locationProvider + " has been selected.");
-+            } else {
-+                say("No location available. " + locationProvider);
-+            }
-+
+-            // initialize the gps service
+-            locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+-            boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+-            // check if enabled and if not send user to the GSP settings
+-            // Better solution would be to display a dialog and suggesting to
+-            // go to the settings
+-            if (!enabled) {
+-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+-                startActivity(intent);
+-            }
+-            // Define the criteria how to select the locatioin provider -> use
+-            // default
+-            Criteria criteria = new Criteria();
+-            locationProvider = locationManager.getBestProvider(criteria, false);
+-            try {
+-                location = locationManager.getLastKnownLocation(locationProvider);
+-                locationManager.requestLocationUpdates(locationProvider, 400, 1, this);
+-            } catch (SecurityException e) {
+-                say("No GPS available");
+-            }
+-            // Initialize the location fields
+-            if (location != null) {
+-                say("Provider " + locationProvider + " has been selected.");
+-            } else {
+-                say("No location available. " + locationProvider);
+-            }
+-
          }
  
          @Override
-         protected void onDraw(Canvas canvas) {
-             int xPoint = getMeasuredWidth() / 2;
-             int yPoint = getMeasuredHeight() / 2;
-+            if(yPoint>xPoint) {
-+                yPoint=xPoint;
-+            } else {
-+                xPoint=yPoint;
-+            }
+@@ -917,7 +993,7 @@ public class TrycorderFragment extends Fragment
  
--            float radius = (float) (Math.max(xPoint, yPoint) * 0.6);
-+            float radius = (float) (Math.min(xPoint, yPoint) * 0.9);
+             float radius = (float) (Math.min(xPoint, yPoint) * 0.9);
              canvas.drawCircle(xPoint, yPoint, radius, paint);
-             canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
+-            canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
++            // canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
  
-@@ -885,7 +927,18 @@ public class TrycorderFragment extends Fragment
-                     (float) (yPoint - radius
-                             * Math.cos((double) (-position) / 180 * 3.1416)), paint);
- 
--            canvas.drawText(String.valueOf(position), xPoint, yPoint, paint);
-+            canvas.drawText("ORI: "+String.valueOf(position), xPoint*2.0f, yPoint*2.0f-32.0f, paint);
-+
-+            // draw the longitude and latitude
-+            if(location!=null) {
-+                float lat = (float) (location.getLatitude());
-+                float lng = (float) (location.getLongitude());
-+                canvas.drawText("LAT: "+String.valueOf(lat),xPoint*2.0f,32.0f,paint);
-+                canvas.drawText("LON: "+String.valueOf(lng),xPoint*2.0f,64.0f,paint);
-+            } else {
-+                canvas.drawText("LAT: "+"Not avalaible",xPoint*2.0f,32.0f,paint);
-+                canvas.drawText("LON: "+"Not avalaible",xPoint*2.0f,64.0f,paint);
-+            }
+             // 3.1416 is a good approximation for the circle
+             canvas.drawLine(xPoint,
+@@ -946,6 +1022,10 @@ public class TrycorderFragment extends Fragment
+             invalidate();
          }
  
-         public void updateData(float position) {
-@@ -905,6 +958,30 @@ public class TrycorderFragment extends Fragment
-             updateData(azimuth);
++        public void setLocation(Location loc) {
++            this.location = loc;
++        }
++
+         @Override
+         public void onAccuracyChanged(Sensor sensor, int accuracy) {
          }
- 
-+        // ============ callbacks for the location listener ===============
-+
-+        @Override
-+        public void onLocationChanged(Location location) {
-+            this.location=location;
-+        }
-+
-+        @Override
-+        public void onStatusChanged(String provider, int status, Bundle extras) {
-+            // TODO Auto-generated method stub
-+        }
-+
-+        @Override
-+        public void onProviderEnabled(String provider) {
-+            say("Enabled new provider " + provider);
-+
-+        }
-+
-+        @Override
-+        public void onProviderDisabled(String provider) {
-+            say("Disabled new provider " + provider);
-+        }
-+
-+
+@@ -1280,6 +1360,7 @@ public class TrycorderFragment extends Fragment
+         mViewerWindow.setVisibility(View.GONE);
+         mFederationlogo.setVisibility(View.GONE);
+         mLogsConsole.setVisibility(View.GONE);
++        mLogsInfo.setVisibility(View.GONE);
+         switch(no) {
+             case 0:
+                 say("Viewer OFF");
+@@ -1296,6 +1377,11 @@ public class TrycorderFragment extends Fragment
+                 mLogsConsole.setVisibility(View.VISIBLE);
+                 mVieweron = false;
+                 break;
++            case 3:
++                say("Logs Info");
++                mLogsInfo.setVisibility(View.VISIBLE);
++                mVieweron = false;
++                break;
+         }
+         mViewermode=no;
      }
+diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
+index c68a953..83c44fa 100644
+--- a/app/src/main/res/layout/trycorder_fragment.xml
++++ b/app/src/main/res/layout/trycorder_fragment.xml
+@@ -223,7 +223,7 @@
+             <TextView
+                 android:layout_width="match_parent"
+                 android:layout_height="0dp"
+-                android:layout_weight="1.5" />
++                android:layout_weight="0.5" />
  
-     // ============================================================================
-@@ -1229,6 +1306,7 @@ public class TrycorderFragment extends Fragment
+             <Button
+                 android:id="@+id/viewer_button"
+@@ -243,7 +243,27 @@
+             <TextView
+                 android:layout_width="match_parent"
+                 android:layout_height="0dp"
+-                android:layout_weight="1.5"
++                android:layout_weight="0.5" />
++
++            <Button
++                android:id="@+id/logs_button"
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_marginBottom="@dimen/button_margin"
++                android:layout_marginEnd="@dimen/button_margin"
++                android:layout_marginStart="@dimen/button_margin"
++                android:layout_marginTop="@dimen/button_margin"
++                android:layout_weight="1"
++                android:background="@drawable/trekbutton_blue_right"
++                android:maxLines="1"
++                android:text="LOGS"
++                android:textSize="18sp"
++                android:textStyle="bold" />
++
++            <TextView
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_weight="1"
+                 android:ellipsize="middle" />
  
-     private void snapphoto() {
-         if(mVieweron) {
-+            say("Picture Taken !");
-             mCamera.takePicture(null, null, this);
-         }
-     }
-@@ -1330,7 +1408,11 @@ public class TrycorderFragment extends Fragment
-         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
-             if (resultCode == getActivity().RESULT_OK) {
-                 // Image captured and saved to fileUri specified in the Intent
--                say(fileUri.toString());
-+                say("Saved to " + fileUri.toString());
-+                // inform the media manager to scan our new file
-+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-+                intent.setData(fileUri);
-+                getActivity().sendBroadcast(intent);
-             } else if (resultCode == getActivity().RESULT_CANCELED) {
-                 // User cancelled the image capture
-                 say("Cancelled Photo");
-@@ -1343,7 +1425,12 @@ public class TrycorderFragment extends Fragment
-         if (requestCode == CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE) {
-             if (resultCode == getActivity().RESULT_OK) {
-                 // Video captured and saved to fileUri specified in the Intent
--                say("" + data.getData());
-+                //say("" + data.getData());
-+                say("Saved to " + fileUri.toString());
-+                // inform the media manager to scan our new file
-+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-+                intent.setData(fileUri);
-+                getActivity().sendBroadcast(intent);
-             } else if (resultCode == getActivity().RESULT_CANCELED) {
-                 // User cancelled the video capture
-                 say("Cancelled Video");
+             <Button
+@@ -600,7 +620,7 @@
+                     android:background="@android:color/black"
+                     android:gravity="center"
+                     android:orientation="horizontal"
+-                    android:visibility="visible"
++                    android:visibility="gone"
+                     android:weightSum="100">
+ 
+                     <Button
+@@ -612,7 +632,7 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="33"
+                         android:background="@drawable/trekbutton_blue_left"
+-                        android:text="VIEWER ON" />
++                        android:text="Viewer On" />
+ 
+                     <Button
+                         android:id="@+id/vieweroff_button"
+@@ -623,18 +643,43 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="33"
+                         android:background="@drawable/trekbutton_blue_right"
+-                        android:text="VIEWER OFF" />
++                        android:text="Viewer Off" />
++
++                </LinearLayout>
++
++                <!-- ========== button layout for logs ============== -->
++                <LinearLayout
++                    android:id="@+id/sensor2_logs_layout"
++                    android:layout_width="match_parent"
++                    android:layout_height="match_parent"
++                    android:background="@android:color/black"
++                    android:gravity="center"
++                    android:orientation="horizontal"
++                    android:visibility="visible"
++                    android:weightSum="100">
++
++
++                    <Button
++                        android:id="@+id/logsconsole_button"
++                        android:layout_width="0dp"
++                        android:layout_height="48dp"
++                        android:layout_gravity="center"
++                        android:layout_marginLeft="2dp"
++                        android:layout_marginRight="2dp"
++                        android:layout_weight="33"
++                        android:background="@drawable/trekbutton_blue"
++                        android:text="Console log" />
+ 
+                     <Button
+-                        android:id="@+id/viewerlogs_button"
++                        android:id="@+id/logsinfo_button"
+                         android:layout_width="0dp"
+                         android:layout_height="48dp"
+                         android:layout_gravity="center"
+                         android:layout_marginLeft="2dp"
+                         android:layout_marginRight="2dp"
+-                        android:layout_weight="34"
++                        android:layout_weight="33"
+                         android:background="@drawable/trekbutton_blue"
+-                        android:text="LOGS" />
++                        android:text="Info log" />
+ 
+                 </LinearLayout>
+ 
+@@ -704,7 +749,7 @@
+ 
+                     <ScrollView
+                         android:layout_width="match_parent"
+-                        android:layout_height="match_parent">
++                        android:layout_height="wrap_content">
+ 
+                         <TextView
+                             android:id="@+id/logs_console"
+@@ -714,6 +759,22 @@
+                             android:textColor="@android:color/holo_green_light"
+                             android:textSize="18sp"
+                             android:textStyle="bold"
++                            android:visibility="gone" />
++
++                    </ScrollView>
++
++                    <ScrollView
++                        android:layout_width="match_parent"
++                        android:layout_height="wrap_content">
++
++                        <TextView
++                            android:id="@+id/logs_info"
++                            android:layout_width="match_parent"
++                            android:layout_height="wrap_content"
++                            android:text="Info log"
++                            android:textColor="@android:color/holo_green_light"
++                            android:textSize="18sp"
++                            android:textStyle="bold"
+                             android:visibility="visible" />
+ 
+                     </ScrollView>
+diff --git a/app/src/main/res/values/arrays.xml b/app/src/main/res/values/arrays.xml
+index 30f0564..c5fe4e9 100644
+--- a/app/src/main/res/values/arrays.xml
++++ b/app/src/main/res/values/arrays.xml
+@@ -13,4 +13,54 @@
+         <item>Auto</item>
+     </string-array>
+ 
++    <string-array name="sensor2_array_entries">
++        <item>None</item>
++        <item>Sensors</item>
++        <item>Communication</item>
++        <item>Shields</item>
++        <item>Fire</item>
++        <item>Transporter</item>
++        <item>Viewer</item>
++        <item>Logs</item>
++    </string-array>
++
++    <string-array name="sensor2_array_entryvalues">
++        <item>0</item>
++        <item>1</item>
++        <item>2</item>
++        <item>3</item>
++        <item>4</item>
++        <item>5</item>
++        <item>6</item>
++        <item>7</item>
++    </string-array>
++
++    <string-array name="sensor_array_entries">
++        <item>None</item>
++        <item>Magnetic</item>
++        <item>Orientation</item>
++        <item>Gravity</item>
++    </string-array>
++
++    <string-array name="sensor_array_entryvalues">
++        <item>0</item>
++        <item>1</item>
++        <item>2</item>
++        <item>3</item>
++    </string-array>
++
++    <string-array name="viewer_array_entries">
++        <item>Logo</item>
++        <item>Video</item>
++        <item>Console</item>
++        <item>Info</item>
++    </string-array>
++
++    <string-array name="viewer_array_entryvalues">
++        <item>0</item>
++        <item>1</item>
++        <item>2</item>
++        <item>3</item>
++    </string-array>
++
+ </resources>
+diff --git a/app/src/main/res/xml/preferences.xml b/app/src/main/res/xml/preferences.xml
+index 0a9cb9e..4843c6c 100644
+--- a/app/src/main/res/xml/preferences.xml
++++ b/app/src/main/res/xml/preferences.xml
+@@ -15,21 +15,21 @@
+             android:entryValues="@array/language_array_entryvalues"
+             android:summary="Language used to display to the user"
+             android:title="Display Language"
+-            android:defaultValue="FR"/>
++            android:defaultValue="EN"/>
+         <ListPreference
+             android:key="pref_key_listen_language"
+             android:entries="@array/language_array_entries"
+             android:entryValues="@array/language_array_entryvalues"
+             android:summary="Language used to listen to the user"
+             android:title="Listen Language"
+-            android:defaultValue="FR"/>
++            android:defaultValue="EN"/>
+         <ListPreference
+             android:key="pref_key_speak_language"
+             android:entries="@array/language_array_entries"
+             android:entryValues="@array/language_array_entryvalues"
+             android:summary="Language used to pronounce text to speak"
+             android:title="Speak Language"
+-            android:defaultValue="FR"/>
++            android:defaultValue="EN"/>
+     </PreferenceCategory>
+ 
+ </PreferenceScreen>
+diff --git a/app/src/main/res/xml/prefmode.xml b/app/src/main/res/xml/prefmode.xml
+index 624ed13..91a942c 100644
+--- a/app/src/main/res/xml/prefmode.xml
++++ b/app/src/main/res/xml/prefmode.xml
+@@ -1,4 +1,25 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
++    <ListPreference
++        android:key="pref_key_sensor2_mode"
++        android:entries="@array/sensor2_array_entries"
++        android:entryValues="@array/sensor2_array_entryvalues"
++        android:summary="Buttons set pre-selected"
++        android:title="Buttons mode"
++        android:defaultValue="0"/>
++    <ListPreference
++        android:key="pref_key_sensor_mode"
++        android:entries="@array/sensor_array_entries"
++        android:entryValues="@array/sensor_array_entryvalues"
++        android:summary="Sensor selected"
++        android:title="Sensors mode"
++        android:defaultValue="0"/>
++    <ListPreference
++        android:key="pref_key_viewer_mode"
++        android:entries="@array/viewer_array_entries"
++        android:entryValues="@array/viewer_array_entryvalues"
++        android:summary="Viewer selected"
++        android:title="Viewer mode"
++        android:defaultValue="0"/>
+ 
+ </PreferenceScreen>
+\ No newline at end of file
+diff --git a/gitdiff.txt b/gitdiff.txt
+index 95ac6cb..222c529 100644
+--- a/gitdiff.txt
++++ b/gitdiff.txt
+@@ -1,201 +0,0 @@
+-diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+-index 40c2665..e08807c 100644
+---- a/app/src/main/AndroidManifest.xml
+-+++ b/app/src/main/AndroidManifest.xml
+-@@ -12,6 +12,8 @@
+-     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+-     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+-     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+-+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+-+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+- 
+-     <uses-feature android:name="android.hardware.camera" android:required="false" />
+- 
+-diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+-index cd8b44f..7a758ab 100644
+---- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+-+++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+-@@ -15,12 +15,17 @@ import android.hardware.Sensor;
+- import android.hardware.SensorEvent;
+- import android.hardware.SensorEventListener;
+- import android.hardware.SensorManager;
+-+import android.location.Criteria;
+-+import android.location.Location;
+-+import android.location.LocationListener;
+-+import android.location.LocationManager;
+- import android.media.AudioManager;
+- import android.media.MediaPlayer;
+- import android.net.Uri;
+- import android.os.Environment;
+- import android.preference.PreferenceManager;
+- import android.provider.MediaStore;
+-+import android.provider.Settings;
+- import android.speech.RecognitionListener;
+- import android.speech.RecognizerIntent;
+- import android.speech.SpeechRecognizer;
+-@@ -231,7 +236,7 @@ public class TrycorderFragment extends Fragment
+-         mAskButton.setOnClickListener(new View.OnClickListener() {
+-             @Override
+-             public void onClick(View view) {
+--                listenandtalk();
+-+                snapphoto();
+-             }
+-         });
+- 
+-@@ -849,31 +854,68 @@ public class TrycorderFragment extends Fragment
+- 
+-     // ==========================================================================================
+- 
+--    public class OriSensorView extends TextView implements SensorEventListener {
+-+    public class OriSensorView extends TextView implements SensorEventListener , LocationListener {
+- 
+-         private Paint paint;
+-         private float position = 0;
+- 
+-+        private LocationManager locationManager;
+-+        private String locationProvider;
+-+        private Location location=null;
+-+
+-         public OriSensorView(Context context) {
+-             super(context);
+-             init();
+-         }
+- 
+-         private void init() {
+-+            // initialize the paint object
+-             paint = new Paint();
+-             paint.setAntiAlias(true);
+-             paint.setStrokeWidth(2);
+-             paint.setTextSize(25);
+-             paint.setStyle(Paint.Style.STROKE);
+-             paint.setColor(Color.WHITE);
+-+            // initialize the gps service
+-+            locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+-+            boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+-+            // check if enabled and if not send user to the GSP settings
+-+            // Better solution would be to display a dialog and suggesting to
+-+            // go to the settings
+-+            if (!enabled) {
+-+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+-+                startActivity(intent);
+-+            }
+-+            // Define the criteria how to select the locatioin provider -> use
+-+            // default
+-+            Criteria criteria = new Criteria();
+-+            locationProvider = locationManager.getBestProvider(criteria, false);
+-+            try {
+-+                location = locationManager.getLastKnownLocation(locationProvider);
+-+                locationManager.requestLocationUpdates(locationProvider, 400, 1, this);
+-+            } catch (SecurityException e) {
+-+                say("No GPS available");
+-+            }
+-+            // Initialize the location fields
+-+            if (location != null) {
+-+                say("Provider " + locationProvider + " has been selected.");
+-+            } else {
+-+                say("No location available. " + locationProvider);
+-+            }
+-+
+-         }
+- 
+-         @Override
+-         protected void onDraw(Canvas canvas) {
+-             int xPoint = getMeasuredWidth() / 2;
+-             int yPoint = getMeasuredHeight() / 2;
+-+            if(yPoint>xPoint) {
+-+                yPoint=xPoint;
+-+            } else {
+-+                xPoint=yPoint;
+-+            }
+- 
+--            float radius = (float) (Math.max(xPoint, yPoint) * 0.6);
+-+            float radius = (float) (Math.min(xPoint, yPoint) * 0.9);
+-             canvas.drawCircle(xPoint, yPoint, radius, paint);
+-             canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
+- 
+-@@ -885,7 +927,18 @@ public class TrycorderFragment extends Fragment
+-                     (float) (yPoint - radius
+-                             * Math.cos((double) (-position) / 180 * 3.1416)), paint);
+- 
+--            canvas.drawText(String.valueOf(position), xPoint, yPoint, paint);
+-+            canvas.drawText("ORI: "+String.valueOf(position), xPoint*2.0f, yPoint*2.0f-32.0f, paint);
+-+
+-+            // draw the longitude and latitude
+-+            if(location!=null) {
+-+                float lat = (float) (location.getLatitude());
+-+                float lng = (float) (location.getLongitude());
+-+                canvas.drawText("LAT: "+String.valueOf(lat),xPoint*2.0f,32.0f,paint);
+-+                canvas.drawText("LON: "+String.valueOf(lng),xPoint*2.0f,64.0f,paint);
+-+            } else {
+-+                canvas.drawText("LAT: "+"Not avalaible",xPoint*2.0f,32.0f,paint);
+-+                canvas.drawText("LON: "+"Not avalaible",xPoint*2.0f,64.0f,paint);
+-+            }
+-         }
+- 
+-         public void updateData(float position) {
+-@@ -905,6 +958,30 @@ public class TrycorderFragment extends Fragment
+-             updateData(azimuth);
+-         }
+- 
+-+        // ============ callbacks for the location listener ===============
+-+
+-+        @Override
+-+        public void onLocationChanged(Location location) {
+-+            this.location=location;
+-+        }
+-+
+-+        @Override
+-+        public void onStatusChanged(String provider, int status, Bundle extras) {
+-+            // TODO Auto-generated method stub
+-+        }
+-+
+-+        @Override
+-+        public void onProviderEnabled(String provider) {
+-+            say("Enabled new provider " + provider);
+-+
+-+        }
+-+
+-+        @Override
+-+        public void onProviderDisabled(String provider) {
+-+            say("Disabled new provider " + provider);
+-+        }
+-+
+-+
+-     }
+- 
+-     // ============================================================================
+-@@ -1229,6 +1306,7 @@ public class TrycorderFragment extends Fragment
+- 
+-     private void snapphoto() {
+-         if(mVieweron) {
+-+            say("Picture Taken !");
+-             mCamera.takePicture(null, null, this);
+-         }
+-     }
+-@@ -1330,7 +1408,11 @@ public class TrycorderFragment extends Fragment
+-         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
+-             if (resultCode == getActivity().RESULT_OK) {
+-                 // Image captured and saved to fileUri specified in the Intent
+--                say(fileUri.toString());
+-+                say("Saved to " + fileUri.toString());
+-+                // inform the media manager to scan our new file
+-+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+-+                intent.setData(fileUri);
+-+                getActivity().sendBroadcast(intent);
+-             } else if (resultCode == getActivity().RESULT_CANCELED) {
+-                 // User cancelled the image capture
+-                 say("Cancelled Photo");
+-@@ -1343,7 +1425,12 @@ public class TrycorderFragment extends Fragment
+-         if (requestCode == CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE) {
+-             if (resultCode == getActivity().RESULT_OK) {
+-                 // Video captured and saved to fileUri specified in the Intent
+--                say("" + data.getData());
+-+                //say("" + data.getData());
+-+                say("Saved to " + fileUri.toString());
+-+                // inform the media manager to scan our new file
+-+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+-+                intent.setData(fileUri);
+-+                getActivity().sendBroadcast(intent);
+-             } else if (resultCode == getActivity().RESULT_CANCELED) {
+-                 // User cancelled the video capture
+-                 say("Cancelled Video");

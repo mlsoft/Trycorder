@@ -67,7 +67,10 @@ public class TrycorderFragment extends Fragment
     // handles to camera and textureview
     private Camera mCamera;
     private TextureView mViewerWindow;
+
+    // handles for the 2 logs pages
     private TextView mLogsConsole;
+    private TextView mLogsInfo;
 
     // handles for the conversation functions
     private TextToSpeech tts;
@@ -75,6 +78,10 @@ public class TrycorderFragment extends Fragment
     private SpeechRecognizer mSpeechRecognizer;
     private Intent mSpeechRecognizerIntent;
     private String mSentence;
+
+    // handle for the gps
+    private LocationManager locationManager;
+    private String locationProvider;
 
     // the handle to the sensors
     private SensorManager mSensorManager;
@@ -149,9 +156,12 @@ public class TrycorderFragment extends Fragment
     private Button mViewerButton;
     private Button mViewerOnButton;
     private Button mViewerOffButton;
-    private Button mViewerLogsButton;
     private boolean mVieweron;
     private int mViewermode=0;
+
+    private Button mLogsButton;
+    private Button mLogsConsoleButton;
+    private Button mLogsInfoButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -167,6 +177,8 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mSensor2fireLayout;
     private LinearLayout mSensor2transporterLayout;
     private LinearLayout mSensor2viewerLayout;
+    private LinearLayout mSensor2logsLayout;
+    private int mSensor2mode=0;
 
     private LinearLayout mSensor3Layout;
     private ImageView mFederationlogo;
@@ -180,15 +192,24 @@ public class TrycorderFragment extends Fragment
     String listenLanguage;
     String displayLanguage;
 
+    // the preferences holder
+    SharedPreferences sharedPref;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trycorder_fragment, container, false);
 
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences, false);
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         autoListen = sharedPref.getBoolean("pref_key_auto_listen",false);
         speakLanguage = sharedPref.getString("pref_key_speak_language", "");
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
+
+        //mSensormode = sharedPref.getInt("pref_key_sensor_mode",0);
+        //mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode",0);
+        //mViewermode = sharedPref.getInt("pref_key_viewer_mode",0);
 
         // ===================== top horizontal button grid ==========================
         // the start button
@@ -475,12 +496,32 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        mViewerLogsButton = (Button) view.findViewById(R.id.viewerlogs_button);
-        mViewerLogsButton.setOnClickListener(new View.OnClickListener() {
+        // ===================== viewer buttons group ============================
+        // the viewer button
+        mLogsButton = (Button) view.findViewById(R.id.logs_button);
+        mLogsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchbuttonlayout(7);
+            }
+        });
+
+        mLogsConsoleButton = (Button) view.findViewById(R.id.logsconsole_button);
+        mLogsConsoleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(2);
+            }
+        });
+
+        mLogsInfoButton = (Button) view.findViewById(R.id.logsinfo_button);
+        mLogsInfoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchviewer(3);
             }
         });
 
@@ -506,11 +547,14 @@ public class TrycorderFragment extends Fragment
         mSensor2fireLayout = (LinearLayout) view.findViewById(R.id.sensor2_fire_layout);
         mSensor2transporterLayout = (LinearLayout) view.findViewById(R.id.sensor2_transporter_layout);
         mSensor2viewerLayout = (LinearLayout) view.findViewById(R.id.sensor2_viewer_layout);
+        mSensor2logsLayout = (LinearLayout) view.findViewById(R.id.sensor2_logs_layout);
 
         // the sensor layout, to contain my surfaceview
         mSensor3Layout = (LinearLayout) view.findViewById(R.id.sensor3_layout);
         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
+        mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
+
         // create and activate a textureview to contain camera display
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
         mViewerWindow.setSurfaceTextureListener(this);
@@ -518,8 +562,8 @@ public class TrycorderFragment extends Fragment
         mFederationlogo.setVisibility(View.VISIBLE);
         mViewerWindow.setVisibility(View.GONE);
         mLogsConsole.setVisibility(View.GONE);
+        mLogsInfo.setVisibility(View.GONE);
         mVieweron=false;
-        mViewermode=0;
 
         // ==============================================================================
         // create layout params for the created views
@@ -550,7 +594,36 @@ public class TrycorderFragment extends Fragment
         mSensorLayout.addView(mGraSensorView,tlayoutParams);
 
         // set the sensors invisible
-        switchsensorlayout(0);
+        //switchsensorlayout(0);
+
+        // initialize the gps service
+        locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        // check if enabled and if not send user to the GSP settings
+        // Better solution would be to display a dialog and suggesting to
+        // go to the settings
+        if (!enabled) {
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent);
+        }
+        // Define the criteria how to select the locatioin provider -> use
+        // default
+        Location location=null;
+        //Criteria criteria = new Criteria();
+        //locationProvider = locationManager.getBestProvider(criteria, false);
+        locationProvider="gps";
+        try {
+            location = locationManager.getLastKnownLocation(locationProvider);
+        } catch (SecurityException e) {
+            say("No GPS available");
+        }
+        // Initialize the location fields
+        if (location != null) {
+            say("Provider " + locationProvider + " has been selected.");
+            mOriSensorView.setLocation(location);
+        } else {
+            say("No location available. " + locationProvider);
+        }
 
         // ============== initialize the audio listener and talker ==============
 
@@ -603,7 +676,9 @@ public class TrycorderFragment extends Fragment
         mFireButton.setTypeface(face2);
         mTransporterButton.setTypeface(face2);
         mViewerButton.setTypeface(face2);
+        mLogsButton.setTypeface(face2);
         mSoundButton.setTypeface(face2);
+
         // center buttons
         mMagneticButton.setTypeface(face3);
         mOrientationButton.setTypeface(face3);
@@ -619,19 +694,31 @@ public class TrycorderFragment extends Fragment
         mTransportInButton.setTypeface(face);
         mViewerOnButton.setTypeface(face3);
         mViewerOffButton.setTypeface(face3);
-        mViewerLogsButton.setTypeface(face3);
+        mLogsConsoleButton.setTypeface(face3);
+        mLogsInfoButton.setTypeface(face3);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        switchbuttonlayout(1);
+        mSensormode = sharedPref.getInt("pref_key_sensor_mode",0);
+        mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode",0);
+        mViewermode = sharedPref.getInt("pref_key_viewer_mode",0);
+
+        switchbuttonlayout(mSensor2mode);
+        switchsensorlayout(mSensormode);
         startsensors(mSensormode);
+        switchviewer(mViewermode);
     }
 
     @Override
     public void onPause() {
         stopsensors();
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("pref_key_sensor_mode", mSensormode);
+        editor.putInt("pref_key_sensor2_mode", mSensor2mode);
+        editor.putInt("pref_key_viewer_mode", mViewermode);
+        editor.commit();
         super.onPause();
     }
 
@@ -700,6 +787,7 @@ public class TrycorderFragment extends Fragment
         mSensor2fireLayout.setVisibility(View.GONE);
         mSensor2transporterLayout.setVisibility(View.GONE);
         mSensor2viewerLayout.setVisibility(View.GONE);
+        mSensor2logsLayout.setVisibility(View.GONE);
         switch(no) {
             case 1:
                 say("Sensors Mode");
@@ -725,7 +813,12 @@ public class TrycorderFragment extends Fragment
                 say("Viewer Mode");
                 mSensor2viewerLayout.setVisibility(View.VISIBLE);
                 break;
+            case 7:
+                say("Logs Mode");
+                mSensor2logsLayout.setVisibility(View.VISIBLE);
+                break;
         }
+        mSensor2mode=no;
     }
 
     // =====================================================================================
@@ -840,6 +933,11 @@ public class TrycorderFragment extends Fragment
         stopmusic();
         mSensorManager.unregisterListener(mOriSensorView);
         mRunStatus=false;
+        try {
+            locationManager.removeUpdates(mOriSensorView);
+        } catch (SecurityException e) {
+            say("Error closing GPS");
+        }
     }
 
     // here we start the sensor reading
@@ -850,6 +948,13 @@ public class TrycorderFragment extends Fragment
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
                 SensorManager.SENSOR_DELAY_NORMAL);
         if(mSoundStatus) startmusic();
+        // start gps location updates
+        try {
+            locationManager.requestLocationUpdates(locationProvider, 400, 1, mOriSensorView);
+        } catch (SecurityException e) {
+            say("No GPS avalaible.");
+        }
+
     }
 
     // ==========================================================================================
@@ -859,8 +964,6 @@ public class TrycorderFragment extends Fragment
         private Paint paint;
         private float position = 0;
 
-        private LocationManager locationManager;
-        private String locationProvider;
         private Location location=null;
 
         public OriSensorView(Context context) {
@@ -876,33 +979,6 @@ public class TrycorderFragment extends Fragment
             paint.setTextSize(25);
             paint.setStyle(Paint.Style.STROKE);
             paint.setColor(Color.WHITE);
-            // initialize the gps service
-            locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
-            boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            // check if enabled and if not send user to the GSP settings
-            // Better solution would be to display a dialog and suggesting to
-            // go to the settings
-            if (!enabled) {
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(intent);
-            }
-            // Define the criteria how to select the locatioin provider -> use
-            // default
-            Criteria criteria = new Criteria();
-            locationProvider = locationManager.getBestProvider(criteria, false);
-            try {
-                location = locationManager.getLastKnownLocation(locationProvider);
-                locationManager.requestLocationUpdates(locationProvider, 400, 1, this);
-            } catch (SecurityException e) {
-                say("No GPS available");
-            }
-            // Initialize the location fields
-            if (location != null) {
-                say("Provider " + locationProvider + " has been selected.");
-            } else {
-                say("No location available. " + locationProvider);
-            }
-
         }
 
         @Override
@@ -917,7 +993,7 @@ public class TrycorderFragment extends Fragment
 
             float radius = (float) (Math.min(xPoint, yPoint) * 0.9);
             canvas.drawCircle(xPoint, yPoint, radius, paint);
-            canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
+            // canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
 
             // 3.1416 is a good approximation for the circle
             canvas.drawLine(xPoint,
@@ -944,6 +1020,10 @@ public class TrycorderFragment extends Fragment
         public void updateData(float position) {
             this.position = position;
             invalidate();
+        }
+
+        public void setLocation(Location loc) {
+            this.location = loc;
         }
 
         @Override
@@ -1280,6 +1360,7 @@ public class TrycorderFragment extends Fragment
         mViewerWindow.setVisibility(View.GONE);
         mFederationlogo.setVisibility(View.GONE);
         mLogsConsole.setVisibility(View.GONE);
+        mLogsInfo.setVisibility(View.GONE);
         switch(no) {
             case 0:
                 say("Viewer OFF");
@@ -1294,6 +1375,11 @@ public class TrycorderFragment extends Fragment
             case 2:
                 say("Logs Console");
                 mLogsConsole.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
+            case 3:
+                say("Logs Info");
+                mLogsInfo.setVisibility(View.VISIBLE);
                 mVieweron = false;
                 break;
         }
