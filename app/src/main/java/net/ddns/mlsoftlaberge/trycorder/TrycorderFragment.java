@@ -15,7 +15,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -65,7 +64,7 @@ public class TrycorderFragment extends Fragment
     }
 
     // handles to camera and textureview
-    private Camera mCamera;
+    private Camera mCamera = null;
     private TextureView mViewerWindow;
 
     // handles for the 2 logs pages
@@ -95,6 +94,9 @@ public class TrycorderFragment extends Fragment
     // the new scope class
     private GraSensorView mGraSensorView;
 
+    // the new scope class
+    private TemSensorView mTemSensorView;
+
     // the button to talk to computer
     private ImageButton mTalkButton;
 
@@ -103,7 +105,7 @@ public class TrycorderFragment extends Fragment
 
     // the button to stop it all
     private Button mStopButton;
-    private boolean mRunStatus=false;
+    private boolean mRunStatus = false;
 
     // the button for settings
     private Button mSettingsButton;
@@ -129,8 +131,9 @@ public class TrycorderFragment extends Fragment
     private Button mMagneticButton;
     private Button mOrientationButton;
     private Button mGravityButton;
+    private Button mTemperatureButton;
     private Button mSensoroffButton;
-    private int mSensormode=0;
+    private int mSensormode = 0;
 
     // the button to open a channel
     private Button mCommButton;
@@ -155,17 +158,20 @@ public class TrycorderFragment extends Fragment
     // the button to control the viewer
     private Button mViewerButton;
     private Button mViewerOnButton;
+    private Button mViewerFrontButton;
     private Button mViewerOffButton;
-    private boolean mVieweron;
-    private int mViewermode=0;
+    private boolean mVieweron = false;
+    private boolean mViewerfront = false;
+    private int mViewermode = 0;
 
     private Button mLogsButton;
     private Button mLogsConsoleButton;
     private Button mLogsInfoButton;
+    private Button mLogsPlansButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
-    private boolean mSoundStatus=false;
+    private boolean mSoundStatus = false;
 
     // the layout to put sensorview in
     private LinearLayout mSensorLayout;
@@ -178,22 +184,23 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mSensor2transporterLayout;
     private LinearLayout mSensor2viewerLayout;
     private LinearLayout mSensor2logsLayout;
-    private int mSensor2mode=0;
+    private int mSensor2mode = 0;
 
     private LinearLayout mSensor3Layout;
     private ImageView mFederationlogo;
+    private ImageView mStarshipPlan;
 
     // the player for sound background
-    private MediaPlayer mMediaPlayer=null;
+    private MediaPlayer mMediaPlayer = null;
 
     // the preferences values
-    boolean autoListen;
-    String speakLanguage;
-    String listenLanguage;
-    String displayLanguage;
+    private boolean autoListen;
+    private String speakLanguage;
+    private String listenLanguage;
+    private String displayLanguage;
 
     // the preferences holder
-    SharedPreferences sharedPref;
+    private SharedPreferences sharedPref;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -202,14 +209,10 @@ public class TrycorderFragment extends Fragment
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences, false);
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        autoListen = sharedPref.getBoolean("pref_key_auto_listen",false);
+        autoListen = sharedPref.getBoolean("pref_key_auto_listen", false);
         speakLanguage = sharedPref.getString("pref_key_speak_language", "");
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
-
-        //mSensormode = sharedPref.getInt("pref_key_sensor_mode",0);
-        //mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode",0);
-        //mViewermode = sharedPref.getInt("pref_key_viewer_mode",0);
 
         // ===================== top horizontal button grid ==========================
         // the start button
@@ -241,6 +244,15 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        // the sound-effect button
+        mSoundButton = (Button) view.findViewById(R.id.sound_button);
+        mSoundButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                switchsound();
+            }
+        });
+
         // the settings button
         mSettingsButton = (Button) view.findViewById(R.id.settings_button);
         mSettingsButton.setOnClickListener(new View.OnClickListener() {
@@ -257,6 +269,7 @@ public class TrycorderFragment extends Fragment
         mAskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                buttonsound();
                 snapphoto();
             }
         });
@@ -327,7 +340,7 @@ public class TrycorderFragment extends Fragment
         mOrientationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                longrangesensor();
+                buttonsound();
                 switchsensorlayout(2);
                 startsensors(2);
             }
@@ -338,9 +351,20 @@ public class TrycorderFragment extends Fragment
         mGravityButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tractorbeam();
+                buttonsound();
                 switchsensorlayout(3);
                 startsensors(3);
+            }
+        });
+
+        // the gravity button
+        mTemperatureButton = (Button) view.findViewById(R.id.temperature_button);
+        mTemperatureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchsensorlayout(4);
+                startsensors(4);
             }
         });
 
@@ -483,7 +507,20 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                mViewerfront = false;
                 switchviewer(1);
+                switchcam(1);
+            }
+        });
+
+        mViewerFrontButton = (Button) view.findViewById(R.id.viewerfront_button);
+        mViewerFrontButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                mViewerfront = true;
+                switchviewer(1);
+                switchcam(2);
             }
         });
 
@@ -493,6 +530,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(0);
+                switchcam(0);
             }
         });
 
@@ -525,13 +563,12 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        // ===================== sound buttons group ============================
-        // the sound-effect button
-        mSoundButton = (Button) view.findViewById(R.id.sound_button);
-        mSoundButton.setOnClickListener(new View.OnClickListener() {
+        mLogsPlansButton = (Button) view.findViewById(R.id.logsplans_button);
+        mLogsPlansButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                switchsound();
+                buttonsound();
+                switchviewer(4);
             }
         });
 
@@ -554,6 +591,7 @@ public class TrycorderFragment extends Fragment
         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
         mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
+        mStarshipPlan = (ImageView) view.findViewById(R.id.starship_plans);
 
         // create and activate a textureview to contain camera display
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
@@ -563,7 +601,8 @@ public class TrycorderFragment extends Fragment
         mViewerWindow.setVisibility(View.GONE);
         mLogsConsole.setVisibility(View.GONE);
         mLogsInfo.setVisibility(View.GONE);
-        mVieweron=false;
+        mStarshipPlan.setVisibility(View.GONE);
+        mVieweron = false;
 
         // ==============================================================================
         // create layout params for the created views
@@ -579,19 +618,25 @@ public class TrycorderFragment extends Fragment
         mMagSensorView = new MagSensorView(getContext());
 
         // add my sensorview to the layout 1
-        mSensorLayout.addView(mMagSensorView,tlayoutParams);
+        mSensorLayout.addView(mMagSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
         mOriSensorView = new OriSensorView(getContext());
 
         // add my sensorview to the layout 1
-        mSensorLayout.addView(mOriSensorView,tlayoutParams);
+        mSensorLayout.addView(mOriSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
         mGraSensorView = new GraSensorView(getContext());
 
         // add my sensorview to the layout 1
-        mSensorLayout.addView(mGraSensorView,tlayoutParams);
+        mSensorLayout.addView(mGraSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mTemSensorView = new TemSensorView(getContext());
+
+        // add my sensorview to the layout 1
+        mSensorLayout.addView(mTemSensorView, tlayoutParams);
 
         // set the sensors invisible
         //switchsensorlayout(0);
@@ -608,10 +653,10 @@ public class TrycorderFragment extends Fragment
         }
         // Define the criteria how to select the locatioin provider -> use
         // default
-        Location location=null;
+        Location location = null;
         //Criteria criteria = new Criteria();
         //locationProvider = locationManager.getBestProvider(criteria, false);
-        locationProvider="gps";
+        locationProvider = "gps";
         try {
             location = locationManager.getLastKnownLocation(locationProvider);
         } catch (SecurityException e) {
@@ -643,10 +688,10 @@ public class TrycorderFragment extends Fragment
         mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.mlsoft");
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE,false);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS,5000);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS,500);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
         //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
 
         return view;
@@ -655,9 +700,9 @@ public class TrycorderFragment extends Fragment
     @Override
     public void onActivityCreated(Bundle bundle) {
         super.onActivityCreated(bundle);
-        Typeface face = Typeface.createFromAsset(getActivity().getAssets(),"sonysketchef.ttf");
-        Typeface face2 = Typeface.createFromAsset(getActivity().getAssets(),"finalold.ttf");
-        Typeface face3 = Typeface.createFromAsset(getActivity().getAssets(),"finalnew.ttf");
+        Typeface face = Typeface.createFromAsset(getActivity().getAssets(), "sonysketchef.ttf");
+        Typeface face2 = Typeface.createFromAsset(getActivity().getAssets(), "finalold.ttf");
+        Typeface face3 = Typeface.createFromAsset(getActivity().getAssets(), "finalnew.ttf");
         // status fields
         mTextstatus_top.setTypeface(face);
         mTextstatus_bottom.setTypeface(face);
@@ -668,6 +713,7 @@ public class TrycorderFragment extends Fragment
         // top buttons
         mStartButton.setTypeface(face2);
         mStopButton.setTypeface(face2);
+        mSoundButton.setTypeface(face2);
         mSettingsButton.setTypeface(face2);
         // left column buttons
         mSensorButton.setTypeface(face2);
@@ -677,34 +723,43 @@ public class TrycorderFragment extends Fragment
         mTransporterButton.setTypeface(face2);
         mViewerButton.setTypeface(face2);
         mLogsButton.setTypeface(face2);
-        mSoundButton.setTypeface(face2);
 
         // center buttons
-        mMagneticButton.setTypeface(face3);
-        mOrientationButton.setTypeface(face3);
-        mGravityButton.setTypeface(face3);
-        mSensoroffButton.setTypeface(face3);
+        mMagneticButton.setTypeface(face);
+        mOrientationButton.setTypeface(face);
+        mGravityButton.setTypeface(face);
+        mTemperatureButton.setTypeface(face);
+        mSensoroffButton.setTypeface(face);
+
         mOpenCommButton.setTypeface(face3);
         mCloseCommButton.setTypeface(face3);
+
         mShieldUpButton.setTypeface(face3);
         mShieldDownButton.setTypeface(face3);
+
         mPhaserButton.setTypeface(face3);
         mTorpedoButton.setTypeface(face3);
+
         mTransportOutButton.setTypeface(face);
         mTransportInButton.setTypeface(face);
-        mViewerOnButton.setTypeface(face3);
-        mViewerOffButton.setTypeface(face3);
-        mLogsConsoleButton.setTypeface(face3);
-        mLogsInfoButton.setTypeface(face3);
+
+        mViewerOnButton.setTypeface(face);
+        mViewerFrontButton.setTypeface(face);
+        mViewerOffButton.setTypeface(face);
+
+        mLogsConsoleButton.setTypeface(face);
+        mLogsInfoButton.setTypeface(face);
+        mLogsPlansButton.setTypeface(face);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        mSensormode = sharedPref.getInt("pref_key_sensor_mode",0);
-        mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode",0);
-        mViewermode = sharedPref.getInt("pref_key_viewer_mode",0);
-
+        mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
+        mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode", 0);
+        mViewermode = sharedPref.getInt("pref_key_viewer_mode", 0);
+        mSoundStatus = sharedPref.getBoolean("pref_key_audio_mode", false);
+        mViewerfront = sharedPref.getBoolean("pref_key_viewer_front", false);
         switchbuttonlayout(mSensor2mode);
         switchsensorlayout(mSensormode);
         startsensors(mSensormode);
@@ -718,6 +773,8 @@ public class TrycorderFragment extends Fragment
         editor.putInt("pref_key_sensor_mode", mSensormode);
         editor.putInt("pref_key_sensor2_mode", mSensor2mode);
         editor.putInt("pref_key_viewer_mode", mViewermode);
+        editor.putBoolean("pref_key_audio_mode", mSoundStatus);
+        editor.putBoolean("pref_key_viewer_front", mViewerfront);
         editor.commit();
         super.onPause();
     }
@@ -725,8 +782,8 @@ public class TrycorderFragment extends Fragment
 
     private void startsensors(int mode) {
         stopsensors();
-        mSensormode=mode;
-        switch(mode) {
+        mSensormode = mode;
+        switch (mode) {
             case 1:
                 say("Sensors Magnetic");
                 startmagsensors();
@@ -739,6 +796,10 @@ public class TrycorderFragment extends Fragment
                 say("Sensors Gravity");
                 startgrasensors();
                 break;
+            case 4:
+                say("Sensors Temperature");
+                starttemsensors();
+                break;
             default:
                 say("Sensors OFF");
                 break;
@@ -749,6 +810,7 @@ public class TrycorderFragment extends Fragment
         stopmagsensors();
         stoporisensors();
         stopgrasensors();
+        stoptemsensors();
     }
 
     // =====================================================================================
@@ -765,7 +827,8 @@ public class TrycorderFragment extends Fragment
         mMagSensorView.setVisibility(View.GONE);
         mOriSensorView.setVisibility(View.GONE);
         mGraSensorView.setVisibility(View.GONE);
-        switch(no) {
+        mTemSensorView.setVisibility(View.GONE);
+        switch (no) {
             case 1:
                 mMagSensorView.setVisibility(View.VISIBLE);
                 break;
@@ -774,6 +837,9 @@ public class TrycorderFragment extends Fragment
                 break;
             case 3:
                 mGraSensorView.setVisibility(View.VISIBLE);
+                break;
+            case 4:
+                mTemSensorView.setVisibility(View.VISIBLE);
                 break;
         }
     }
@@ -788,7 +854,7 @@ public class TrycorderFragment extends Fragment
         mSensor2transporterLayout.setVisibility(View.GONE);
         mSensor2viewerLayout.setVisibility(View.GONE);
         mSensor2logsLayout.setVisibility(View.GONE);
-        switch(no) {
+        switch (no) {
             case 1:
                 say("Sensors Mode");
                 mSensor2sensorLayout.setVisibility(View.VISIBLE);
@@ -818,7 +884,7 @@ public class TrycorderFragment extends Fragment
                 mSensor2logsLayout.setVisibility(View.VISIBLE);
                 break;
         }
-        mSensor2mode=no;
+        mSensor2mode = no;
     }
 
     // =====================================================================================
@@ -897,42 +963,196 @@ public class TrycorderFragment extends Fragment
     // ==========================================================================================
     // start sensor background sound
     private void startmusic() {
-        if(mMediaPlayer==null) {
-            mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.tricscan2);
-            mMediaPlayer.setLooping(true);
-            mMediaPlayer.start(); // no need to call prepare(); create() does that for you
+        if (mMediaPlayer == null) {
+            switch (mSensormode) {
+                case 1:
+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.tricscan2);
+                    mMediaPlayer.setLooping(true);
+                    mMediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    break;
+                case 2:
+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.long_range_scan);
+                    mMediaPlayer.setLooping(true);
+                    mMediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    break;
+                case 3:
+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.tng_tractor_clean);
+                    mMediaPlayer.setLooping(true);
+                    mMediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    break;
+                case 4:
+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.scan_high);
+                    mMediaPlayer.setLooping(true);
+                    mMediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    break;
+            }
+
         }
+        if (mSensormode != 0)
+            mSoundButton.setBackgroundResource(R.drawable.trekbutton_yellow_center);
     }
 
     // stop the background sound
     private void stopmusic() {
-        if(mMediaPlayer!=null) {
+        if (mMediaPlayer != null) {
             mMediaPlayer.release();
             mMediaPlayer = null;
         }
+        mSoundButton.setBackgroundResource(R.drawable.trekbutton_gray_center);
     }
 
     // switch background sound on/off
     private void switchsound() {
-        if(mSoundStatus) {
-            mSoundStatus=false;
+        if (mSoundStatus) {
+            mSoundStatus = false;
             stopmusic();
-            mSoundButton.setBackgroundResource(R.drawable.trekbutton);
-            //mSoundButton.setBackgroundColor(Color.GRAY);
         } else {
-            mSoundStatus=true;
-            if(mRunStatus) startmusic();
-            mSoundButton.setBackgroundResource(R.drawable.trekbutton_yellow);
-            //mSoundButton.setBackgroundColor(Color.YELLOW);
+            mSoundStatus = true;
+            if (mRunStatus) startmusic();
         }
     }
+
+    // ============================================================================
+    // stop the sensor updates
+    private void stoptemsensors() {
+        stopmusic();
+        mSensorManager.unregisterListener(mTemSensorView);
+        mRunStatus = false;
+    }
+
+    // here we start the sensor reading
+    private void starttemsensors() {
+        mRunStatus = true;
+        // link a sensor to the sensorview
+        mTemSensorView.resetcount();
+        mSensorManager.registerListener(mTemSensorView,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE),
+                SensorManager.SENSOR_DELAY_FASTEST);
+        if (mSoundStatus) startmusic();
+    }
+
+
+    // ============================================================================
+    // class defining the sensor display widget
+    private class TemSensorView extends TextView implements SensorEventListener {
+
+        private Bitmap mBitmap;
+        private Paint mPaint = new Paint();
+        private Canvas mCanvas = new Canvas();
+        private int mColor[] = new int[3];
+        private float mWidth;
+        private float mHeight;
+        private float mYOffset;
+        private float mScale;
+        private float mSpeed = 0.5f;
+
+        // table of values for the trace
+        private int MAXVALUES = 300;
+        private float mValues[] = new float[MAXVALUES * 3];
+        private int nbValues = 0;
+        private float lastvalue = 0.0f;
+
+        // initialize the 3 colors, and setup painter
+        public TemSensorView(Context context) {
+            super(context);
+            mColor[0] = Color.argb(192, 255, 64, 64);
+            mColor[1] = Color.argb(192, 64, 64, 255);
+            mColor[2] = Color.argb(192, 64, 255, 64);
+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            for (int i = 0; i < (MAXVALUES * 3); ++i) {
+                mValues[i] = 0.0f;
+            }
+            nbValues = 0;
+        }
+
+        public void resetcount() {
+            nbValues = 0;
+        }
+
+        // initialize the bitmap to the size of the view, fill it white
+        // init the view state variables to initial values
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+            mCanvas.setBitmap(mBitmap);
+            mCanvas.drawColor(Color.BLACK);
+            mYOffset = h * 0.5f;
+            mScale = -(h * 0.5f * (1.0f / (SensorManager.MAGNETIC_FIELD_EARTH_MAX)));
+            mWidth = w;
+            mHeight = h;
+            mSpeed = mWidth / MAXVALUES;
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        // draw
+        @Override
+        public void onDraw(Canvas viewcanvas) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    // clear the surface
+                    mCanvas.drawColor(Color.BLACK);
+                    // draw middle line horizontal
+                    mPaint.setColor(0xffaaaaaa);
+                    mPaint.setStrokeWidth(1.0f);
+                    mCanvas.drawLine(0, mYOffset, mWidth, mYOffset, mPaint);
+                    mCanvas.drawText("Temp: " + String.valueOf(lastvalue), 0, 32, mPaint);
+
+                    // draw the 100 values x 3 rows
+                    for (int i = 0; i < nbValues - 1; ++i) {
+                        for (int j = 0; j < 3; ++j) {
+                            int k = (j * MAXVALUES) + i;
+                            float oldx = i * mSpeed;
+                            float newx = (i + 1) * mSpeed;
+                            mPaint.setColor(mColor[j]);
+                            mPaint.setStrokeWidth(3.0f);
+                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k + 1], mPaint);
+                        }
+                    }
+                    // transfer the bitmap to the view
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+                }
+            }
+            super.onDraw(viewcanvas);
+        }
+
+        // extract sensor data and plot them on view
+        public void onSensorChanged(SensorEvent event) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
+                        // scroll left when full
+                        if (nbValues >= MAXVALUES) {
+                            for (int i = 0; i < (MAXVALUES * 3) - 1; ++i) {
+                                mValues[i] = mValues[i + 1];
+                            }
+                            nbValues--;
+                        }
+                        // fill the 3 elements in the table
+                        for (int i = 0; i < 3; ++i) {
+                            final float v = mYOffset + event.values[i] * mScale;
+                            mValues[nbValues + (i * MAXVALUES)] = v;
+                            if (i == 0) lastvalue = v;
+                        }
+                        nbValues++;
+                        invalidate();
+                    }
+                }
+            }
+        }
+
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            // nothing to do
+        }
+
+    }
+
 
     // ============================================================================
     // stop the sensor updates
     private void stoporisensors() {
         stopmusic();
         mSensorManager.unregisterListener(mOriSensorView);
-        mRunStatus=false;
+        mRunStatus = false;
         try {
             locationManager.removeUpdates(mOriSensorView);
         } catch (SecurityException e) {
@@ -942,12 +1162,12 @@ public class TrycorderFragment extends Fragment
 
     // here we start the sensor reading
     private void startorisensors() {
-        mRunStatus=true;
+        mRunStatus = true;
         // link a sensor to the sensorview
         mSensorManager.registerListener(mOriSensorView,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
                 SensorManager.SENSOR_DELAY_NORMAL);
-        if(mSoundStatus) startmusic();
+        if (mSoundStatus) startmusic();
         // start gps location updates
         try {
             locationManager.requestLocationUpdates(locationProvider, 400, 1, mOriSensorView);
@@ -959,12 +1179,12 @@ public class TrycorderFragment extends Fragment
 
     // ==========================================================================================
 
-    public class OriSensorView extends TextView implements SensorEventListener , LocationListener {
+    public class OriSensorView extends TextView implements SensorEventListener, LocationListener {
 
         private Paint paint;
         private float position = 0;
 
-        private Location location=null;
+        private Location location = null;
 
         public OriSensorView(Context context) {
             super(context);
@@ -985,10 +1205,10 @@ public class TrycorderFragment extends Fragment
         protected void onDraw(Canvas canvas) {
             int xPoint = getMeasuredWidth() / 2;
             int yPoint = getMeasuredHeight() / 2;
-            if(yPoint>xPoint) {
-                yPoint=xPoint;
+            if (yPoint > xPoint) {
+                yPoint = xPoint;
             } else {
-                xPoint=yPoint;
+                xPoint = yPoint;
             }
 
             float radius = (float) (Math.min(xPoint, yPoint) * 0.9);
@@ -1003,17 +1223,17 @@ public class TrycorderFragment extends Fragment
                     (float) (yPoint - radius
                             * Math.cos((double) (-position) / 180 * 3.1416)), paint);
 
-            canvas.drawText("ORI: "+String.valueOf(position), xPoint*2.0f, yPoint*2.0f-32.0f, paint);
+            canvas.drawText("ORI: " + String.valueOf(position), xPoint * 2.0f, yPoint * 2.0f - 32.0f, paint);
 
             // draw the longitude and latitude
-            if(location!=null) {
+            if (location != null) {
                 float lat = (float) (location.getLatitude());
                 float lng = (float) (location.getLongitude());
-                canvas.drawText("LAT: "+String.valueOf(lat),xPoint*2.0f,32.0f,paint);
-                canvas.drawText("LON: "+String.valueOf(lng),xPoint*2.0f,64.0f,paint);
+                canvas.drawText("LAT: " + String.valueOf(lat), xPoint * 2.0f, 32.0f, paint);
+                canvas.drawText("LON: " + String.valueOf(lng), xPoint * 2.0f, 64.0f, paint);
             } else {
-                canvas.drawText("LAT: "+"Not avalaible",xPoint*2.0f,32.0f,paint);
-                canvas.drawText("LON: "+"Not avalaible",xPoint*2.0f,64.0f,paint);
+                canvas.drawText("LAT: " + "Not avalaible", xPoint * 2.0f, 32.0f, paint);
+                canvas.drawText("LON: " + "Not avalaible", xPoint * 2.0f, 64.0f, paint);
             }
         }
 
@@ -1042,12 +1262,12 @@ public class TrycorderFragment extends Fragment
 
         @Override
         public void onLocationChanged(Location location) {
-            this.location=location;
+            this.location = location;
         }
 
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            // TODO Auto-generated method stub
+            say("Location Status changed. " + String.valueOf(status));
         }
 
         @Override
@@ -1069,18 +1289,18 @@ public class TrycorderFragment extends Fragment
     private void stopmagsensors() {
         stopmusic();
         mSensorManager.unregisterListener(mMagSensorView);
-        mRunStatus=false;
+        mRunStatus = false;
     }
 
     // here we start the sensor reading
     private void startmagsensors() {
-        mRunStatus=true;
+        mRunStatus = true;
         // link a sensor to the sensorview
         mMagSensorView.resetcount();
         mSensorManager.registerListener(mMagSensorView,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
                 SensorManager.SENSOR_DELAY_FASTEST);
-        if(mSoundStatus) startmusic();
+        if (mSoundStatus) startmusic();
     }
 
     // ============================================================================
@@ -1090,17 +1310,17 @@ public class TrycorderFragment extends Fragment
         private Bitmap mBitmap;
         private Paint mPaint = new Paint();
         private Canvas mCanvas = new Canvas();
-        private int mColor[]=new int[3];
+        private int mColor[] = new int[3];
         private float mWidth;
         private float mHeight;
         private float mYOffset;
         private float mScale;
-        private float mSpeed=0.5f;
+        private float mSpeed = 0.5f;
 
         // table of values for the trace
         private int MAXVALUES = 300;
         private float mValues[] = new float[MAXVALUES * 3];
-        private int nbValues=0;
+        private int nbValues = 0;
 
         // initialize the 3 colors, and setup painter
         public MagSensorView(Context context) {
@@ -1109,15 +1329,16 @@ public class TrycorderFragment extends Fragment
             mColor[1] = Color.argb(192, 64, 64, 255);
             mColor[2] = Color.argb(192, 64, 255, 64);
             mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-            for(int i=0; i<(MAXVALUES * 3); ++i) {
-                mValues[i]=0.0f;
+            for (int i = 0; i < (MAXVALUES * 3); ++i) {
+                mValues[i] = 0.0f;
             }
-            nbValues=0;
+            nbValues = 0;
         }
 
         public void resetcount() {
-            nbValues=0;
+            nbValues = 0;
         }
+
         // initialize the bitmap to the size of the view, fill it white
         // init the view state variables to initial values
         @Override
@@ -1129,7 +1350,7 @@ public class TrycorderFragment extends Fragment
             mScale = -(h * 0.5f * (1.0f / (SensorManager.MAGNETIC_FIELD_EARTH_MAX)));
             mWidth = w;
             mHeight = h;
-            mSpeed = mWidth/MAXVALUES;
+            mSpeed = mWidth / MAXVALUES;
             super.onSizeChanged(w, h, oldw, oldh);
         }
 
@@ -1137,7 +1358,7 @@ public class TrycorderFragment extends Fragment
         @Override
         public void onDraw(Canvas viewcanvas) {
             synchronized (this) {
-                if(mBitmap!=null) {
+                if (mBitmap != null) {
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
                     // draw middle line horizontal
@@ -1145,18 +1366,18 @@ public class TrycorderFragment extends Fragment
                     mPaint.setStrokeWidth(1.0f);
                     mCanvas.drawLine(0, mYOffset, mWidth, mYOffset, mPaint);
                     // draw the 100 values x 3 rows
-                    for(int i=0; i<nbValues-1;++i) {
-                        for(int j=0; j<3;++j) {
-                            int k=(j*MAXVALUES)+i;
-                            float oldx=i*mSpeed;
-                            float newx=(i+1)*mSpeed;
+                    for (int i = 0; i < nbValues - 1; ++i) {
+                        for (int j = 0; j < 3; ++j) {
+                            int k = (j * MAXVALUES) + i;
+                            float oldx = i * mSpeed;
+                            float newx = (i + 1) * mSpeed;
                             mPaint.setColor(mColor[j]);
                             mPaint.setStrokeWidth(3.0f);
-                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k+1], mPaint);
+                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k + 1], mPaint);
                         }
                     }
                     // transfer the bitmap to the view
-                    viewcanvas.drawBitmap(mBitmap,0,0,null);
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
                 }
             }
             super.onDraw(viewcanvas);
@@ -1166,18 +1387,18 @@ public class TrycorderFragment extends Fragment
         public void onSensorChanged(SensorEvent event) {
             synchronized (this) {
                 if (mBitmap != null) {
-                    if(event.sensor.getType()== Sensor.TYPE_MAGNETIC_FIELD) {
+                    if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
                         // scroll left when full
-                        if(nbValues>=MAXVALUES) {
-                            for (int i = 0; i < (MAXVALUES * 3)-1; ++i) {
-                                mValues[i] = mValues[i+1];
+                        if (nbValues >= MAXVALUES) {
+                            for (int i = 0; i < (MAXVALUES * 3) - 1; ++i) {
+                                mValues[i] = mValues[i + 1];
                             }
                             nbValues--;
                         }
                         // fill the 3 elements in the table
-                        for(int i=0; i<3; ++i) {
-                            final float v = mYOffset +event.values[i] * mScale;
-                            mValues[nbValues+(i*MAXVALUES)]=v;
+                        for (int i = 0; i < 3; ++i) {
+                            final float v = mYOffset + event.values[i] * mScale;
+                            mValues[nbValues + (i * MAXVALUES)] = v;
                         }
                         nbValues++;
                         invalidate();
@@ -1198,18 +1419,18 @@ public class TrycorderFragment extends Fragment
     private void stopgrasensors() {
         stopmusic();
         mSensorManager.unregisterListener(mGraSensorView);
-        mRunStatus=false;
+        mRunStatus = false;
     }
 
     // here we start the sensor reading
     private void startgrasensors() {
-        mRunStatus=true;
+        mRunStatus = true;
         // link a sensor to the sensorview
         mGraSensorView.resetcount();
         mSensorManager.registerListener(mGraSensorView,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
                 SensorManager.SENSOR_DELAY_FASTEST);
-        if(mSoundStatus) startmusic();
+        if (mSoundStatus) startmusic();
     }
 
     // ============================================================================
@@ -1219,17 +1440,17 @@ public class TrycorderFragment extends Fragment
         private Bitmap mBitmap;
         private Paint mPaint = new Paint();
         private Canvas mCanvas = new Canvas();
-        private int mColor[]=new int[3];
+        private int mColor[] = new int[3];
         private float mWidth;
         private float mHeight;
         private float mYOffset;
         private float mScale;
-        private float mSpeed=0.5f;
+        private float mSpeed = 0.5f;
 
         // table of values for the trace
         private int MAXVALUES = 300;
         private float mValues[] = new float[MAXVALUES * 3];
-        private int nbValues=0;
+        private int nbValues = 0;
 
         // initialize the 3 colors, and setup painter
         public GraSensorView(Context context) {
@@ -1238,15 +1459,16 @@ public class TrycorderFragment extends Fragment
             mColor[1] = Color.argb(192, 64, 64, 255);
             mColor[2] = Color.argb(192, 64, 255, 64);
             mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-            for(int i=0; i<(MAXVALUES * 3); ++i) {
-                mValues[i]=0.0f;
+            for (int i = 0; i < (MAXVALUES * 3); ++i) {
+                mValues[i] = 0.0f;
             }
-            nbValues=0;
+            nbValues = 0;
         }
 
         public void resetcount() {
-            nbValues=0;
+            nbValues = 0;
         }
+
         // initialize the bitmap to the size of the view, fill it white
         // init the view state variables to initial values
         @Override
@@ -1258,7 +1480,7 @@ public class TrycorderFragment extends Fragment
             mScale = -(h * 0.5f * (1.0f / (SensorManager.MAGNETIC_FIELD_EARTH_MAX)));
             mWidth = w;
             mHeight = h;
-            mSpeed = mWidth/MAXVALUES;
+            mSpeed = mWidth / MAXVALUES;
             super.onSizeChanged(w, h, oldw, oldh);
         }
 
@@ -1266,7 +1488,7 @@ public class TrycorderFragment extends Fragment
         @Override
         public void onDraw(Canvas viewcanvas) {
             synchronized (this) {
-                if(mBitmap!=null) {
+                if (mBitmap != null) {
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
                     // draw middle line horizontal
@@ -1274,18 +1496,18 @@ public class TrycorderFragment extends Fragment
                     mPaint.setStrokeWidth(1.0f);
                     mCanvas.drawLine(0, mYOffset, mWidth, mYOffset, mPaint);
                     // draw the 100 values x 3 rows
-                    for(int i=0; i<nbValues-1;++i) {
-                        for(int j=0; j<3;++j) {
-                            int k=(j*MAXVALUES)+i;
-                            float oldx=i*mSpeed;
-                            float newx=(i+1)*mSpeed;
+                    for (int i = 0; i < nbValues - 1; ++i) {
+                        for (int j = 0; j < 3; ++j) {
+                            int k = (j * MAXVALUES) + i;
+                            float oldx = i * mSpeed;
+                            float newx = (i + 1) * mSpeed;
                             mPaint.setColor(mColor[j]);
                             mPaint.setStrokeWidth(3.0f);
-                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k+1], mPaint);
+                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k + 1], mPaint);
                         }
                     }
                     // transfer the bitmap to the view
-                    viewcanvas.drawBitmap(mBitmap,0,0,null);
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
                 }
             }
             super.onDraw(viewcanvas);
@@ -1295,18 +1517,18 @@ public class TrycorderFragment extends Fragment
         public void onSensorChanged(SensorEvent event) {
             synchronized (this) {
                 if (mBitmap != null) {
-                    if(event.sensor.getType()== Sensor.TYPE_ACCELEROMETER) {
+                    if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                         // scroll left when full
-                        if(nbValues>=MAXVALUES) {
-                            for (int i = 0; i < (MAXVALUES * 3)-1; ++i) {
-                                mValues[i] = mValues[i+1];
+                        if (nbValues >= MAXVALUES) {
+                            for (int i = 0; i < (MAXVALUES * 3) - 1; ++i) {
+                                mValues[i] = mValues[i + 1];
                             }
                             nbValues--;
                         }
                         // fill the 3 elements in the table
-                        for(int i=0; i<3; ++i) {
-                            final float v = mYOffset +event.values[i] * mScale;
-                            mValues[nbValues+(i*MAXVALUES)]=v;
+                        for (int i = 0; i < 3; ++i) {
+                            final float v = mYOffset + event.values[i] * mScale;
+                            mValues[nbValues + (i * MAXVALUES)] = v;
                         }
                         nbValues++;
                         invalidate();
@@ -1326,17 +1548,35 @@ public class TrycorderFragment extends Fragment
     // functions to listen to the surface texture view
 
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-
-        try {
-            mCamera = Camera.open();
-            mCamera.setPreviewTexture(surface);
-            Camera.Parameters parameters = mCamera.getParameters();
-            parameters.set("orientation", "portrait");
-            mCamera.setParameters(parameters);
-            mCamera.setDisplayOrientation(90);
-            mCamera.startPreview();
-        } catch (IOException ioe) {
-            // Something bad happened
+        mCamera = null;
+        if (mViewerfront == false) {
+            try {
+                mCamera = Camera.open();
+                mCamera.setPreviewTexture(surface);
+                Camera.Parameters parameters = mCamera.getParameters();
+                parameters.set("orientation", "portrait");
+                mCamera.setParameters(parameters);
+                mCamera.setDisplayOrientation(90);
+                mCamera.startPreview();
+            } catch (IOException ioe) {
+                say("Something bad happened with camera");
+            } catch (Exception sex) {
+                say("camera permission refused");
+            }
+        } else {
+            try {
+                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+                mCamera.setPreviewTexture(surface);
+                Camera.Parameters parameters = mCamera.getParameters();
+                parameters.set("orientation", "portrait");
+                mCamera.setParameters(parameters);
+                mCamera.setDisplayOrientation(90);
+                mCamera.startPreview();
+            } catch (IOException ioe) {
+                say("Something bad happened with camera");
+            } catch (Exception sex) {
+                say("camera permission refused");
+            }
         }
     }
 
@@ -1345,13 +1585,57 @@ public class TrycorderFragment extends Fragment
     }
 
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        mCamera.stopPreview();
-        mCamera.release();
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
         return true;
     }
 
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
         // Invoked every time there's a new Camera preview frame
+    }
+
+    // switch between cameras
+    private void switchcam(int no) {
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
+        switch (no) {
+            case 1:
+                try {
+                    mCamera = Camera.open();
+                    mCamera.setPreviewTexture(mViewerWindow.getSurfaceTexture());
+                    Camera.Parameters parameters = mCamera.getParameters();
+                    parameters.set("orientation", "portrait");
+                    mCamera.setParameters(parameters);
+                    mCamera.setDisplayOrientation(90);
+                    mCamera.startPreview();
+                } catch (IOException ioe) {
+                    say("Something bad happened with camera");
+                } catch (Exception sex) {
+                    say("camera permission refused");
+                }
+                break;
+            case 2:
+                try {
+                    mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+                    mCamera.setPreviewTexture(mViewerWindow.getSurfaceTexture());
+                    Camera.Parameters parameters = mCamera.getParameters();
+                    parameters.set("orientation", "portrait");
+                    mCamera.setParameters(parameters);
+                    mCamera.setDisplayOrientation(90);
+                    mCamera.startPreview();
+                } catch (IOException ioe) {
+                    say("Something bad happened with camera");
+                } catch (Exception sex) {
+                    say("camera permission refused");
+                }
+                break;
+        }
     }
 
     // ==========================================================================================
@@ -1361,7 +1645,8 @@ public class TrycorderFragment extends Fragment
         mFederationlogo.setVisibility(View.GONE);
         mLogsConsole.setVisibility(View.GONE);
         mLogsInfo.setVisibility(View.GONE);
-        switch(no) {
+        mStarshipPlan.setVisibility(View.GONE);
+        switch (no) {
             case 0:
                 say("Viewer OFF");
                 mFederationlogo.setVisibility(View.VISIBLE);
@@ -1382,8 +1667,13 @@ public class TrycorderFragment extends Fragment
                 mLogsInfo.setVisibility(View.VISIBLE);
                 mVieweron = false;
                 break;
+            case 4:
+                say("Plans");
+                mStarshipPlan.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
         }
-        mViewermode=no;
+        mViewermode = no;
     }
 
     // =====================================================================================
@@ -1391,7 +1681,7 @@ public class TrycorderFragment extends Fragment
 
 
     private void snapphoto() {
-        if(mVieweron) {
+        if (mVieweron) {
             say("Picture Taken !");
             mCamera.takePicture(null, null, this);
         }
@@ -1421,13 +1711,17 @@ public class TrycorderFragment extends Fragment
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
 
-    /** Create a file Uri for saving an image or video */
-    private static Uri getOutputMediaFileUri(int type){
+    /**
+     * Create a file Uri for saving an image or video
+     */
+    private static Uri getOutputMediaFileUri(int type) {
         return Uri.fromFile(getOutputMediaFile(type));
     }
 
-    /** Create a File for saving an image or video */
-    private static File getOutputMediaFile(int type){
+    /**
+     * Create a File for saving an image or video
+     */
+    private static File getOutputMediaFile(int type) {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
@@ -1437,8 +1731,8 @@ public class TrycorderFragment extends Fragment
         // between applications and persist after your app has been uninstalled.
 
         // Create the storage directory if it does not exist
-        if (! mediaStorageDir.exists()){
-            if (! mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
                 Log.d("Trycorder", "failed to create directory");
                 return null;
             }
@@ -1447,12 +1741,12 @@ public class TrycorderFragment extends Fragment
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File mediaFile;
-        if (type == MEDIA_TYPE_IMAGE){
+        if (type == MEDIA_TYPE_IMAGE) {
             mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_"+ timeStamp + ".jpg");
-        } else if(type == MEDIA_TYPE_VIDEO) {
+                    "IMG_" + timeStamp + ".jpg");
+        } else if (type == MEDIA_TYPE_VIDEO) {
             mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "VID_"+ timeStamp + ".mp4");
+                    "VID_" + timeStamp + ".mp4");
         } else {
             return null;
         }
@@ -1575,9 +1869,9 @@ public class TrycorderFragment extends Fragment
     public void onResults(Bundle results) {
         ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         if (dutexte != null && dutexte.size() > 0) {
-            for(int i=0;i<dutexte.size();++i) {
+            for (int i = 0; i < dutexte.size(); ++i) {
                 mSentence = dutexte.get(i);
-                if(matchvoice(mSentence)) {
+                if (matchvoice(mSentence)) {
                     mTextstatus_top.setText(mSentence);
                     return;
                 }
@@ -1595,9 +1889,9 @@ public class TrycorderFragment extends Fragment
     // functions to control the speech process
 
     private void listen() {
-        if(listenLanguage.equals("FR")) {
+        if (listenLanguage.equals("FR")) {
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
-        } else if(listenLanguage.equals("EN")) {
+        } else if (listenLanguage.equals("EN")) {
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
         } else {
             // automatic
@@ -1608,9 +1902,9 @@ public class TrycorderFragment extends Fragment
     }
 
     private void speak(String texte) {
-        if(speakLanguage.equals("FR")) {
+        if (speakLanguage.equals("FR")) {
             tts.setLanguage(Locale.FRENCH);
-        } else if(speakLanguage.equals("EN")) {
+        } else if (speakLanguage.equals("EN")) {
             tts.setLanguage(Locale.US);
         } else {
             // default prechoosen language
@@ -1619,84 +1913,84 @@ public class TrycorderFragment extends Fragment
         say(texte);
     }
 
-    private StringBuffer logbuffer=new StringBuffer(500);
+    private StringBuffer logbuffer = new StringBuffer(500);
 
     private void say(String texte) {
         mTextstatus_bottom.setText(texte);
-        logbuffer.insert(0,texte + "\n");
+        logbuffer.insert(0, texte + "\n");
         mLogsConsole.setText(logbuffer);
     }
 
     private boolean matchvoice(String texte) {
-        if(texte.contains("Martin")) {
+        if (texte.contains("Martin")) {
             switchbuttonlayout(0);
             speak("Martin is my Master.");
-            return(true);
+            return (true);
         }
-        if(texte.contains("phaser")) {
+        if (texte.contains("phaser")) {
             switchbuttonlayout(4);
             firephaser();
-            return(true);
+            return (true);
         }
-        if(texte.contains("fire") || texte.contains("torpedo")) {
+        if (texte.contains("fire") || texte.contains("torpedo")) {
             switchbuttonlayout(4);
             firemissiles();
-            return(true);
+            return (true);
         }
-        if(texte.contains("shield") || texte.contains("raise")) {
+        if (texte.contains("shield") || texte.contains("raise")) {
             switchbuttonlayout(3);
             raiseshields();
-            return(true);
+            return (true);
         }
-        if(texte.contains("sensor off")) {
+        if (texte.contains("sensor off")) {
             switchbuttonlayout(0);
             switchsensorlayout(0);
             stopsensors();
-            return(true);
+            return (true);
         }
-        if(texte.contains("sensor") || texte.contains("magnetic")) {
+        if (texte.contains("sensor") || texte.contains("magnetic")) {
             switchbuttonlayout(1);
             switchsensorlayout(1);
             startsensors(1);
-            return(true);
+            return (true);
         }
-        if(texte.contains("orientation") || texte.contains("direction")) {
+        if (texte.contains("orientation") || texte.contains("direction")) {
             switchbuttonlayout(1);
             switchsensorlayout(2);
             startsensors(2);
-            return(true);
+            return (true);
         }
-        if(texte.contains("gravity") || texte.contains("vibration")) {
+        if (texte.contains("gravity") || texte.contains("vibration")) {
             switchbuttonlayout(1);
             switchsensorlayout(3);
             startsensors(3);
-            return(true);
+            return (true);
         }
-        if(texte.contains("hailing") && texte.contains("close")) {
+        if (texte.contains("hailing") && texte.contains("close")) {
             switchbuttonlayout(2);
             closecomm();
-            return(true);
+            return (true);
         }
-        if(texte.contains("hailing") && texte.contains("open")) {
+        if (texte.contains("hailing") && texte.contains("open")) {
             switchbuttonlayout(2);
             opencomm();
-            return(true);
+            return (true);
         }
-        if(texte.contains("beam me up") || texte.contains("scotty")) {
+        if (texte.contains("beam me up") || texte.contains("scotty")) {
             switchbuttonlayout(5);
             transporterin();
-            return(true);
+            return (true);
         }
-        if(texte.contains("beam me down")) {
+        if (texte.contains("beam me down")) {
             switchbuttonlayout(5);
             transporterout();
-            return(true);
+            return (true);
         }
-        if(texte.contains("viewer")) {
+        if (texte.contains("viewer")) {
             switchbuttonlayout(6);
             switchviewer(1);
-            return(true);
+            return (true);
         }
-        return(false);
+        return (false);
     }
 }

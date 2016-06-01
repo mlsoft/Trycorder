@@ -47,10 +47,10 @@
                     android:layout_height="32dp"
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
-                    android:layout_weight="2"
-                    android:background="@android:color/holo_green_dark"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_green_center"
                     android:maxLines="1"
-                    android:text="START"
+                    android:text="Start"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -60,12 +60,26 @@
                     android:layout_height="32dp"
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
-                    android:layout_weight="2"
-                    android:background="@android:color/holo_red_dark"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_red_center"
                     android:maxLines="1"
-                    android:text="STOP"
+                    android:text="Stop"
                     android:textSize="18sp"
                     android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/sound_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_gravity="center"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_gray_center"
+                    android:maxLines="1"
+                    android:text="Sound"
+                    android:textSize="18sp" />
+
 
                 <Button
                     android:id="@+id/settings_button"
@@ -73,10 +87,10 @@
                     android:layout_height="32dp"
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
-                    android:layout_weight="2"
+                    android:layout_weight="1.5"
                     android:background="@drawable/trekbutton_blue_right"
                     android:maxLines="1"
-                    android:text="SETUP"
+                    android:text="Setup"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -109,6 +123,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="80"
+        android:baselineAligned="false"
         android:background="@android:color/black"
         android:orientation="horizontal"
         android:weightSum="10">
@@ -214,7 +229,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_blue_right"
+                android:background="@drawable/trekbutton_pink_right"
                 android:maxLines="1"
                 android:text="TRANSP"
                 android:textSize="18sp"
@@ -234,7 +249,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_blue_right"
+                android:background="@drawable/trekbutton_mauve_right"
                 android:maxLines="1"
                 android:text="VIEWER"
                 android:textSize="18sp"
@@ -265,21 +280,6 @@
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:ellipsize="middle" />
-
-            <Button
-                android:id="@+id/sound_button"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginBottom="@dimen/button_margin"
-                android:layout_marginEnd="@dimen/button_margin"
-                android:layout_marginStart="@dimen/button_margin"
-                android:layout_marginTop="@dimen/button_margin"
-                android:layout_weight="1"
-                android:background="@drawable/trekbutton"
-                android:maxLines="1"
-                android:text="SOUND"
-                android:textSize="18sp"
-                android:textStyle="bold" />
 
 
         </LinearLayout>
@@ -415,6 +415,75 @@
                 android:background="@android:color/black"
                 android:orientation="vertical">
 
+                <!-- ========== button layout for sensors ============== -->
+                <LinearLayout
+                    android:id="@+id/sensor2_sensor_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="100">
+
+                    <Button
+                        android:id="@+id/magnetic_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="20"
+                        android:background="@drawable/trekbutton_yellow_left"
+                        android:text="Magn" />
+
+                    <Button
+                        android:id="@+id/orientation_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="20"
+                        android:background="@drawable/trekbutton_yellow_center"
+                        android:text="Orient" />
+
+                    <Button
+                        android:id="@+id/gravity_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="20"
+                        android:background="@drawable/trekbutton_yellow_center"
+                        android:text="Grav" />
+
+                    <Button
+                        android:id="@+id/temperature_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="20"
+                        android:background="@drawable/trekbutton_yellow_center"
+                        android:text="Temp" />
+
+                    <Button
+                        android:id="@+id/sensoroff_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="20"
+                        android:background="@drawable/trekbutton_yellow_right"
+                        android:text="OFF" />
+
+
+                </LinearLayout>
+
                 <!-- ========== button layout for comm ============== -->
                 <LinearLayout
                     android:id="@+id/sensor2_comm_layout"
@@ -447,63 +516,6 @@
                         android:layout_weight="50"
                         android:background="@drawable/trekbutton_green_right"
                         android:text="CLOSE COMM" />
-
-                </LinearLayout>
-
-                <!-- ========== button layout for sensors ============== -->
-                <LinearLayout
-                    android:id="@+id/sensor2_sensor_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@android:color/black"
-                    android:gravity="center"
-                    android:orientation="horizontal"
-                    android:visibility="gone"
-                    android:weightSum="100">
-
-                    <Button
-                        android:id="@+id/magnetic_button"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="2dp"
-                        android:layout_marginRight="2dp"
-                        android:layout_weight="28"
-                        android:background="@drawable/trekbutton_yellow_left"
-                        android:text="MAG" />
-
-                    <Button
-                        android:id="@+id/orientation_button"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="2dp"
-                        android:layout_marginRight="2dp"
-                        android:layout_weight="28"
-                        android:background="@drawable/trekbutton_yellow_center"
-                        android:text="ORI" />
-
-                    <Button
-                        android:id="@+id/gravity_button"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="2dp"
-                        android:layout_marginRight="2dp"
-                        android:layout_weight="28"
-                        android:background="@drawable/trekbutton_yellow_center"
-                        android:text="GRA" />
-
-                    <Button
-                        android:id="@+id/sensoroff_button"
-                        android:layout_width="0dp"
-                        android:layout_height="48dp"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="2dp"
-                        android:layout_marginRight="2dp"
-                        android:layout_weight="16"
-                        android:background="@drawable/trekbutton_yellow_right"
-                        android:text="OFF" />
 
                 </LinearLayout>
 
@@ -596,7 +608,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_blue_left"
+                        android:background="@drawable/trekbutton_pink_left"
                         android:text="TRANSPORT OUT" />
 
                     <Button
@@ -607,7 +619,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="50"
-                        android:background="@drawable/trekbutton_blue_right"
+                        android:background="@drawable/trekbutton_pink_right"
                         android:text="TRANSPORT IN" />
 
                 </LinearLayout>
@@ -631,8 +643,19 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
-                        android:background="@drawable/trekbutton_blue_left"
-                        android:text="Viewer On" />
+                        android:background="@drawable/trekbutton_mauve_left"
+                        android:text="Main Viewer" />
+
+                    <Button
+                        android:id="@+id/viewerfront_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="34"
+                        android:background="@drawable/trekbutton_mauve_center"
+                        android:text="Local Viewer" />
 
                     <Button
                         android:id="@+id/vieweroff_button"
@@ -642,7 +665,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
-                        android:background="@drawable/trekbutton_blue_right"
+                        android:background="@drawable/trekbutton_mauve_right"
                         android:text="Viewer Off" />
 
                 </LinearLayout>
@@ -655,7 +678,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
 
@@ -680,6 +703,17 @@
                         android:layout_weight="33"
                         android:background="@drawable/trekbutton_blue"
                         android:text="Info log" />
+
+                    <Button
+                        android:id="@+id/logsplans_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_blue"
+                        android:text="Plans" />
 
                 </LinearLayout>
 
@@ -775,9 +809,16 @@
                             android:textColor="@android:color/holo_green_light"
                             android:textSize="18sp"
                             android:textStyle="bold"
-                            android:visibility="visible" />
+                            android:visibility="gone" />
 
                     </ScrollView>
+
+                    <ImageView
+                        android:id="@+id/starship_plans"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/starship_plans"
+                        android:visibility="visible" />
 
                 </LinearLayout>
 
@@ -882,9 +923,9 @@
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
                     android:layout_weight="2"
-                    android:background="@android:color/holo_green_dark"
+                    android:background="@drawable/trekbutton_green_center"
                     android:maxLines="1"
-                    android:text="PHOTO"
+                    android:text="Photo"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -896,9 +937,9 @@
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
                     android:layout_weight="2"
-                    android:background="@android:color/holo_red_dark"
+                    android:background="@drawable/trekbutton_red_center"
                     android:maxLines="1"
-                    android:text="RECORD"
+                    android:text="Record"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -912,7 +953,7 @@
                     android:layout_weight="2"
                     android:background="@drawable/trekbutton_blue_right"
                     android:maxLines="1"
-                    android:text="GALLERY"
+                    android:text="Gallery"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
