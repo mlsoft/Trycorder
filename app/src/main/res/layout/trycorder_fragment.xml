@@ -358,7 +358,17 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="94"
-                        android:orientation="horizontal" />
+                        android:orientation="horizontal" >
+
+                        <ImageView
+                            android:id="@+id/startrek_logo"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/startrek_logo"
+                            android:visibility="visible" />
+
+
+                    </LinearLayout>
 
                     <ImageView
                         android:layout_width="0dp"
@@ -773,7 +783,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/federation_logo"
-                        android:visibility="gone" />
+                        android:visibility="visible" />
 
                     <TextureView
                         android:id="@+id/viewer_window"
@@ -818,7 +828,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/starship_plans"
-                        android:visibility="visible" />
+                        android:visibility="gone" />
 
                 </LinearLayout>
 

@@ -97,6 +97,9 @@ public class TrycorderFragment extends Fragment
     // the new scope class
     private TemSensorView mTemSensorView;
 
+    // the Star-Trek Logo on sensor screen
+    private ImageView mStartrekLogo;
+
     // the button to talk to computer
     private ImageButton mTalkButton;
 
@@ -638,8 +641,8 @@ public class TrycorderFragment extends Fragment
         // add my sensorview to the layout 1
         mSensorLayout.addView(mTemSensorView, tlayoutParams);
 
-        // set the sensors invisible
-        //switchsensorlayout(0);
+        // position 0 of layout 1
+        mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
 
         // initialize the gps service
         locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
@@ -687,12 +690,13 @@ public class TrycorderFragment extends Fragment
         mSpeechRecognizer.setRecognitionListener(this);
         mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.mlsoft");
+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+        //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
-        //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
+
+        mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
 
         return view;
     }
@@ -828,7 +832,11 @@ public class TrycorderFragment extends Fragment
         mOriSensorView.setVisibility(View.GONE);
         mGraSensorView.setVisibility(View.GONE);
         mTemSensorView.setVisibility(View.GONE);
+        mStartrekLogo.setVisibility(View.GONE);
         switch (no) {
+            case 0:
+                mStartrekLogo.setVisibility(View.VISIBLE);
+                break;
             case 1:
                 mMagSensorView.setVisibility(View.VISIBLE);
                 break;
@@ -842,6 +850,7 @@ public class TrycorderFragment extends Fragment
                 mTemSensorView.setVisibility(View.VISIBLE);
                 break;
         }
+        mSensormode=no;
     }
 
     // =====================================================================================
@@ -1028,6 +1037,12 @@ public class TrycorderFragment extends Fragment
         mSensorManager.registerListener(mTemSensorView,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE),
                 SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener(mTemSensorView,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE),
+                SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener(mTemSensorView,
+                mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),
+                SensorManager.SENSOR_DELAY_FASTEST);
         if (mSoundStatus) startmusic();
     }
 
@@ -1038,35 +1053,37 @@ public class TrycorderFragment extends Fragment
 
         private Bitmap mBitmap;
         private Paint mPaint = new Paint();
+        private Paint mPaint2 = new Paint();
         private Canvas mCanvas = new Canvas();
-        private int mColor[] = new int[3];
-        private float mWidth;
-        private float mHeight;
-        private float mYOffset;
-        private float mScale;
-        private float mSpeed = 0.5f;
 
-        // table of values for the trace
-        private int MAXVALUES = 300;
-        private float mValues[] = new float[MAXVALUES * 3];
-        private int nbValues = 0;
-        private float lastvalue = 0.0f;
+        private int mWidth;
+        private int mHeight;
+
+        private float lastTempValue = 0.0f;
+        private float lastAtempValue = 0.0f;
+        private float lastLightValue = 0.0f;
 
         // initialize the 3 colors, and setup painter
         public TemSensorView(Context context) {
             super(context);
-            mColor[0] = Color.argb(192, 255, 64, 64);
-            mColor[1] = Color.argb(192, 64, 64, 255);
-            mColor[2] = Color.argb(192, 64, 255, 64);
+            // text paint
             mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-            for (int i = 0; i < (MAXVALUES * 3); ++i) {
-                mValues[i] = 0.0f;
-            }
-            nbValues = 0;
+            mPaint.setStrokeWidth(2);
+            mPaint.setTextSize(24);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setColor(Color.WHITE);
+            // line paint
+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint2.setStrokeWidth(8);
+            mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
+            mPaint2.setColor(Color.RED);
+
         }
 
         public void resetcount() {
-            nbValues = 0;
+            lastTempValue = 0.0f;
+            lastAtempValue = 0.0f;
+            lastLightValue = 0.0f;
         }
 
         // initialize the bitmap to the size of the view, fill it white
@@ -1076,11 +1093,8 @@ public class TrycorderFragment extends Fragment
             mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
             mCanvas.setBitmap(mBitmap);
             mCanvas.drawColor(Color.BLACK);
-            mYOffset = h * 0.5f;
-            mScale = -(h * 0.5f * (1.0f / (SensorManager.MAGNETIC_FIELD_EARTH_MAX)));
             mWidth = w;
             mHeight = h;
-            mSpeed = mWidth / MAXVALUES;
             super.onSizeChanged(w, h, oldw, oldh);
         }
 
@@ -1091,23 +1105,20 @@ public class TrycorderFragment extends Fragment
                 if (mBitmap != null) {
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
-                    // draw middle line horizontal
-                    mPaint.setColor(0xffaaaaaa);
-                    mPaint.setStrokeWidth(1.0f);
-                    mCanvas.drawLine(0, mYOffset, mWidth, mYOffset, mPaint);
-                    mCanvas.drawText("Temp: " + String.valueOf(lastvalue), 0, 32, mPaint);
+                    // draw the ambient temperature
+                    drawSensor("Temp(°C)",lastTempValue,-20.0f,100.0f,0,0,mWidth/3.0f,mHeight);
 
-                    // draw the 100 values x 3 rows
-                    for (int i = 0; i < nbValues - 1; ++i) {
-                        for (int j = 0; j < 3; ++j) {
-                            int k = (j * MAXVALUES) + i;
-                            float oldx = i * mSpeed;
-                            float newx = (i + 1) * mSpeed;
-                            mPaint.setColor(mColor[j]);
-                            mPaint.setStrokeWidth(3.0f);
-                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k + 1], mPaint);
-                        }
-                    }
+                    mCanvas.drawLine(mWidth/3.0f,0,mWidth/3.0f,mHeight,mPaint);
+
+                    // draw the ambient temperature
+                    drawSensor("ATemp(°C)",lastAtempValue,-20.0f,100.0f,mWidth/3.0f,0,mWidth/3.0f,mHeight);
+
+                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
+
+                    // draw the ambient temperature
+                    drawSensor("Light(Lux)",lastLightValue,0.0f,200.0f,mWidth/3.0f*2.0f,0,mWidth/3.0f,mHeight);
+
+
                     // transfer the bitmap to the view
                     viewcanvas.drawBitmap(mBitmap, 0, 0, null);
                 }
@@ -1115,25 +1126,42 @@ public class TrycorderFragment extends Fragment
             super.onDraw(viewcanvas);
         }
 
+        private void drawSensor(String label,float value, float minvalue, float maxvalue,
+                                float px, float py, float nx, float ny ) {
+            // draw a proportionnal large red line for the value
+            float linelen= (ny-64.0f)*((value-minvalue)/(maxvalue-minvalue));
+            mCanvas.drawRect(px+(nx/3.0f),py+ny-32-linelen,px+(nx/3.0f*2.0f),py+ny-32,mPaint2);
+            // draw the label on top
+            mCanvas.drawText(label, px+32, py+24, mPaint);
+            // draw the value on bottom
+            mCanvas.drawText(String.format("%.2f",value),px+(nx/3.0f),py+ny-4,mPaint);
+            // draw a center white line showing range
+            mCanvas.drawLine(px+(nx/2.0f),py+32,px+(nx/2.0f),py+ny-32,mPaint);
+            // draw scale lines
+            mCanvas.drawLine(px+(nx/2)-32,py+32,px+(nx/2)+32,py+32,mPaint); // top white line
+            mCanvas.drawLine(px+(nx/2)-32,py+ny-32,px+(nx/2)+32,py+ny-32,mPaint); // bottom white line
+            float zerolen=(ny-64.0f)*((0.0f-minvalue)/(maxvalue-minvalue));
+            mCanvas.drawLine(px+(nx/2)-32,py+ny-32-zerolen,px+(nx/2)+32,py+ny-32-zerolen,mPaint); // zero white line
+            // draw scale texts
+            mCanvas.drawText(String.format("%.0f",maxvalue),px+4,py+56,mPaint);  // max value indicator
+            mCanvas.drawText(String.format("%.0f",minvalue),px+4,py+ny-32,mPaint);  // min value indicator
+            mCanvas.drawText("0.0",px+4,py+ny-32-zerolen,mPaint);  // zero indicator
+        }
+
         // extract sensor data and plot them on view
         public void onSensorChanged(SensorEvent event) {
             synchronized (this) {
                 if (mBitmap != null) {
                     if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
-                        // scroll left when full
-                        if (nbValues >= MAXVALUES) {
-                            for (int i = 0; i < (MAXVALUES * 3) - 1; ++i) {
-                                mValues[i] = mValues[i + 1];
-                            }
-                            nbValues--;
-                        }
-                        // fill the 3 elements in the table
-                        for (int i = 0; i < 3; ++i) {
-                            final float v = mYOffset + event.values[i] * mScale;
-                            mValues[nbValues + (i * MAXVALUES)] = v;
-                            if (i == 0) lastvalue = v;
-                        }
-                        nbValues++;
+                        lastAtempValue = event.values[0];
+                        invalidate();
+                    }
+                    if (event.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
+                        lastTempValue = event.values[0];
+                        invalidate();
+                    }
+                    if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+                        lastLightValue = event.values[0];
                         invalidate();
                     }
                 }
@@ -1145,7 +1173,6 @@ public class TrycorderFragment extends Fragment
         }
 
     }
-
 
     // ============================================================================
     // stop the sensor updates
@@ -1196,7 +1223,7 @@ public class TrycorderFragment extends Fragment
             paint = new Paint();
             paint.setAntiAlias(true);
             paint.setStrokeWidth(2);
-            paint.setTextSize(25);
+            paint.setTextSize(24);
             paint.setStyle(Paint.Style.STROKE);
             paint.setColor(Color.WHITE);
         }
@@ -1873,13 +1900,16 @@ public class TrycorderFragment extends Fragment
                 mSentence = dutexte.get(i);
                 if (matchvoice(mSentence)) {
                     mTextstatus_top.setText(mSentence);
+                    say("Said: " + mSentence);
                     return;
                 }
             }
             mTextstatus_top.setText(dutexte.get(0));
+            say("Understood: "+dutexte.get(0));
             speak("Unknown command.");
         }
     }
+
 
     @Override
     public void onRmsChanged(float rmsdB) {
@@ -1921,8 +1951,9 @@ public class TrycorderFragment extends Fragment
         mLogsConsole.setText(logbuffer);
     }
 
-    private boolean matchvoice(String texte) {
-        if (texte.contains("Martin")) {
+    private boolean matchvoice(String textein) {
+        String texte=textein.toLowerCase();
+        if (texte.contains("martin")) {
             switchbuttonlayout(0);
             speak("Martin is my Master.");
             return (true);
@@ -1940,6 +1971,11 @@ public class TrycorderFragment extends Fragment
         if (texte.contains("shield") || texte.contains("raise")) {
             switchbuttonlayout(3);
             raiseshields();
+            return (true);
+        }
+        if (texte.contains("shield") && texte.contains("down")) {
+            switchbuttonlayout(3);
+            lowershields();
             return (true);
         }
         if (texte.contains("sensor off")) {
@@ -1989,6 +2025,11 @@ public class TrycorderFragment extends Fragment
         if (texte.contains("viewer")) {
             switchbuttonlayout(6);
             switchviewer(1);
+            return (true);
+        }
+        if (texte.contains("logs")) {
+            switchbuttonlayout(7);
+            switchviewer(2);
             return (true);
         }
         return (false);
