@@ -1111,7 +1111,7 @@ public class TrycorderFragment extends Fragment
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
                     // draw the ambient temperature
-                    drawSensor("Press(Kpa)", lastPresValue, 800.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
+                    drawSensor("Press(Kpa)", lastPresValue, 0.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
 
                     mCanvas.drawLine(mWidth / 3.0f, 0, mWidth / 3.0f, mHeight, mPaint);
 

@@ -1,754 +1,807 @@
-diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
-index e08807c..0095518 100644
---- a/app/src/main/AndroidManifest.xml
-+++ b/app/src/main/AndroidManifest.xml
-@@ -14,6 +14,8 @@
-     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-+    <uses-permission android:name="android.permission.GET_TASKS" />
- 
-     <uses-feature android:name="android.hardware.camera" android:required="false" />
- 
+diff --git a/app/build.gradle b/app/build.gradle
+index bf6e7a4..17d1ccd 100644
+--- a/app/build.gradle
++++ b/app/build.gradle
+@@ -9,7 +9,7 @@ android {
+         minSdkVersion 15
+         targetSdkVersion 23
+         versionCode 1
+-        versionName "1.0"
++        versionName "1.1"
+     }
+     buildTypes {
+         release {
 diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-index 401eae1..b08b2fc 100644
+index b08b2fc..d610745 100644
 --- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
 +++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-@@ -1,5 +1,6 @@
- package net.ddns.mlsoftlaberge.trycorder;
- 
-+import android.app.ActivityManager;
- import android.content.ContentValues;
- import android.content.Context;
- import android.content.Intent;
-@@ -31,6 +32,7 @@ import android.speech.SpeechRecognizer;
- import android.speech.tts.TextToSpeech;
- import android.support.v4.app.Fragment;
- import android.os.Bundle;
-+import android.telephony.TelephonyManager;
- import android.util.Log;
- import android.view.LayoutInflater;
- import android.view.TextureView;
-@@ -46,10 +48,13 @@ import android.widget.Toast;
- 
- import java.io.File;
- import java.io.IOException;
-+import java.io.InputStream;
- import java.io.OutputStream;
- import java.text.SimpleDateFormat;
- import java.util.ArrayList;
- import java.util.Date;
-+import java.util.Iterator;
-+import java.util.List;
- import java.util.Locale;
- 
- /**
-@@ -850,7 +855,7 @@ public class TrycorderFragment extends Fragment
-                 mTemSensorView.setVisibility(View.VISIBLE);
-                 break;
-         }
--        mSensormode=no;
-+        mSensormode = no;
-     }
- 
-     // =====================================================================================
-@@ -1038,7 +1043,7 @@ public class TrycorderFragment extends Fragment
-                 mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE),
-                 SensorManager.SENSOR_DELAY_FASTEST);
-         mSensorManager.registerListener(mTemSensorView,
--                mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE),
-+                mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE),
-                 SensorManager.SENSOR_DELAY_FASTEST);
-         mSensorManager.registerListener(mTemSensorView,
-                 mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),
-@@ -1059,7 +1064,7 @@ public class TrycorderFragment extends Fragment
-         private int mWidth;
-         private int mHeight;
- 
--        private float lastTempValue = 0.0f;
-+        private float lastPresValue = 0.0f;
-         private float lastAtempValue = 0.0f;
-         private float lastLightValue = 0.0f;
- 
-@@ -1074,14 +1079,14 @@ public class TrycorderFragment extends Fragment
-             mPaint.setColor(Color.WHITE);
-             // line paint
-             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
--            mPaint2.setStrokeWidth(8);
-+            mPaint2.setStrokeWidth(2);
-             mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
-             mPaint2.setColor(Color.RED);
- 
-         }
- 
-         public void resetcount() {
--            lastTempValue = 0.0f;
-+            lastPresValue = 0.0f;
-             lastAtempValue = 0.0f;
-             lastLightValue = 0.0f;
-         }
-@@ -1106,17 +1111,17 @@ public class TrycorderFragment extends Fragment
+@@ -1111,7 +1111,7 @@ public class TrycorderFragment extends Fragment
                      // clear the surface
                      mCanvas.drawColor(Color.BLACK);
                      // draw the ambient temperature
--                    drawSensor("Temp(°C)",lastTempValue,-20.0f,100.0f,0,0,mWidth/3.0f,mHeight);
-+                    drawSensor("Press(Kpa)", lastPresValue, 800.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
+-                    drawSensor("Press(Kpa)", lastPresValue, 800.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
++                    drawSensor("Press(Kpa)", lastPresValue, 0.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
  
--                    mCanvas.drawLine(mWidth/3.0f,0,mWidth/3.0f,mHeight,mPaint);
-+                    mCanvas.drawLine(mWidth / 3.0f, 0, mWidth / 3.0f, mHeight, mPaint);
+                     mCanvas.drawLine(mWidth / 3.0f, 0, mWidth / 3.0f, mHeight, mPaint);
  
-                     // draw the ambient temperature
--                    drawSensor("ATemp(°C)",lastAtempValue,-20.0f,100.0f,mWidth/3.0f,0,mWidth/3.0f,mHeight);
-+                    drawSensor("ATemp(°C)", lastAtempValue, -20.0f, 100.0f, mWidth / 3.0f, 0, mWidth / 3.0f, mHeight);
- 
--                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
-+                    mCanvas.drawLine(mWidth / 3.0f * 2.0f, 0, mWidth / 3.0f * 2.0f, mHeight, mPaint);
- 
-                     // draw the ambient temperature
--                    drawSensor("Light(Lux)",lastLightValue,0.0f,200.0f,mWidth/3.0f*2.0f,0,mWidth/3.0f,mHeight);
-+                    drawSensor("Light(Lux)", lastLightValue, 0.0f, 200.0f, mWidth / 3.0f * 2.0f, 0, mWidth / 3.0f, mHeight);
- 
- 
-                     // transfer the bitmap to the view
-@@ -1126,26 +1131,26 @@ public class TrycorderFragment extends Fragment
-             super.onDraw(viewcanvas);
-         }
- 
--        private void drawSensor(String label,float value, float minvalue, float maxvalue,
--                                float px, float py, float nx, float ny ) {
-+        private void drawSensor(String label, float value, float minvalue, float maxvalue,
-+                                float px, float py, float nx, float ny) {
-             // draw a proportionnal large red line for the value
--            float linelen= (ny-64.0f)*((value-minvalue)/(maxvalue-minvalue));
--            mCanvas.drawRect(px+(nx/3.0f),py+ny-32-linelen,px+(nx/3.0f*2.0f),py+ny-32,mPaint2);
-+            float linelen = (ny - 64.0f) * ((value - minvalue) / (maxvalue - minvalue));
-+            mCanvas.drawRect(px + (nx / 3.0f), py + ny - 32 - linelen, px + (nx / 3.0f * 2.0f), py + ny - 32, mPaint2);
-             // draw the label on top
--            mCanvas.drawText(label, px+32, py+24, mPaint);
-+            mCanvas.drawText(label, px + 32, py + 24, mPaint);
-             // draw the value on bottom
--            mCanvas.drawText(String.format("%.2f",value),px+(nx/3.0f),py+ny-4,mPaint);
-+            mCanvas.drawText(String.format("%.2f", value), px + (nx / 3.0f), py + ny - 4, mPaint);
-             // draw a center white line showing range
--            mCanvas.drawLine(px+(nx/2.0f),py+32,px+(nx/2.0f),py+ny-32,mPaint);
-+            mCanvas.drawLine(px + (nx / 2.0f), py + 32, px + (nx / 2.0f), py + ny - 32, mPaint);
-             // draw scale lines
--            mCanvas.drawLine(px+(nx/2)-32,py+32,px+(nx/2)+32,py+32,mPaint); // top white line
--            mCanvas.drawLine(px+(nx/2)-32,py+ny-32,px+(nx/2)+32,py+ny-32,mPaint); // bottom white line
--            float zerolen=(ny-64.0f)*((0.0f-minvalue)/(maxvalue-minvalue));
--            mCanvas.drawLine(px+(nx/2)-32,py+ny-32-zerolen,px+(nx/2)+32,py+ny-32-zerolen,mPaint); // zero white line
-+            mCanvas.drawLine(px + (nx / 2) - 32, py + 32, px + (nx / 2) + 32, py + 32, mPaint); // top white line
-+            mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32, px + (nx / 2) + 32, py + ny - 32, mPaint); // bottom white line
-+            float zerolen = (ny - 64.0f) * ((0.0f - minvalue) / (maxvalue - minvalue));
-+            if(zerolen>0.0f) mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32 - zerolen, px + (nx / 2) + 32, py + ny - 32 - zerolen, mPaint); // zero white line
-             // draw scale texts
--            mCanvas.drawText(String.format("%.0f",maxvalue),px+4,py+56,mPaint);  // max value indicator
--            mCanvas.drawText(String.format("%.0f",minvalue),px+4,py+ny-32,mPaint);  // min value indicator
--            mCanvas.drawText("0.0",px+4,py+ny-32-zerolen,mPaint);  // zero indicator
-+            mCanvas.drawText(String.format("%.0f", maxvalue), px + 4, py + 56, mPaint);  // max value indicator
-+            mCanvas.drawText(String.format("%.0f", minvalue), px + 4, py + ny - 32, mPaint);  // min value indicator
-+            if(zerolen>0.0f) mCanvas.drawText("0.0", px + 4, py + ny - 32 - zerolen, mPaint);  // zero indicator
-         }
- 
-         // extract sensor data and plot them on view
-@@ -1156,8 +1161,8 @@ public class TrycorderFragment extends Fragment
-                         lastAtempValue = event.values[0];
-                         invalidate();
-                     }
--                    if (event.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
--                        lastTempValue = event.values[0];
-+                    if (event.sensor.getType() == Sensor.TYPE_PRESSURE) {
-+                        lastPresValue = event.values[0];
-                         invalidate();
-                     }
-                     if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
-@@ -1693,6 +1698,18 @@ public class TrycorderFragment extends Fragment
-                 say("Logs Info");
-                 mLogsInfo.setVisibility(View.VISIBLE);
-                 mVieweron = false;
-+                mLogsInfo.setText("--------------------\nTelephony\n--------------------\n");
-+                mLogsInfo.append(fetch_tel_status(getContext()));
-+                mLogsInfo.append("--------------------\nNetwork\n--------------------\n");
-+                mLogsInfo.append(fetch_network_info());
-+                //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
-+                //mLogsInfo.append(fetch_dmesg_info());
-+                mLogsInfo.append("--------------------\nSystem\n--------------------\n");
-+                mLogsInfo.append(fetch_system_info());
-+                mLogsInfo.append("--------------------\nOperSys\n--------------------\n");
-+                mLogsInfo.append(fetch_os_info());
-+                //mLogsInfo.append("--------------------\nProcess\n--------------------\n");
-+                //mLogsInfo.append(fetch_process_info());
-                 break;
-             case 4:
-                 say("Plans");
-@@ -1905,7 +1922,7 @@ public class TrycorderFragment extends Fragment
-                 }
-             }
-             mTextstatus_top.setText(dutexte.get(0));
--            say("Understood: "+dutexte.get(0));
-+            say("Understood: " + dutexte.get(0));
-             speak("Unknown command.");
-         }
-     }
-@@ -1952,7 +1969,7 @@ public class TrycorderFragment extends Fragment
-     }
- 
-     private boolean matchvoice(String textein) {
--        String texte=textein.toLowerCase();
-+        String texte = textein.toLowerCase();
-         if (texte.contains("martin")) {
-             switchbuttonlayout(0);
-             speak("Martin is my Master.");
-@@ -2034,4 +2051,159 @@ public class TrycorderFragment extends Fragment
-         }
-         return (false);
-     }
-+
-+    // =================================================================================
-+    // run a command line program with args, return the printed output
-+    // invoque with run(new String[] { "ls", "-la" },"/data/data");
-+    public synchronized String run(String[] cmd, String workdirectory)
-+            throws IOException {
-+        String result = "";
-+
-+        try {
-+            ProcessBuilder builder = new ProcessBuilder(cmd);
-+            // set working directory
-+            if (workdirectory != null)
-+                builder.directory(new File(workdirectory));
-+            builder.redirectErrorStream(true);
-+            Process process = builder.start();
-+            InputStream in = process.getInputStream();
-+            byte[] re = new byte[1024];
-+            while (in.read(re) != -1) {
-+                System.out.println(new String(re));
-+                result = result + new String(re);
-+            }
-+            in.close();
-+
-+        } catch (Exception ex) {
-+            ex.printStackTrace();
-+        }
-+        return result;
-+    }
-+
-+    // =================================================================================
-+    // functions to fetch info from the system
-+
-+    // =================== fetch telephone status =======================
-+
-+    public String fetch_tel_status(Context cx) {
-+        String result = null;
-+        TelephonyManager tm = (TelephonyManager) cx
-+                .getSystemService(Context.TELEPHONY_SERVICE);//
-+        String str = "";
-+        str += "DeviceId(IMEI) = " + tm.getDeviceId() + "\n";
-+        str += "DeviceSoftwareVersion = " + tm.getDeviceSoftwareVersion()
-+                + "\n";
-+        str += "Line1Number = " + tm.getLine1Number() + "\n";
-+        str += "NetworkCountryIso = " + tm.getNetworkCountryIso() + "\n";
-+        str += "NetworkOperator = " + tm.getNetworkOperator() + "\n";
-+        str += "NetworkOperatorName = " + tm.getNetworkOperatorName() + "\n";
-+        str += "NetworkType = " + tm.getNetworkType() + "\n";
-+        str += "PhoneType = " + tm.getPhoneType() + "\n";
-+        str += "SimCountryIso = " + tm.getSimCountryIso() + "\n";
-+        str += "SimOperator = " + tm.getSimOperator() + "\n";
-+        str += "SimOperatorName = " + tm.getSimOperatorName() + "\n";
-+        str += "SimSerialNumber = " + tm.getSimSerialNumber() + "\n";
-+        str += "SimState = " + tm.getSimState() + "\n";
-+        str += "SubscriberId(IMSI) = " + tm.getSubscriberId() + "\n";
-+        str += "VoiceMailNumber = " + tm.getVoiceMailNumber() + "\n";
-+
-+        int mcc = cx.getResources().getConfiguration().mcc;
-+        int mnc = cx.getResources().getConfiguration().mnc;
-+        str += "IMSI MCC (Mobile Country Code):" + String.valueOf(mcc) + "\n";
-+        str += "IMSI MNC (Mobile Network Code):" + String.valueOf(mnc) + "\n";
-+        result = str;
-+        return result;
-+    }
-+
-+    // ================ fetch process info ===================
-+
-+    public String fetch_process_info() {
-+        String result = "";
-+        try {
-+            String[] args = {"/system/bin/top", "-n", "1"};
-+            result = run(args, "/system/bin/");
-+        } catch (IOException ex) {
-+            say("fetch_process_info ex=" + ex.toString());
-+        }
-+        return result;
-+    }
-+
-+    // ================= fetch network info ===================
-+
-+    public String fetch_network_info() {
-+        String result = "";
-+        try {
-+            String[] args = {"/system/bin/netcfg"};
-+            result = run(args, "/system/bin/");
-+        } catch (IOException ex) {
-+            say("fetch_network_info ex=" + ex.toString());
-+        }
-+        return result;
-+    }
-+
-+    // ================= fetch network info ===================
-+
-+    public String fetch_dmesg_info() {
-+        String result = "";
-+        try {
-+            String[] args = {"/system/bin/dmesg"};
-+            result = run(args, "/system/bin/");
-+        } catch (IOException ex) {
-+            say("fetch_dmesg_info ex=" + ex.toString());
-+        }
-+        return result;
-+    }
-+
-+    // ============ fetch system info ===========
-+    private StringBuffer buffer;
-+
-+    public String fetch_system_info() {
-+        buffer = new StringBuffer();
-+        initProperty("java.vendor.url", "java.vendor.url");
-+        initProperty("java.class.path", "java.class.path");
-+        initProperty("user.home", "user.home");
-+        initProperty("java.class.version", "java.class.version");
-+        initProperty("os.version", "os.version");
-+        initProperty("java.vendor", "java.vendor");
-+        initProperty("user.dir", "user.dir");
-+        initProperty("user.timezone", "user.timezone");
-+        initProperty("path.separator", "path.separator");
-+        initProperty(" os.name", " os.name");
-+        initProperty("os.arch", "os.arch");
-+        initProperty("line.separator", "line.separator");
-+        initProperty("file.separator", "file.separator");
-+        initProperty("user.name", "user.name");
-+        initProperty("java.version", "java.version");
-+        initProperty("java.home", "java.home");
-+        return buffer.toString();
-+    }
-+
-+    private void initProperty(String description, String propertyStr) {
-+        buffer.append(description).append(":");
-+        buffer.append(System.getProperty(propertyStr)).append("\n");
-+    }
-+
-+    // ================= fetch os information ===================
-+
-+    private String fetch_os_info() {
-+        StringBuffer sInfo = new StringBuffer();
-+        final ActivityManager activityManager =
-+                (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
-+        List<ActivityManager.RunningTaskInfo> tasks = activityManager.getRunningTasks(100);
-+        Iterator<ActivityManager.RunningTaskInfo> l = tasks.iterator();
-+        while (l.hasNext()) {
-+            ActivityManager.RunningTaskInfo ti = (ActivityManager.RunningTaskInfo) l.next();
-+            sInfo.append("id: ").append(ti.id);
-+            sInfo.append("\nbaseActivity: ").append(
-+                    ti.baseActivity.flattenToString());
-+            sInfo.append("\nnumActivities: ").append(ti.numActivities);
-+            sInfo.append("\nnumRunning: ").append(ti.numRunning);
-+            sInfo.append("\ndescription: ").append(ti.description);
-+            sInfo.append("\n\n");
-+        }
-+        return sInfo.toString();
-+    }
-+
- }
-+
-+
 diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
-index ac2609a..b30b5fb 100644
+index b30b5fb..1e5a156 100644
 --- a/app/src/main/res/layout/trycorder_fragment.xml
 +++ b/app/src/main/res/layout/trycorder_fragment.xml
 @@ -783,7 +783,7 @@
                          android:layout_width="match_parent"
                          android:layout_height="match_parent"
                          android:src="@drawable/federation_logo"
--                        android:visibility="visible" />
-+                        android:visibility="gone" />
+-                        android:visibility="gone" />
++                        android:visibility="visible" />
  
                      <TextureView
                          android:id="@+id/viewer_window"
-@@ -809,17 +809,18 @@
- 
-                     <ScrollView
-                         android:layout_width="match_parent"
--                        android:layout_height="wrap_content">
-+                        android:layout_height="wrap_content"
-+                        android:scrollIndicators="right">
- 
-                         <TextView
-                             android:id="@+id/logs_info"
-                             android:layout_width="match_parent"
-                             android:layout_height="wrap_content"
--                            android:text="Info log"
--                            android:textColor="@android:color/holo_green_light"
--                            android:textSize="18sp"
-+                            android:text="Information log\n------------------"
-+                            android:textColor="@android:color/white"
-+                            android:textSize="14sp"
+@@ -820,7 +820,7 @@
+                             android:textColor="@android:color/white"
+                             android:textSize="14sp"
                              android:textStyle="bold"
--                            android:visibility="gone" />
-+                            android:visibility="visible" />
+-                            android:visibility="visible" />
++                            android:visibility="gone" />
  
                      </ScrollView>
  
 diff --git a/gitdiff.txt b/gitdiff.txt
-index cbf7618..d48f966 100644
+index 5bf11db..e69de29 100644
 --- a/gitdiff.txt
 +++ b/gitdiff.txt
-@@ -1,350 +0,0 @@
+@@ -1,754 +0,0 @@
+-diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+-index e08807c..0095518 100644
+---- a/app/src/main/AndroidManifest.xml
+-+++ b/app/src/main/AndroidManifest.xml
+-@@ -14,6 +14,8 @@
+-     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+-     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+-     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+-+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+-+    <uses-permission android:name="android.permission.GET_TASKS" />
+- 
+-     <uses-feature android:name="android.hardware.camera" android:required="false" />
+- 
 -diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--index 2221668..401eae1 100644
+-index 401eae1..b08b2fc 100644
 ---- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
 -+++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--@@ -97,6 +97,9 @@ public class TrycorderFragment extends Fragment
--     // the new scope class
--     private TemSensorView mTemSensorView;
+-@@ -1,5 +1,6 @@
+- package net.ddns.mlsoftlaberge.trycorder;
 - 
--+    // the Star-Trek Logo on sensor screen
--+    private ImageView mStartrekLogo;
--+
--     // the button to talk to computer
--     private ImageButton mTalkButton;
+-+import android.app.ActivityManager;
+- import android.content.ContentValues;
+- import android.content.Context;
+- import android.content.Intent;
+-@@ -31,6 +32,7 @@ import android.speech.SpeechRecognizer;
+- import android.speech.tts.TextToSpeech;
+- import android.support.v4.app.Fragment;
+- import android.os.Bundle;
+-+import android.telephony.TelephonyManager;
+- import android.util.Log;
+- import android.view.LayoutInflater;
+- import android.view.TextureView;
+-@@ -46,10 +48,13 @@ import android.widget.Toast;
 - 
--@@ -638,8 +641,8 @@ public class TrycorderFragment extends Fragment
--         // add my sensorview to the layout 1
--         mSensorLayout.addView(mTemSensorView, tlayoutParams);
+- import java.io.File;
+- import java.io.IOException;
+-+import java.io.InputStream;
+- import java.io.OutputStream;
+- import java.text.SimpleDateFormat;
+- import java.util.ArrayList;
+- import java.util.Date;
+-+import java.util.Iterator;
+-+import java.util.List;
+- import java.util.Locale;
 - 
---        // set the sensors invisible
---        //switchsensorlayout(0);
--+        // position 0 of layout 1
--+        mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
-- 
--         // initialize the gps service
--         locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
--@@ -687,12 +690,13 @@ public class TrycorderFragment extends Fragment
--         mSpeechRecognizer.setRecognitionListener(this);
--         mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
---        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.mlsoft");
--+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
---        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
--+        //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
---        //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
--+
--+        mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
-- 
--         return view;
--     }
--@@ -828,7 +832,11 @@ public class TrycorderFragment extends Fragment
--         mOriSensorView.setVisibility(View.GONE);
--         mGraSensorView.setVisibility(View.GONE);
--         mTemSensorView.setVisibility(View.GONE);
--+        mStartrekLogo.setVisibility(View.GONE);
--         switch (no) {
--+            case 0:
--+                mStartrekLogo.setVisibility(View.VISIBLE);
--+                break;
--             case 1:
--                 mMagSensorView.setVisibility(View.VISIBLE);
--                 break;
--@@ -842,6 +850,7 @@ public class TrycorderFragment extends Fragment
+- /**
+-@@ -850,7 +855,7 @@ public class TrycorderFragment extends Fragment
 -                 mTemSensorView.setVisibility(View.VISIBLE);
 -                 break;
 -         }
--+        mSensormode=no;
+--        mSensormode=no;
+-+        mSensormode = no;
 -     }
 - 
 -     // =====================================================================================
--@@ -1028,6 +1037,12 @@ public class TrycorderFragment extends Fragment
--         mSensorManager.registerListener(mTemSensorView,
+-@@ -1038,7 +1043,7 @@ public class TrycorderFragment extends Fragment
 -                 mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE),
 -                 SensorManager.SENSOR_DELAY_FASTEST);
--+        mSensorManager.registerListener(mTemSensorView,
--+                mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE),
--+                SensorManager.SENSOR_DELAY_FASTEST);
--+        mSensorManager.registerListener(mTemSensorView,
--+                mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),
--+                SensorManager.SENSOR_DELAY_FASTEST);
--         if (mSoundStatus) startmusic();
--     }
+-         mSensorManager.registerListener(mTemSensorView,
+--                mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE),
+-+                mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE),
+-                 SensorManager.SENSOR_DELAY_FASTEST);
+-         mSensorManager.registerListener(mTemSensorView,
+-                 mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),
+-@@ -1059,7 +1064,7 @@ public class TrycorderFragment extends Fragment
+-         private int mWidth;
+-         private int mHeight;
 - 
--@@ -1038,35 +1053,37 @@ public class TrycorderFragment extends Fragment
+--        private float lastTempValue = 0.0f;
+-+        private float lastPresValue = 0.0f;
+-         private float lastAtempValue = 0.0f;
+-         private float lastLightValue = 0.0f;
 - 
--         private Bitmap mBitmap;
--         private Paint mPaint = new Paint();
--+        private Paint mPaint2 = new Paint();
--         private Canvas mCanvas = new Canvas();
---        private int mColor[] = new int[3];
---        private float mWidth;
---        private float mHeight;
---        private float mYOffset;
---        private float mScale;
---        private float mSpeed = 0.5f;
+-@@ -1074,14 +1079,14 @@ public class TrycorderFragment extends Fragment
+-             mPaint.setColor(Color.WHITE);
+-             // line paint
+-             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+--            mPaint2.setStrokeWidth(8);
+-+            mPaint2.setStrokeWidth(2);
+-             mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
+-             mPaint2.setColor(Color.RED);
 - 
---        // table of values for the trace
---        private int MAXVALUES = 300;
---        private float mValues[] = new float[MAXVALUES * 3];
---        private int nbValues = 0;
---        private float lastvalue = 0.0f;
--+        private int mWidth;
--+        private int mHeight;
--+
--+        private float lastTempValue = 0.0f;
--+        private float lastAtempValue = 0.0f;
--+        private float lastLightValue = 0.0f;
-- 
--         // initialize the 3 colors, and setup painter
--         public TemSensorView(Context context) {
--             super(context);
---            mColor[0] = Color.argb(192, 255, 64, 64);
---            mColor[1] = Color.argb(192, 64, 64, 255);
---            mColor[2] = Color.argb(192, 64, 255, 64);
--+            // text paint
--             mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
---            for (int i = 0; i < (MAXVALUES * 3); ++i) {
---                mValues[i] = 0.0f;
---            }
---            nbValues = 0;
--+            mPaint.setStrokeWidth(2);
--+            mPaint.setTextSize(24);
--+            mPaint.setStyle(Paint.Style.STROKE);
--+            mPaint.setColor(Color.WHITE);
--+            // line paint
--+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
--+            mPaint2.setStrokeWidth(8);
--+            mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
--+            mPaint2.setColor(Color.RED);
--+
 -         }
 - 
 -         public void resetcount() {
---            nbValues = 0;
--+            lastTempValue = 0.0f;
--+            lastAtempValue = 0.0f;
--+            lastLightValue = 0.0f;
+--            lastTempValue = 0.0f;
+-+            lastPresValue = 0.0f;
+-             lastAtempValue = 0.0f;
+-             lastLightValue = 0.0f;
 -         }
-- 
--         // initialize the bitmap to the size of the view, fill it white
--@@ -1076,11 +1093,8 @@ public class TrycorderFragment extends Fragment
--             mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
--             mCanvas.setBitmap(mBitmap);
--             mCanvas.drawColor(Color.BLACK);
---            mYOffset = h * 0.5f;
---            mScale = -(h * 0.5f * (1.0f / (SensorManager.MAGNETIC_FIELD_EARTH_MAX)));
--             mWidth = w;
--             mHeight = h;
---            mSpeed = mWidth / MAXVALUES;
--             super.onSizeChanged(w, h, oldw, oldh);
--         }
-- 
--@@ -1091,23 +1105,20 @@ public class TrycorderFragment extends Fragment
--                 if (mBitmap != null) {
+-@@ -1106,17 +1111,17 @@ public class TrycorderFragment extends Fragment
 -                     // clear the surface
 -                     mCanvas.drawColor(Color.BLACK);
---                    // draw middle line horizontal
---                    mPaint.setColor(0xffaaaaaa);
---                    mPaint.setStrokeWidth(1.0f);
---                    mCanvas.drawLine(0, mYOffset, mWidth, mYOffset, mPaint);
---                    mCanvas.drawText("Temp: " + String.valueOf(lastvalue), 0, 32, mPaint);
--+                    // draw the ambient temperature
--+                    drawSensor("Temp(°C)",lastTempValue,-20.0f,100.0f,0,0,mWidth/3.0f,mHeight);
--+
--+                    mCanvas.drawLine(mWidth/3.0f,0,mWidth/3.0f,mHeight,mPaint);
--+
--+                    // draw the ambient temperature
--+                    drawSensor("ATemp(°C)",lastAtempValue,-20.0f,100.0f,mWidth/3.0f,0,mWidth/3.0f,mHeight);
--+
--+                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
--+
--+                    // draw the ambient temperature
--+                    drawSensor("Light(Lux)",lastLightValue,0.0f,200.0f,mWidth/3.0f*2.0f,0,mWidth/3.0f,mHeight);
--+
+-                     // draw the ambient temperature
+--                    drawSensor("Temp(°C)",lastTempValue,-20.0f,100.0f,0,0,mWidth/3.0f,mHeight);
+-+                    drawSensor("Press(Kpa)", lastPresValue, 800.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
 - 
---                    // draw the 100 values x 3 rows
---                    for (int i = 0; i < nbValues - 1; ++i) {
---                        for (int j = 0; j < 3; ++j) {
---                            int k = (j * MAXVALUES) + i;
---                            float oldx = i * mSpeed;
---                            float newx = (i + 1) * mSpeed;
---                            mPaint.setColor(mColor[j]);
---                            mPaint.setStrokeWidth(3.0f);
---                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k + 1], mPaint);
---                        }
---                    }
+--                    mCanvas.drawLine(mWidth/3.0f,0,mWidth/3.0f,mHeight,mPaint);
+-+                    mCanvas.drawLine(mWidth / 3.0f, 0, mWidth / 3.0f, mHeight, mPaint);
+- 
+-                     // draw the ambient temperature
+--                    drawSensor("ATemp(°C)",lastAtempValue,-20.0f,100.0f,mWidth/3.0f,0,mWidth/3.0f,mHeight);
+-+                    drawSensor("ATemp(°C)", lastAtempValue, -20.0f, 100.0f, mWidth / 3.0f, 0, mWidth / 3.0f, mHeight);
+- 
+--                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
+-+                    mCanvas.drawLine(mWidth / 3.0f * 2.0f, 0, mWidth / 3.0f * 2.0f, mHeight, mPaint);
+- 
+-                     // draw the ambient temperature
+--                    drawSensor("Light(Lux)",lastLightValue,0.0f,200.0f,mWidth/3.0f*2.0f,0,mWidth/3.0f,mHeight);
+-+                    drawSensor("Light(Lux)", lastLightValue, 0.0f, 200.0f, mWidth / 3.0f * 2.0f, 0, mWidth / 3.0f, mHeight);
+- 
+- 
 -                     // transfer the bitmap to the view
--                     viewcanvas.drawBitmap(mBitmap, 0, 0, null);
--                 }
--@@ -1115,25 +1126,42 @@ public class TrycorderFragment extends Fragment
+-@@ -1126,26 +1131,26 @@ public class TrycorderFragment extends Fragment
 -             super.onDraw(viewcanvas);
 -         }
 - 
--+        private void drawSensor(String label,float value, float minvalue, float maxvalue,
--+                                float px, float py, float nx, float ny ) {
--+            // draw a proportionnal large red line for the value
--+            float linelen= (ny-64.0f)*((value-minvalue)/(maxvalue-minvalue));
--+            mCanvas.drawRect(px+(nx/3.0f),py+ny-32-linelen,px+(nx/3.0f*2.0f),py+ny-32,mPaint2);
--+            // draw the label on top
--+            mCanvas.drawText(label, px+32, py+24, mPaint);
--+            // draw the value on bottom
--+            mCanvas.drawText(String.format("%.2f",value),px+(nx/3.0f),py+ny-4,mPaint);
--+            // draw a center white line showing range
--+            mCanvas.drawLine(px+(nx/2.0f),py+32,px+(nx/2.0f),py+ny-32,mPaint);
--+            // draw scale lines
--+            mCanvas.drawLine(px+(nx/2)-32,py+32,px+(nx/2)+32,py+32,mPaint); // top white line
--+            mCanvas.drawLine(px+(nx/2)-32,py+ny-32,px+(nx/2)+32,py+ny-32,mPaint); // bottom white line
--+            float zerolen=(ny-64.0f)*((0.0f-minvalue)/(maxvalue-minvalue));
--+            mCanvas.drawLine(px+(nx/2)-32,py+ny-32-zerolen,px+(nx/2)+32,py+ny-32-zerolen,mPaint); // zero white line
--+            // draw scale texts
--+            mCanvas.drawText(String.format("%.0f",maxvalue),px+4,py+56,mPaint);  // max value indicator
--+            mCanvas.drawText(String.format("%.0f",minvalue),px+4,py+ny-32,mPaint);  // min value indicator
--+            mCanvas.drawText("0.0",px+4,py+ny-32-zerolen,mPaint);  // zero indicator
--+        }
--+
+--        private void drawSensor(String label,float value, float minvalue, float maxvalue,
+--                                float px, float py, float nx, float ny ) {
+-+        private void drawSensor(String label, float value, float minvalue, float maxvalue,
+-+                                float px, float py, float nx, float ny) {
+-             // draw a proportionnal large red line for the value
+--            float linelen= (ny-64.0f)*((value-minvalue)/(maxvalue-minvalue));
+--            mCanvas.drawRect(px+(nx/3.0f),py+ny-32-linelen,px+(nx/3.0f*2.0f),py+ny-32,mPaint2);
+-+            float linelen = (ny - 64.0f) * ((value - minvalue) / (maxvalue - minvalue));
+-+            mCanvas.drawRect(px + (nx / 3.0f), py + ny - 32 - linelen, px + (nx / 3.0f * 2.0f), py + ny - 32, mPaint2);
+-             // draw the label on top
+--            mCanvas.drawText(label, px+32, py+24, mPaint);
+-+            mCanvas.drawText(label, px + 32, py + 24, mPaint);
+-             // draw the value on bottom
+--            mCanvas.drawText(String.format("%.2f",value),px+(nx/3.0f),py+ny-4,mPaint);
+-+            mCanvas.drawText(String.format("%.2f", value), px + (nx / 3.0f), py + ny - 4, mPaint);
+-             // draw a center white line showing range
+--            mCanvas.drawLine(px+(nx/2.0f),py+32,px+(nx/2.0f),py+ny-32,mPaint);
+-+            mCanvas.drawLine(px + (nx / 2.0f), py + 32, px + (nx / 2.0f), py + ny - 32, mPaint);
+-             // draw scale lines
+--            mCanvas.drawLine(px+(nx/2)-32,py+32,px+(nx/2)+32,py+32,mPaint); // top white line
+--            mCanvas.drawLine(px+(nx/2)-32,py+ny-32,px+(nx/2)+32,py+ny-32,mPaint); // bottom white line
+--            float zerolen=(ny-64.0f)*((0.0f-minvalue)/(maxvalue-minvalue));
+--            mCanvas.drawLine(px+(nx/2)-32,py+ny-32-zerolen,px+(nx/2)+32,py+ny-32-zerolen,mPaint); // zero white line
+-+            mCanvas.drawLine(px + (nx / 2) - 32, py + 32, px + (nx / 2) + 32, py + 32, mPaint); // top white line
+-+            mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32, px + (nx / 2) + 32, py + ny - 32, mPaint); // bottom white line
+-+            float zerolen = (ny - 64.0f) * ((0.0f - minvalue) / (maxvalue - minvalue));
+-+            if(zerolen>0.0f) mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32 - zerolen, px + (nx / 2) + 32, py + ny - 32 - zerolen, mPaint); // zero white line
+-             // draw scale texts
+--            mCanvas.drawText(String.format("%.0f",maxvalue),px+4,py+56,mPaint);  // max value indicator
+--            mCanvas.drawText(String.format("%.0f",minvalue),px+4,py+ny-32,mPaint);  // min value indicator
+--            mCanvas.drawText("0.0",px+4,py+ny-32-zerolen,mPaint);  // zero indicator
+-+            mCanvas.drawText(String.format("%.0f", maxvalue), px + 4, py + 56, mPaint);  // max value indicator
+-+            mCanvas.drawText(String.format("%.0f", minvalue), px + 4, py + ny - 32, mPaint);  // min value indicator
+-+            if(zerolen>0.0f) mCanvas.drawText("0.0", px + 4, py + ny - 32 - zerolen, mPaint);  // zero indicator
+-         }
+- 
 -         // extract sensor data and plot them on view
--         public void onSensorChanged(SensorEvent event) {
--             synchronized (this) {
--                 if (mBitmap != null) {
--                     if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
---                        // scroll left when full
---                        if (nbValues >= MAXVALUES) {
---                            for (int i = 0; i < (MAXVALUES * 3) - 1; ++i) {
---                                mValues[i] = mValues[i + 1];
---                            }
---                            nbValues--;
---                        }
---                        // fill the 3 elements in the table
---                        for (int i = 0; i < 3; ++i) {
---                            final float v = mYOffset + event.values[i] * mScale;
---                            mValues[nbValues + (i * MAXVALUES)] = v;
---                            if (i == 0) lastvalue = v;
---                        }
---                        nbValues++;
--+                        lastAtempValue = event.values[0];
--+                        invalidate();
--+                    }
--+                    if (event.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
--+                        lastTempValue = event.values[0];
--+                        invalidate();
--+                    }
--+                    if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
--+                        lastLightValue = event.values[0];
+-@@ -1156,8 +1161,8 @@ public class TrycorderFragment extends Fragment
+-                         lastAtempValue = event.values[0];
 -                         invalidate();
 -                     }
--                 }
--@@ -1146,7 +1174,6 @@ public class TrycorderFragment extends Fragment
-- 
--     }
-- 
---
--     // ============================================================================
--     // stop the sensor updates
--     private void stoporisensors() {
--@@ -1196,7 +1223,7 @@ public class TrycorderFragment extends Fragment
--             paint = new Paint();
--             paint.setAntiAlias(true);
--             paint.setStrokeWidth(2);
---            paint.setTextSize(25);
--+            paint.setTextSize(24);
--             paint.setStyle(Paint.Style.STROKE);
--             paint.setColor(Color.WHITE);
--         }
--@@ -1873,14 +1900,17 @@ public class TrycorderFragment extends Fragment
--                 mSentence = dutexte.get(i);
--                 if (matchvoice(mSentence)) {
--                     mTextstatus_top.setText(mSentence);
--+                    say("Said: " + mSentence);
--                     return;
+--                    if (event.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
+--                        lastTempValue = event.values[0];
+-+                    if (event.sensor.getType() == Sensor.TYPE_PRESSURE) {
+-+                        lastPresValue = event.values[0];
+-                         invalidate();
+-                     }
+-                     if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+-@@ -1693,6 +1698,18 @@ public class TrycorderFragment extends Fragment
+-                 say("Logs Info");
+-                 mLogsInfo.setVisibility(View.VISIBLE);
+-                 mVieweron = false;
+-+                mLogsInfo.setText("--------------------\nTelephony\n--------------------\n");
+-+                mLogsInfo.append(fetch_tel_status(getContext()));
+-+                mLogsInfo.append("--------------------\nNetwork\n--------------------\n");
+-+                mLogsInfo.append(fetch_network_info());
+-+                //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
+-+                //mLogsInfo.append(fetch_dmesg_info());
+-+                mLogsInfo.append("--------------------\nSystem\n--------------------\n");
+-+                mLogsInfo.append(fetch_system_info());
+-+                mLogsInfo.append("--------------------\nOperSys\n--------------------\n");
+-+                mLogsInfo.append(fetch_os_info());
+-+                //mLogsInfo.append("--------------------\nProcess\n--------------------\n");
+-+                //mLogsInfo.append(fetch_process_info());
+-                 break;
+-             case 4:
+-                 say("Plans");
+-@@ -1905,7 +1922,7 @@ public class TrycorderFragment extends Fragment
 -                 }
 -             }
 -             mTextstatus_top.setText(dutexte.get(0));
--+            say("Understood: "+dutexte.get(0));
+--            say("Understood: "+dutexte.get(0));
+-+            say("Understood: " + dutexte.get(0));
 -             speak("Unknown command.");
 -         }
 -     }
-- 
--+
--     @Override
--     public void onRmsChanged(float rmsdB) {
--     }
--@@ -1921,8 +1951,9 @@ public class TrycorderFragment extends Fragment
--         mLogsConsole.setText(logbuffer);
+-@@ -1952,7 +1969,7 @@ public class TrycorderFragment extends Fragment
 -     }
 - 
---    private boolean matchvoice(String texte) {
---        if (texte.contains("Martin")) {
--+    private boolean matchvoice(String textein) {
--+        String texte=textein.toLowerCase();
--+        if (texte.contains("martin")) {
+-     private boolean matchvoice(String textein) {
+--        String texte=textein.toLowerCase();
+-+        String texte = textein.toLowerCase();
+-         if (texte.contains("martin")) {
 -             switchbuttonlayout(0);
 -             speak("Martin is my Master.");
--             return (true);
--@@ -1942,6 +1973,11 @@ public class TrycorderFragment extends Fragment
--             raiseshields();
--             return (true);
+-@@ -2034,4 +2051,159 @@ public class TrycorderFragment extends Fragment
 -         }
--+        if (texte.contains("shield") && texte.contains("down")) {
--+            switchbuttonlayout(3);
--+            lowershields();
--+            return (true);
--+        }
--         if (texte.contains("sensor off")) {
--             switchbuttonlayout(0);
--             switchsensorlayout(0);
--@@ -1991,6 +2027,11 @@ public class TrycorderFragment extends Fragment
--             switchviewer(1);
--             return (true);
--         }
--+        if (texte.contains("logs")) {
--+            switchbuttonlayout(7);
--+            switchviewer(2);
--+            return (true);
--+        }
 -         return (false);
 -     }
+-+
+-+    // =================================================================================
+-+    // run a command line program with args, return the printed output
+-+    // invoque with run(new String[] { "ls", "-la" },"/data/data");
+-+    public synchronized String run(String[] cmd, String workdirectory)
+-+            throws IOException {
+-+        String result = "";
+-+
+-+        try {
+-+            ProcessBuilder builder = new ProcessBuilder(cmd);
+-+            // set working directory
+-+            if (workdirectory != null)
+-+                builder.directory(new File(workdirectory));
+-+            builder.redirectErrorStream(true);
+-+            Process process = builder.start();
+-+            InputStream in = process.getInputStream();
+-+            byte[] re = new byte[1024];
+-+            while (in.read(re) != -1) {
+-+                System.out.println(new String(re));
+-+                result = result + new String(re);
+-+            }
+-+            in.close();
+-+
+-+        } catch (Exception ex) {
+-+            ex.printStackTrace();
+-+        }
+-+        return result;
+-+    }
+-+
+-+    // =================================================================================
+-+    // functions to fetch info from the system
+-+
+-+    // =================== fetch telephone status =======================
+-+
+-+    public String fetch_tel_status(Context cx) {
+-+        String result = null;
+-+        TelephonyManager tm = (TelephonyManager) cx
+-+                .getSystemService(Context.TELEPHONY_SERVICE);//
+-+        String str = "";
+-+        str += "DeviceId(IMEI) = " + tm.getDeviceId() + "\n";
+-+        str += "DeviceSoftwareVersion = " + tm.getDeviceSoftwareVersion()
+-+                + "\n";
+-+        str += "Line1Number = " + tm.getLine1Number() + "\n";
+-+        str += "NetworkCountryIso = " + tm.getNetworkCountryIso() + "\n";
+-+        str += "NetworkOperator = " + tm.getNetworkOperator() + "\n";
+-+        str += "NetworkOperatorName = " + tm.getNetworkOperatorName() + "\n";
+-+        str += "NetworkType = " + tm.getNetworkType() + "\n";
+-+        str += "PhoneType = " + tm.getPhoneType() + "\n";
+-+        str += "SimCountryIso = " + tm.getSimCountryIso() + "\n";
+-+        str += "SimOperator = " + tm.getSimOperator() + "\n";
+-+        str += "SimOperatorName = " + tm.getSimOperatorName() + "\n";
+-+        str += "SimSerialNumber = " + tm.getSimSerialNumber() + "\n";
+-+        str += "SimState = " + tm.getSimState() + "\n";
+-+        str += "SubscriberId(IMSI) = " + tm.getSubscriberId() + "\n";
+-+        str += "VoiceMailNumber = " + tm.getVoiceMailNumber() + "\n";
+-+
+-+        int mcc = cx.getResources().getConfiguration().mcc;
+-+        int mnc = cx.getResources().getConfiguration().mnc;
+-+        str += "IMSI MCC (Mobile Country Code):" + String.valueOf(mcc) + "\n";
+-+        str += "IMSI MNC (Mobile Network Code):" + String.valueOf(mnc) + "\n";
+-+        result = str;
+-+        return result;
+-+    }
+-+
+-+    // ================ fetch process info ===================
+-+
+-+    public String fetch_process_info() {
+-+        String result = "";
+-+        try {
+-+            String[] args = {"/system/bin/top", "-n", "1"};
+-+            result = run(args, "/system/bin/");
+-+        } catch (IOException ex) {
+-+            say("fetch_process_info ex=" + ex.toString());
+-+        }
+-+        return result;
+-+    }
+-+
+-+    // ================= fetch network info ===================
+-+
+-+    public String fetch_network_info() {
+-+        String result = "";
+-+        try {
+-+            String[] args = {"/system/bin/netcfg"};
+-+            result = run(args, "/system/bin/");
+-+        } catch (IOException ex) {
+-+            say("fetch_network_info ex=" + ex.toString());
+-+        }
+-+        return result;
+-+    }
+-+
+-+    // ================= fetch network info ===================
+-+
+-+    public String fetch_dmesg_info() {
+-+        String result = "";
+-+        try {
+-+            String[] args = {"/system/bin/dmesg"};
+-+            result = run(args, "/system/bin/");
+-+        } catch (IOException ex) {
+-+            say("fetch_dmesg_info ex=" + ex.toString());
+-+        }
+-+        return result;
+-+    }
+-+
+-+    // ============ fetch system info ===========
+-+    private StringBuffer buffer;
+-+
+-+    public String fetch_system_info() {
+-+        buffer = new StringBuffer();
+-+        initProperty("java.vendor.url", "java.vendor.url");
+-+        initProperty("java.class.path", "java.class.path");
+-+        initProperty("user.home", "user.home");
+-+        initProperty("java.class.version", "java.class.version");
+-+        initProperty("os.version", "os.version");
+-+        initProperty("java.vendor", "java.vendor");
+-+        initProperty("user.dir", "user.dir");
+-+        initProperty("user.timezone", "user.timezone");
+-+        initProperty("path.separator", "path.separator");
+-+        initProperty(" os.name", " os.name");
+-+        initProperty("os.arch", "os.arch");
+-+        initProperty("line.separator", "line.separator");
+-+        initProperty("file.separator", "file.separator");
+-+        initProperty("user.name", "user.name");
+-+        initProperty("java.version", "java.version");
+-+        initProperty("java.home", "java.home");
+-+        return buffer.toString();
+-+    }
+-+
+-+    private void initProperty(String description, String propertyStr) {
+-+        buffer.append(description).append(":");
+-+        buffer.append(System.getProperty(propertyStr)).append("\n");
+-+    }
+-+
+-+    // ================= fetch os information ===================
+-+
+-+    private String fetch_os_info() {
+-+        StringBuffer sInfo = new StringBuffer();
+-+        final ActivityManager activityManager =
+-+                (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+-+        List<ActivityManager.RunningTaskInfo> tasks = activityManager.getRunningTasks(100);
+-+        Iterator<ActivityManager.RunningTaskInfo> l = tasks.iterator();
+-+        while (l.hasNext()) {
+-+            ActivityManager.RunningTaskInfo ti = (ActivityManager.RunningTaskInfo) l.next();
+-+            sInfo.append("id: ").append(ti.id);
+-+            sInfo.append("\nbaseActivity: ").append(
+-+                    ti.baseActivity.flattenToString());
+-+            sInfo.append("\nnumActivities: ").append(ti.numActivities);
+-+            sInfo.append("\nnumRunning: ").append(ti.numRunning);
+-+            sInfo.append("\ndescription: ").append(ti.description);
+-+            sInfo.append("\n\n");
+-+        }
+-+        return sInfo.toString();
+-+    }
+-+
 - }
+-+
+-+
 -diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
--index 1890782..ac2609a 100644
+-index ac2609a..b30b5fb 100644
 ---- a/app/src/main/res/layout/trycorder_fragment.xml
 -+++ b/app/src/main/res/layout/trycorder_fragment.xml
--@@ -358,7 +358,17 @@
--                         android:layout_width="0dp"
--                         android:layout_height="match_parent"
--                         android:layout_weight="94"
---                        android:orientation="horizontal" />
--+                        android:orientation="horizontal" >
--+
--+                        <ImageView
--+                            android:id="@+id/startrek_logo"
--+                            android:layout_width="match_parent"
--+                            android:layout_height="match_parent"
--+                            android:src="@drawable/startrek_logo"
--+                            android:visibility="visible" />
--+
--+
--+                    </LinearLayout>
-- 
--                     <ImageView
--                         android:layout_width="0dp"
--@@ -773,7 +783,7 @@
+-@@ -783,7 +783,7 @@
 -                         android:layout_width="match_parent"
 -                         android:layout_height="match_parent"
 -                         android:src="@drawable/federation_logo"
---                        android:visibility="gone" />
--+                        android:visibility="visible" />
-- 
--                     <TextureView
--                         android:id="@+id/viewer_window"
--@@ -818,7 +828,7 @@
--                         android:layout_width="match_parent"
--                         android:layout_height="match_parent"
--                         android:src="@drawable/starship_plans"
 --                        android:visibility="visible" />
 -+                        android:visibility="gone" />
 - 
--                 </LinearLayout>
+-                     <TextureView
+-                         android:id="@+id/viewer_window"
+-@@ -809,17 +809,18 @@
 - 
+-                     <ScrollView
+-                         android:layout_width="match_parent"
+--                        android:layout_height="wrap_content">
+-+                        android:layout_height="wrap_content"
+-+                        android:scrollIndicators="right">
+- 
+-                         <TextView
+-                             android:id="@+id/logs_info"
+-                             android:layout_width="match_parent"
+-                             android:layout_height="wrap_content"
+--                            android:text="Info log"
+--                            android:textColor="@android:color/holo_green_light"
+--                            android:textSize="18sp"
+-+                            android:text="Information log\n------------------"
+-+                            android:textColor="@android:color/white"
+-+                            android:textSize="14sp"
+-                             android:textStyle="bold"
+--                            android:visibility="gone" />
+-+                            android:visibility="visible" />
+- 
+-                     </ScrollView>
+- 
+-diff --git a/gitdiff.txt b/gitdiff.txt
+-index cbf7618..d48f966 100644
+---- a/gitdiff.txt
+-+++ b/gitdiff.txt
+-@@ -1,350 +0,0 @@
+--diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+--index 2221668..401eae1 100644
+----- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+--+++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
+--@@ -97,6 +97,9 @@ public class TrycorderFragment extends Fragment
+--     // the new scope class
+--     private TemSensorView mTemSensorView;
+-- 
+--+    // the Star-Trek Logo on sensor screen
+--+    private ImageView mStartrekLogo;
+--+
+--     // the button to talk to computer
+--     private ImageButton mTalkButton;
+-- 
+--@@ -638,8 +641,8 @@ public class TrycorderFragment extends Fragment
+--         // add my sensorview to the layout 1
+--         mSensorLayout.addView(mTemSensorView, tlayoutParams);
+-- 
+---        // set the sensors invisible
+---        //switchsensorlayout(0);
+--+        // position 0 of layout 1
+--+        mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
+-- 
+--         // initialize the gps service
+--         locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+--@@ -687,12 +690,13 @@ public class TrycorderFragment extends Fragment
+--         mSpeechRecognizer.setRecognitionListener(this);
+--         mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+---        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.mlsoft");
+--+        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
+--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+---        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+--+        //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
+--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
+---        //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
+--+
+--+        mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
+-- 
+--         return view;
+--     }
+--@@ -828,7 +832,11 @@ public class TrycorderFragment extends Fragment
+--         mOriSensorView.setVisibility(View.GONE);
+--         mGraSensorView.setVisibility(View.GONE);
+--         mTemSensorView.setVisibility(View.GONE);
+--+        mStartrekLogo.setVisibility(View.GONE);
+--         switch (no) {
+--+            case 0:
+--+                mStartrekLogo.setVisibility(View.VISIBLE);
+--+                break;
+--             case 1:
+--                 mMagSensorView.setVisibility(View.VISIBLE);
+--                 break;
+--@@ -842,6 +850,7 @@ public class TrycorderFragment extends Fragment
+--                 mTemSensorView.setVisibility(View.VISIBLE);
+--                 break;
+--         }
+--+        mSensormode=no;
+--     }
+-- 
+--     // =====================================================================================
+--@@ -1028,6 +1037,12 @@ public class TrycorderFragment extends Fragment
+--         mSensorManager.registerListener(mTemSensorView,
+--                 mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE),
+--                 SensorManager.SENSOR_DELAY_FASTEST);
+--+        mSensorManager.registerListener(mTemSensorView,
+--+                mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE),
+--+                SensorManager.SENSOR_DELAY_FASTEST);
+--+        mSensorManager.registerListener(mTemSensorView,
+--+                mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),
+--+                SensorManager.SENSOR_DELAY_FASTEST);
+--         if (mSoundStatus) startmusic();
+--     }
+-- 
+--@@ -1038,35 +1053,37 @@ public class TrycorderFragment extends Fragment
+-- 
+--         private Bitmap mBitmap;
+--         private Paint mPaint = new Paint();
+--+        private Paint mPaint2 = new Paint();
+--         private Canvas mCanvas = new Canvas();
+---        private int mColor[] = new int[3];
+---        private float mWidth;
+---        private float mHeight;
+---        private float mYOffset;
+---        private float mScale;
+---        private float mSpeed = 0.5f;
+-- 
+---        // table of values for the trace
+---        private int MAXVALUES = 300;
+---        private float mValues[] = new float[MAXVALUES * 3];
+---        private int nbValues = 0;
+---        private float lastvalue = 0.0f;
+--+        private int mWidth;
+--+        private int mHeight;
+--+
+--+        private float lastTempValue = 0.0f;
+--+        private float lastAtempValue = 0.0f;
+--+        private float lastLightValue = 0.0f;
+-- 
+--         // initialize the 3 colors, and setup painter
+--         public TemSensorView(Context context) {
+--             super(context);
+---            mColor[0] = Color.argb(192, 255, 64, 64);
+---            mColor[1] = Color.argb(192, 64, 64, 255);
+---            mColor[2] = Color.argb(192, 64, 255, 64);
+--+            // text paint
+--             mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+---            for (int i = 0; i < (MAXVALUES * 3); ++i) {
+---                mValues[i] = 0.0f;
+---            }
+---            nbValues = 0;
+--+            mPaint.setStrokeWidth(2);
+--+            mPaint.setTextSize(24);
+--+            mPaint.setStyle(Paint.Style.STROKE);
+--+            mPaint.setColor(Color.WHITE);
+--+            // line paint
+--+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+--+            mPaint2.setStrokeWidth(8);
+--+            mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
+--+            mPaint2.setColor(Color.RED);
+--+
+--         }
+-- 
+--         public void resetcount() {
+---            nbValues = 0;
+--+            lastTempValue = 0.0f;
+--+            lastAtempValue = 0.0f;
+--+            lastLightValue = 0.0f;
+--         }
+-- 
+--         // initialize the bitmap to the size of the view, fill it white
+--@@ -1076,11 +1093,8 @@ public class TrycorderFragment extends Fragment
+--             mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+--             mCanvas.setBitmap(mBitmap);
+--             mCanvas.drawColor(Color.BLACK);
+---            mYOffset = h * 0.5f;
+---            mScale = -(h * 0.5f * (1.0f / (SensorManager.MAGNETIC_FIELD_EARTH_MAX)));
+--             mWidth = w;
+--             mHeight = h;
+---            mSpeed = mWidth / MAXVALUES;
+--             super.onSizeChanged(w, h, oldw, oldh);
+--         }
+-- 
+--@@ -1091,23 +1105,20 @@ public class TrycorderFragment extends Fragment
+--                 if (mBitmap != null) {
+--                     // clear the surface
+--                     mCanvas.drawColor(Color.BLACK);
+---                    // draw middle line horizontal
+---                    mPaint.setColor(0xffaaaaaa);
+---                    mPaint.setStrokeWidth(1.0f);
+---                    mCanvas.drawLine(0, mYOffset, mWidth, mYOffset, mPaint);
+---                    mCanvas.drawText("Temp: " + String.valueOf(lastvalue), 0, 32, mPaint);
+--+                    // draw the ambient temperature
+--+                    drawSensor("Temp(°C)",lastTempValue,-20.0f,100.0f,0,0,mWidth/3.0f,mHeight);
+--+
+--+                    mCanvas.drawLine(mWidth/3.0f,0,mWidth/3.0f,mHeight,mPaint);
+--+
+--+                    // draw the ambient temperature
+--+                    drawSensor("ATemp(°C)",lastAtempValue,-20.0f,100.0f,mWidth/3.0f,0,mWidth/3.0f,mHeight);
+--+
+--+                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
+--+
+--+                    // draw the ambient temperature
+--+                    drawSensor("Light(Lux)",lastLightValue,0.0f,200.0f,mWidth/3.0f*2.0f,0,mWidth/3.0f,mHeight);
+--+
+-- 
+---                    // draw the 100 values x 3 rows
+---                    for (int i = 0; i < nbValues - 1; ++i) {
+---                        for (int j = 0; j < 3; ++j) {
+---                            int k = (j * MAXVALUES) + i;
+---                            float oldx = i * mSpeed;
+---                            float newx = (i + 1) * mSpeed;
+---                            mPaint.setColor(mColor[j]);
+---                            mPaint.setStrokeWidth(3.0f);
+---                            mCanvas.drawLine(oldx, mValues[k], newx, mValues[k + 1], mPaint);
+---                        }
+---                    }
+--                     // transfer the bitmap to the view
+--                     viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+--                 }
+--@@ -1115,25 +1126,42 @@ public class TrycorderFragment extends Fragment
+--             super.onDraw(viewcanvas);
+--         }
+-- 
+--+        private void drawSensor(String label,float value, float minvalue, float maxvalue,
+--+                                float px, float py, float nx, float ny ) {
+--+            // draw a proportionnal large red line for the value
+--+            float linelen= (ny-64.0f)*((value-minvalue)/(maxvalue-minvalue));
+--+            mCanvas.drawRect(px+(nx/3.0f),py+ny-32-linelen,px+(nx/3.0f*2.0f),py+ny-32,mPaint2);
+--+            // draw the label on top
+--+            mCanvas.drawText(label, px+32, py+24, mPaint);
+--+            // draw the value on bottom
+--+            mCanvas.drawText(String.format("%.2f",value),px+(nx/3.0f),py+ny-4,mPaint);
+--+            // draw a center white line showing range
+--+            mCanvas.drawLine(px+(nx/2.0f),py+32,px+(nx/2.0f),py+ny-32,mPaint);
+--+            // draw scale lines
+--+            mCanvas.drawLine(px+(nx/2)-32,py+32,px+(nx/2)+32,py+32,mPaint); // top white line
+--+            mCanvas.drawLine(px+(nx/2)-32,py+ny-32,px+(nx/2)+32,py+ny-32,mPaint); // bottom white line
+--+            float zerolen=(ny-64.0f)*((0.0f-minvalue)/(maxvalue-minvalue));
+--+            mCanvas.drawLine(px+(nx/2)-32,py+ny-32-zerolen,px+(nx/2)+32,py+ny-32-zerolen,mPaint); // zero white line
+--+            // draw scale texts
+--+            mCanvas.drawText(String.format("%.0f",maxvalue),px+4,py+56,mPaint);  // max value indicator
+--+            mCanvas.drawText(String.format("%.0f",minvalue),px+4,py+ny-32,mPaint);  // min value indicator
+--+            mCanvas.drawText("0.0",px+4,py+ny-32-zerolen,mPaint);  // zero indicator
+--+        }
+--+
+--         // extract sensor data and plot them on view
+--         public void onSensorChanged(SensorEvent event) {
+--             synchronized (this) {
+--                 if (mBitmap != null) {
+--                     if (event.sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
+---                        // scroll left when full
+---                        if (nbValues >= MAXVALUES) {
+---                            for (int i = 0; i < (MAXVALUES * 3) - 1; ++i) {
+---                                mValues[i] = mValues[i + 1];
+---                            }
+---                            nbValues--;
+---                        }
+---                        // fill the 3 elements in the table
+---                        for (int i = 0; i < 3; ++i) {
+---                            final float v = mYOffset + event.values[i] * mScale;
+---                            mValues[nbValues + (i * MAXVALUES)] = v;
+---                            if (i == 0) lastvalue = v;
+---                        }
+---                        nbValues++;
+--+                        lastAtempValue = event.values[0];
+--+                        invalidate();
+--+                    }
+--+                    if (event.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
+--+                        lastTempValue = event.values[0];
+--+                        invalidate();
+--+                    }
+--+                    if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+--+                        lastLightValue = event.values[0];
+--                         invalidate();
+--                     }
+--                 }
+--@@ -1146,7 +1174,6 @@ public class TrycorderFragment extends Fragment
+-- 
+--     }
+-- 
+---
+--     // ============================================================================
+--     // stop the sensor updates
+--     private void stoporisensors() {
+--@@ -1196,7 +1223,7 @@ public class TrycorderFragment extends Fragment
+--             paint = new Paint();
+--             paint.setAntiAlias(true);
+--             paint.setStrokeWidth(2);
+---            paint.setTextSize(25);
+--+            paint.setTextSize(24);
+--             paint.setStyle(Paint.Style.STROKE);
+--             paint.setColor(Color.WHITE);
+--         }
+--@@ -1873,14 +1900,17 @@ public class TrycorderFragment extends Fragment
+--                 mSentence = dutexte.get(i);
+--                 if (matchvoice(mSentence)) {
+--                     mTextstatus_top.setText(mSentence);
+--+                    say("Said: " + mSentence);
+--                     return;
+--                 }
+--             }
+--             mTextstatus_top.setText(dutexte.get(0));
+--+            say("Understood: "+dutexte.get(0));
+--             speak("Unknown command.");
+--         }
+--     }
+-- 
+--+
+--     @Override
+--     public void onRmsChanged(float rmsdB) {
+--     }
+--@@ -1921,8 +1951,9 @@ public class TrycorderFragment extends Fragment
+--         mLogsConsole.setText(logbuffer);
+--     }
+-- 
+---    private boolean matchvoice(String texte) {
+---        if (texte.contains("Martin")) {
+--+    private boolean matchvoice(String textein) {
+--+        String texte=textein.toLowerCase();
+--+        if (texte.contains("martin")) {
+--             switchbuttonlayout(0);
+--             speak("Martin is my Master.");
+--             return (true);
+--@@ -1942,6 +1973,11 @@ public class TrycorderFragment extends Fragment
+--             raiseshields();
+--             return (true);
+--         }
+--+        if (texte.contains("shield") && texte.contains("down")) {
+--+            switchbuttonlayout(3);
+--+            lowershields();
+--+            return (true);
+--+        }
+--         if (texte.contains("sensor off")) {
+--             switchbuttonlayout(0);
+--             switchsensorlayout(0);
+--@@ -1991,6 +2027,11 @@ public class TrycorderFragment extends Fragment
+--             switchviewer(1);
+--             return (true);
+--         }
+--+        if (texte.contains("logs")) {
+--+            switchbuttonlayout(7);
+--+            switchviewer(2);
+--+            return (true);
+--+        }
+--         return (false);
+--     }
+-- }
+--diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
+--index 1890782..ac2609a 100644
+----- a/app/src/main/res/layout/trycorder_fragment.xml
+--+++ b/app/src/main/res/layout/trycorder_fragment.xml
+--@@ -358,7 +358,17 @@
+--                         android:layout_width="0dp"
+--                         android:layout_height="match_parent"
+--                         android:layout_weight="94"
+---                        android:orientation="horizontal" />
+--+                        android:orientation="horizontal" >
+--+
+--+                        <ImageView
+--+                            android:id="@+id/startrek_logo"
+--+                            android:layout_width="match_parent"
+--+                            android:layout_height="match_parent"
+--+                            android:src="@drawable/startrek_logo"
+--+                            android:visibility="visible" />
+--+
+--+
+--+                    </LinearLayout>
+-- 
+--                     <ImageView
+--                         android:layout_width="0dp"
+--@@ -773,7 +783,7 @@
+--                         android:layout_width="match_parent"
+--                         android:layout_height="match_parent"
+--                         android:src="@drawable/federation_logo"
+---                        android:visibility="gone" />
+--+                        android:visibility="visible" />
+-- 
+--                     <TextureView
+--                         android:id="@+id/viewer_window"
+--@@ -818,7 +828,7 @@
+--                         android:layout_width="match_parent"
+--                         android:layout_height="match_parent"
+--                         android:src="@drawable/starship_plans"
+---                        android:visibility="visible" />
+--+                        android:visibility="gone" />
+-- 
+--                 </LinearLayout>
+-- 
