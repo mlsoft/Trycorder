@@ -1,5 +1,6 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
+import android.app.ActivityManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.TextureView;
@@ -46,10 +48,13 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -850,7 +855,7 @@ public class TrycorderFragment extends Fragment
                 mTemSensorView.setVisibility(View.VISIBLE);
                 break;
         }
-        mSensormode=no;
+        mSensormode = no;
     }
 
     // =====================================================================================
@@ -1038,7 +1043,7 @@ public class TrycorderFragment extends Fragment
                 mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE),
                 SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(mTemSensorView,
-                mSensorManager.getDefaultSensor(Sensor.TYPE_TEMPERATURE),
+                mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE),
                 SensorManager.SENSOR_DELAY_FASTEST);
         mSensorManager.registerListener(mTemSensorView,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT),
@@ -1059,7 +1064,7 @@ public class TrycorderFragment extends Fragment
         private int mWidth;
         private int mHeight;
 
-        private float lastTempValue = 0.0f;
+        private float lastPresValue = 0.0f;
         private float lastAtempValue = 0.0f;
         private float lastLightValue = 0.0f;
 
@@ -1074,14 +1079,14 @@ public class TrycorderFragment extends Fragment
             mPaint.setColor(Color.WHITE);
             // line paint
             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
-            mPaint2.setStrokeWidth(8);
+            mPaint2.setStrokeWidth(2);
             mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
             mPaint2.setColor(Color.RED);
 
         }
 
         public void resetcount() {
-            lastTempValue = 0.0f;
+            lastPresValue = 0.0f;
             lastAtempValue = 0.0f;
             lastLightValue = 0.0f;
         }
@@ -1106,17 +1111,17 @@ public class TrycorderFragment extends Fragment
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
                     // draw the ambient temperature
-                    drawSensor("Temp(°C)",lastTempValue,-20.0f,100.0f,0,0,mWidth/3.0f,mHeight);
+                    drawSensor("Press(Kpa)", lastPresValue, 800.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
 
-                    mCanvas.drawLine(mWidth/3.0f,0,mWidth/3.0f,mHeight,mPaint);
-
-                    // draw the ambient temperature
-                    drawSensor("ATemp(°C)",lastAtempValue,-20.0f,100.0f,mWidth/3.0f,0,mWidth/3.0f,mHeight);
-
-                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
+                    mCanvas.drawLine(mWidth / 3.0f, 0, mWidth / 3.0f, mHeight, mPaint);
 
                     // draw the ambient temperature
-                    drawSensor("Light(Lux)",lastLightValue,0.0f,200.0f,mWidth/3.0f*2.0f,0,mWidth/3.0f,mHeight);
+                    drawSensor("ATemp(°C)", lastAtempValue, -20.0f, 100.0f, mWidth / 3.0f, 0, mWidth / 3.0f, mHeight);
+
+                    mCanvas.drawLine(mWidth / 3.0f * 2.0f, 0, mWidth / 3.0f * 2.0f, mHeight, mPaint);
+
+                    // draw the ambient temperature
+                    drawSensor("Light(Lux)", lastLightValue, 0.0f, 200.0f, mWidth / 3.0f * 2.0f, 0, mWidth / 3.0f, mHeight);
 
 
                     // transfer the bitmap to the view
@@ -1126,26 +1131,26 @@ public class TrycorderFragment extends Fragment
             super.onDraw(viewcanvas);
         }
 
-        private void drawSensor(String label,float value, float minvalue, float maxvalue,
-                                float px, float py, float nx, float ny ) {
+        private void drawSensor(String label, float value, float minvalue, float maxvalue,
+                                float px, float py, float nx, float ny) {
             // draw a proportionnal large red line for the value
-            float linelen= (ny-64.0f)*((value-minvalue)/(maxvalue-minvalue));
-            mCanvas.drawRect(px+(nx/3.0f),py+ny-32-linelen,px+(nx/3.0f*2.0f),py+ny-32,mPaint2);
+            float linelen = (ny - 64.0f) * ((value - minvalue) / (maxvalue - minvalue));
+            mCanvas.drawRect(px + (nx / 3.0f), py + ny - 32 - linelen, px + (nx / 3.0f * 2.0f), py + ny - 32, mPaint2);
             // draw the label on top
-            mCanvas.drawText(label, px+32, py+24, mPaint);
+            mCanvas.drawText(label, px + 32, py + 24, mPaint);
             // draw the value on bottom
-            mCanvas.drawText(String.format("%.2f",value),px+(nx/3.0f),py+ny-4,mPaint);
+            mCanvas.drawText(String.format("%.2f", value), px + (nx / 3.0f), py + ny - 4, mPaint);
             // draw a center white line showing range
-            mCanvas.drawLine(px+(nx/2.0f),py+32,px+(nx/2.0f),py+ny-32,mPaint);
+            mCanvas.drawLine(px + (nx / 2.0f), py + 32, px + (nx / 2.0f), py + ny - 32, mPaint);
             // draw scale lines
-            mCanvas.drawLine(px+(nx/2)-32,py+32,px+(nx/2)+32,py+32,mPaint); // top white line
-            mCanvas.drawLine(px+(nx/2)-32,py+ny-32,px+(nx/2)+32,py+ny-32,mPaint); // bottom white line
-            float zerolen=(ny-64.0f)*((0.0f-minvalue)/(maxvalue-minvalue));
-            mCanvas.drawLine(px+(nx/2)-32,py+ny-32-zerolen,px+(nx/2)+32,py+ny-32-zerolen,mPaint); // zero white line
+            mCanvas.drawLine(px + (nx / 2) - 32, py + 32, px + (nx / 2) + 32, py + 32, mPaint); // top white line
+            mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32, px + (nx / 2) + 32, py + ny - 32, mPaint); // bottom white line
+            float zerolen = (ny - 64.0f) * ((0.0f - minvalue) / (maxvalue - minvalue));
+            if(zerolen>0.0f) mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32 - zerolen, px + (nx / 2) + 32, py + ny - 32 - zerolen, mPaint); // zero white line
             // draw scale texts
-            mCanvas.drawText(String.format("%.0f",maxvalue),px+4,py+56,mPaint);  // max value indicator
-            mCanvas.drawText(String.format("%.0f",minvalue),px+4,py+ny-32,mPaint);  // min value indicator
-            mCanvas.drawText("0.0",px+4,py+ny-32-zerolen,mPaint);  // zero indicator
+            mCanvas.drawText(String.format("%.0f", maxvalue), px + 4, py + 56, mPaint);  // max value indicator
+            mCanvas.drawText(String.format("%.0f", minvalue), px + 4, py + ny - 32, mPaint);  // min value indicator
+            if(zerolen>0.0f) mCanvas.drawText("0.0", px + 4, py + ny - 32 - zerolen, mPaint);  // zero indicator
         }
 
         // extract sensor data and plot them on view
@@ -1156,8 +1161,8 @@ public class TrycorderFragment extends Fragment
                         lastAtempValue = event.values[0];
                         invalidate();
                     }
-                    if (event.sensor.getType() == Sensor.TYPE_TEMPERATURE) {
-                        lastTempValue = event.values[0];
+                    if (event.sensor.getType() == Sensor.TYPE_PRESSURE) {
+                        lastPresValue = event.values[0];
                         invalidate();
                     }
                     if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
@@ -1693,6 +1698,18 @@ public class TrycorderFragment extends Fragment
                 say("Logs Info");
                 mLogsInfo.setVisibility(View.VISIBLE);
                 mVieweron = false;
+                mLogsInfo.setText("--------------------\nTelephony\n--------------------\n");
+                mLogsInfo.append(fetch_tel_status(getContext()));
+                mLogsInfo.append("--------------------\nNetwork\n--------------------\n");
+                mLogsInfo.append(fetch_network_info());
+                //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
+                //mLogsInfo.append(fetch_dmesg_info());
+                mLogsInfo.append("--------------------\nSystem\n--------------------\n");
+                mLogsInfo.append(fetch_system_info());
+                mLogsInfo.append("--------------------\nOperSys\n--------------------\n");
+                mLogsInfo.append(fetch_os_info());
+                //mLogsInfo.append("--------------------\nProcess\n--------------------\n");
+                //mLogsInfo.append(fetch_process_info());
                 break;
             case 4:
                 say("Plans");
@@ -1905,7 +1922,7 @@ public class TrycorderFragment extends Fragment
                 }
             }
             mTextstatus_top.setText(dutexte.get(0));
-            say("Understood: "+dutexte.get(0));
+            say("Understood: " + dutexte.get(0));
             speak("Unknown command.");
         }
     }
@@ -1952,7 +1969,7 @@ public class TrycorderFragment extends Fragment
     }
 
     private boolean matchvoice(String textein) {
-        String texte=textein.toLowerCase();
+        String texte = textein.toLowerCase();
         if (texte.contains("martin")) {
             switchbuttonlayout(0);
             speak("Martin is my Master.");
@@ -2034,4 +2051,159 @@ public class TrycorderFragment extends Fragment
         }
         return (false);
     }
+
+    // =================================================================================
+    // run a command line program with args, return the printed output
+    // invoque with run(new String[] { "ls", "-la" },"/data/data");
+    public synchronized String run(String[] cmd, String workdirectory)
+            throws IOException {
+        String result = "";
+
+        try {
+            ProcessBuilder builder = new ProcessBuilder(cmd);
+            // set working directory
+            if (workdirectory != null)
+                builder.directory(new File(workdirectory));
+            builder.redirectErrorStream(true);
+            Process process = builder.start();
+            InputStream in = process.getInputStream();
+            byte[] re = new byte[1024];
+            while (in.read(re) != -1) {
+                System.out.println(new String(re));
+                result = result + new String(re);
+            }
+            in.close();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    // =================================================================================
+    // functions to fetch info from the system
+
+    // =================== fetch telephone status =======================
+
+    public String fetch_tel_status(Context cx) {
+        String result = null;
+        TelephonyManager tm = (TelephonyManager) cx
+                .getSystemService(Context.TELEPHONY_SERVICE);//
+        String str = "";
+        str += "DeviceId(IMEI) = " + tm.getDeviceId() + "\n";
+        str += "DeviceSoftwareVersion = " + tm.getDeviceSoftwareVersion()
+                + "\n";
+        str += "Line1Number = " + tm.getLine1Number() + "\n";
+        str += "NetworkCountryIso = " + tm.getNetworkCountryIso() + "\n";
+        str += "NetworkOperator = " + tm.getNetworkOperator() + "\n";
+        str += "NetworkOperatorName = " + tm.getNetworkOperatorName() + "\n";
+        str += "NetworkType = " + tm.getNetworkType() + "\n";
+        str += "PhoneType = " + tm.getPhoneType() + "\n";
+        str += "SimCountryIso = " + tm.getSimCountryIso() + "\n";
+        str += "SimOperator = " + tm.getSimOperator() + "\n";
+        str += "SimOperatorName = " + tm.getSimOperatorName() + "\n";
+        str += "SimSerialNumber = " + tm.getSimSerialNumber() + "\n";
+        str += "SimState = " + tm.getSimState() + "\n";
+        str += "SubscriberId(IMSI) = " + tm.getSubscriberId() + "\n";
+        str += "VoiceMailNumber = " + tm.getVoiceMailNumber() + "\n";
+
+        int mcc = cx.getResources().getConfiguration().mcc;
+        int mnc = cx.getResources().getConfiguration().mnc;
+        str += "IMSI MCC (Mobile Country Code):" + String.valueOf(mcc) + "\n";
+        str += "IMSI MNC (Mobile Network Code):" + String.valueOf(mnc) + "\n";
+        result = str;
+        return result;
+    }
+
+    // ================ fetch process info ===================
+
+    public String fetch_process_info() {
+        String result = "";
+        try {
+            String[] args = {"/system/bin/top", "-n", "1"};
+            result = run(args, "/system/bin/");
+        } catch (IOException ex) {
+            say("fetch_process_info ex=" + ex.toString());
+        }
+        return result;
+    }
+
+    // ================= fetch network info ===================
+
+    public String fetch_network_info() {
+        String result = "";
+        try {
+            String[] args = {"/system/bin/netcfg"};
+            result = run(args, "/system/bin/");
+        } catch (IOException ex) {
+            say("fetch_network_info ex=" + ex.toString());
+        }
+        return result;
+    }
+
+    // ================= fetch network info ===================
+
+    public String fetch_dmesg_info() {
+        String result = "";
+        try {
+            String[] args = {"/system/bin/dmesg"};
+            result = run(args, "/system/bin/");
+        } catch (IOException ex) {
+            say("fetch_dmesg_info ex=" + ex.toString());
+        }
+        return result;
+    }
+
+    // ============ fetch system info ===========
+    private StringBuffer buffer;
+
+    public String fetch_system_info() {
+        buffer = new StringBuffer();
+        initProperty("java.vendor.url", "java.vendor.url");
+        initProperty("java.class.path", "java.class.path");
+        initProperty("user.home", "user.home");
+        initProperty("java.class.version", "java.class.version");
+        initProperty("os.version", "os.version");
+        initProperty("java.vendor", "java.vendor");
+        initProperty("user.dir", "user.dir");
+        initProperty("user.timezone", "user.timezone");
+        initProperty("path.separator", "path.separator");
+        initProperty(" os.name", " os.name");
+        initProperty("os.arch", "os.arch");
+        initProperty("line.separator", "line.separator");
+        initProperty("file.separator", "file.separator");
+        initProperty("user.name", "user.name");
+        initProperty("java.version", "java.version");
+        initProperty("java.home", "java.home");
+        return buffer.toString();
+    }
+
+    private void initProperty(String description, String propertyStr) {
+        buffer.append(description).append(":");
+        buffer.append(System.getProperty(propertyStr)).append("\n");
+    }
+
+    // ================= fetch os information ===================
+
+    private String fetch_os_info() {
+        StringBuffer sInfo = new StringBuffer();
+        final ActivityManager activityManager =
+                (ActivityManager) getContext().getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> tasks = activityManager.getRunningTasks(100);
+        Iterator<ActivityManager.RunningTaskInfo> l = tasks.iterator();
+        while (l.hasNext()) {
+            ActivityManager.RunningTaskInfo ti = (ActivityManager.RunningTaskInfo) l.next();
+            sInfo.append("id: ").append(ti.id);
+            sInfo.append("\nbaseActivity: ").append(
+                    ti.baseActivity.flattenToString());
+            sInfo.append("\nnumActivities: ").append(ti.numActivities);
+            sInfo.append("\nnumRunning: ").append(ti.numRunning);
+            sInfo.append("\ndescription: ").append(ti.description);
+            sInfo.append("\n\n");
+        }
+        return sInfo.toString();
+    }
+
 }
+
+

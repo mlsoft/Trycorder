@@ -783,7 +783,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/federation_logo"
-                        android:visibility="visible" />
+                        android:visibility="gone" />
 
                     <TextureView
                         android:id="@+id/viewer_window"
@@ -809,17 +809,18 @@
 
                     <ScrollView
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:scrollIndicators="right">
 
                         <TextView
                             android:id="@+id/logs_info"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Info log"
-                            android:textColor="@android:color/holo_green_light"
-                            android:textSize="18sp"
+                            android:text="Information log\n------------------"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
                             android:textStyle="bold"
-                            android:visibility="gone" />
+                            android:visibility="visible" />
 
                     </ScrollView>
 
