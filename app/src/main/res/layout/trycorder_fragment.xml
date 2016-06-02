@@ -783,7 +783,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/federation_logo"
-                        android:visibility="gone" />
+                        android:visibility="visible" />
 
                     <TextureView
                         android:id="@+id/viewer_window"
@@ -820,7 +820,7 @@
                             android:textColor="@android:color/white"
                             android:textSize="14sp"
                             android:textStyle="bold"
-                            android:visibility="visible" />
+                            android:visibility="gone" />
 
                     </ScrollView>
 
