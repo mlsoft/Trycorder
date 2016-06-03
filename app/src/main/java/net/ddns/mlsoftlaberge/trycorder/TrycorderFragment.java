@@ -21,7 +21,11 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -50,9 +54,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -228,7 +236,7 @@ public class TrycorderFragment extends Fragment
         mTalkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listenandtalk();
+                listen();
             }
         });
 
@@ -903,12 +911,6 @@ public class TrycorderFragment extends Fragment
 
     // =====================================================================================
 
-    private void listenandtalk() {
-        listen();
-    }
-
-    // =====================================================================================
-
     private void buttonsound() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
@@ -917,13 +919,13 @@ public class TrycorderFragment extends Fragment
     private void opencomm() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-        say("Healing frequency open");
+        speak("Hailing frequency open.");
     }
 
     private void closecomm() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-        say("Healing frequency closed");
+        speak("Hailing frequency closed.");
     }
 
     private void transporterout() {
@@ -1146,11 +1148,13 @@ public class TrycorderFragment extends Fragment
             mCanvas.drawLine(px + (nx / 2) - 32, py + 32, px + (nx / 2) + 32, py + 32, mPaint); // top white line
             mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32, px + (nx / 2) + 32, py + ny - 32, mPaint); // bottom white line
             float zerolen = (ny - 64.0f) * ((0.0f - minvalue) / (maxvalue - minvalue));
-            if(zerolen>0.0f) mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32 - zerolen, px + (nx / 2) + 32, py + ny - 32 - zerolen, mPaint); // zero white line
+            if (zerolen > 0.0f)
+                mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32 - zerolen, px + (nx / 2) + 32, py + ny - 32 - zerolen, mPaint); // zero white line
             // draw scale texts
             mCanvas.drawText(String.format("%.0f", maxvalue), px + 4, py + 56, mPaint);  // max value indicator
             mCanvas.drawText(String.format("%.0f", minvalue), px + 4, py + ny - 32, mPaint);  // min value indicator
-            if(zerolen>0.0f) mCanvas.drawText("0.0", px + 4, py + ny - 32 - zerolen, mPaint);  // zero indicator
+            if (zerolen > 0.0f)
+                mCanvas.drawText("0.0", px + 4, py + ny - 32 - zerolen, mPaint);  // zero indicator
         }
 
         // extract sensor data and plot them on view
@@ -1698,16 +1702,19 @@ public class TrycorderFragment extends Fragment
                 say("Logs Info");
                 mLogsInfo.setVisibility(View.VISIBLE);
                 mVieweron = false;
-                mLogsInfo.setText("--------------------\nTelephony\n--------------------\n");
-                mLogsInfo.append(fetch_tel_status(getContext()));
+                mLogsInfo.setText("");
+                mLogsInfo.append("--------------------\nConnectivity\n--------------------\n");
+                mLogsInfo.append(fetch_connectivity());
+                mLogsInfo.append("--------------------\nTelephony\n--------------------\n");
+                mLogsInfo.append(fetch_tel_status());
                 mLogsInfo.append("--------------------\nNetwork\n--------------------\n");
                 mLogsInfo.append(fetch_network_info());
-                //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
-                //mLogsInfo.append(fetch_dmesg_info());
                 mLogsInfo.append("--------------------\nSystem\n--------------------\n");
                 mLogsInfo.append(fetch_system_info());
                 mLogsInfo.append("--------------------\nOperSys\n--------------------\n");
                 mLogsInfo.append(fetch_os_info());
+                //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
+                //mLogsInfo.append(fetch_dmesg_info());
                 //mLogsInfo.append("--------------------\nProcess\n--------------------\n");
                 //mLogsInfo.append(fetch_process_info());
                 break;
@@ -1985,14 +1992,14 @@ public class TrycorderFragment extends Fragment
             firemissiles();
             return (true);
         }
-        if (texte.contains("shield") || texte.contains("raise")) {
-            switchbuttonlayout(3);
-            raiseshields();
-            return (true);
-        }
         if (texte.contains("shield") && texte.contains("down")) {
             switchbuttonlayout(3);
             lowershields();
+            return (true);
+        }
+        if (texte.contains("shield") || texte.contains("raise")) {
+            switchbuttonlayout(3);
+            raiseshields();
             return (true);
         }
         if (texte.contains("sensor off")) {
@@ -2024,7 +2031,7 @@ public class TrycorderFragment extends Fragment
             closecomm();
             return (true);
         }
-        if (texte.contains("hailing") && texte.contains("open")) {
+        if (texte.contains("hailing")) {
             switchbuttonlayout(2);
             opencomm();
             return (true);
@@ -2085,7 +2092,8 @@ public class TrycorderFragment extends Fragment
 
     // =================== fetch telephone status =======================
 
-    public String fetch_tel_status(Context cx) {
+    public String fetch_tel_status() {
+        Context cx=getContext();
         String result = null;
         TelephonyManager tm = (TelephonyManager) cx
                 .getSystemService(Context.TELEPHONY_SERVICE);//
@@ -2124,19 +2132,6 @@ public class TrycorderFragment extends Fragment
             result = run(args, "/system/bin/");
         } catch (IOException ex) {
             say("fetch_process_info ex=" + ex.toString());
-        }
-        return result;
-    }
-
-    // ================= fetch network info ===================
-
-    public String fetch_network_info() {
-        String result = "";
-        try {
-            String[] args = {"/system/bin/netcfg"};
-            result = run(args, "/system/bin/");
-        } catch (IOException ex) {
-            say("fetch_network_info ex=" + ex.toString());
         }
         return result;
     }
@@ -2202,6 +2197,118 @@ public class TrycorderFragment extends Fragment
             sInfo.append("\n\n");
         }
         return sInfo.toString();
+    }
+
+    // ================= fetch network info ===================
+
+    public String fetch_network_info() {
+        String result = "";
+        NetInfo netinfo = new NetInfo(getContext());
+        result += String.format("Network type : %d\n", netinfo.getCurrentNetworkType());
+        result += String.format("Wifi IP Addr : %s\n", netinfo.getWifiIpAddress());
+        result += String.format("Wifi MAC Addr : %s\n", netinfo.getWiFiMACAddress());
+        result += String.format("Wifi SSID : %s\n", netinfo.getWiFiSSID());
+        result += String.format("IP Address : %s\n", netinfo.getIPAddress());
+        return result;
+    }
+
+    // ====================================================================================
+    // public functions to obtain different infos from network interface
+
+    public class NetInfo {
+        private ConnectivityManager connManager = null;
+        private WifiManager wifiManager = null;
+        private WifiInfo wifiInfo = null;
+
+        public NetInfo(Context context) {
+            connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            wifiInfo = wifiManager.getConnectionInfo();
+        }
+
+        public int getCurrentNetworkType() {
+            if (null == connManager)
+                return 0;
+
+            NetworkInfo netinfo = connManager.getActiveNetworkInfo();
+
+            return netinfo.getType();
+        }
+
+        public String getWifiIpAddress() {
+            if (null == wifiManager || null == wifiInfo)
+                return "";
+
+            int ipAddress = wifiInfo.getIpAddress();
+
+            return String.format("%d.%d.%d.%d",
+                    (ipAddress & 0xff),
+                    (ipAddress >> 8 & 0xff),
+                    (ipAddress >> 16 & 0xff),
+                    (ipAddress >> 24 & 0xff));
+        }
+
+        public String getWiFiMACAddress() {
+            if (null == wifiManager || null == wifiInfo)
+                return "";
+
+            return wifiInfo.getMacAddress();
+        }
+
+        public String getWiFiSSID() {
+            if (null == wifiManager || null == wifiInfo)
+                return "";
+
+            return wifiInfo.getSSID();
+        }
+
+        public String getIPAddress() {
+            String ipaddress = "";
+
+            try {
+                Enumeration<NetworkInterface> enumnet = NetworkInterface.getNetworkInterfaces();
+                NetworkInterface netinterface = null;
+
+                while (enumnet.hasMoreElements()) {
+                    netinterface = enumnet.nextElement();
+
+                    for (Enumeration<InetAddress> enumip = netinterface.getInetAddresses();
+                         enumip.hasMoreElements(); ) {
+                        InetAddress inetAddress = enumip.nextElement();
+
+                        if (!inetAddress.isLoopbackAddress()) {
+                            ipaddress = inetAddress.getHostAddress();
+
+                            break;
+                        }
+                    }
+                }
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
+
+            return ipaddress;
+        }
+    }
+
+    // =================================================================================
+    // fetch the internet connectivity
+
+    private String fetch_connectivity() {
+        if(checkInternet()) {
+            return "INTERNET is Active\n";
+        }
+        return "INTERNET is Off\n";
+    }
+
+    // check internet connectivity
+    public boolean checkInternet() {
+        ConnectivityManager connect = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connect.getNetworkInfo(0).getState() == NetworkInfo.State.CONNECTED
+                || connect.getNetworkInfo(1).getState() == NetworkInfo.State.CONNECTED) {
+            return true;
+        }
+        return false;
     }
 
 }
