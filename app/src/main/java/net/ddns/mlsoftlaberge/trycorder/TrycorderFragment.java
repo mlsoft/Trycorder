@@ -19,8 +19,11 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioRecord;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -113,6 +116,9 @@ public class TrycorderFragment extends Fragment
     private TemSensorView mTemSensorView;
 
     // the new scope class
+    private AudSensorView mAudSensorView;
+
+    // the new scope class
     private AniSensorView mAniSensorView;
 
     // the Star-Trek Logo on sensor screen
@@ -155,6 +161,7 @@ public class TrycorderFragment extends Fragment
     private Button mTemperatureButton;
     private Button mSensoroffButton;
     private int mSensormode = 0;
+    private int mSensorpage = 0;
 
     // the button to open a channel
     private Button mCommButton;
@@ -342,6 +349,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 switchbuttonlayout(1);
+                switchsensorlayout(mSensorpage);
                 buttonsound();
             }
         });
@@ -407,6 +415,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 switchbuttonlayout(2);
+                switchsensorlayout(5);
                 buttonsound();
             }
         });
@@ -415,6 +424,7 @@ public class TrycorderFragment extends Fragment
         mOpenCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                switchsensorlayout(5);
                 opencomm();
             }
         });
@@ -423,6 +433,7 @@ public class TrycorderFragment extends Fragment
         mCloseCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                switchsensorlayout(5);
                 closecomm();
             }
         });
@@ -461,7 +472,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 switchbuttonlayout(4);
-                switchsensorlayout(5);
+                switchsensorlayout(7);
                 buttonsound();
             }
         });
@@ -657,6 +668,11 @@ public class TrycorderFragment extends Fragment
         mSensorLayout.addView(mTemSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
+        mAudSensorView = new AudSensorView(getContext());
+        // add my sensorview to the layout 1
+        mSensorLayout.addView(mAudSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
         mAniSensorView = new AniSensorView(getContext());
         // add my sensorview to the layout 1
         mSensorLayout.addView(mAniSensorView, tlayoutParams);
@@ -780,14 +796,15 @@ public class TrycorderFragment extends Fragment
     public void onResume() {
         super.onResume();
         mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
+        mSensorpage = sharedPref.getInt("pref_key_sensor_page", 0);
         mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode", 0);
         mViewermode = sharedPref.getInt("pref_key_viewer_mode", 0);
         mSoundStatus = sharedPref.getBoolean("pref_key_audio_mode", false);
         mViewerfront = sharedPref.getBoolean("pref_key_viewer_front", false);
         switchbuttonlayout(mSensor2mode);
         switchsensorlayout(mSensormode);
-        startsensors(mSensormode);
         switchviewer(mViewermode);
+        if(mSensormode<=4) startsensors(mSensormode);
     }
 
     @Override
@@ -795,6 +812,7 @@ public class TrycorderFragment extends Fragment
         stopsensors();
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt("pref_key_sensor_mode", mSensormode);
+        editor.putInt("pref_key_sensor_page", mSensorpage);
         editor.putInt("pref_key_sensor2_mode", mSensor2mode);
         editor.putInt("pref_key_viewer_mode", mViewermode);
         editor.putBoolean("pref_key_audio_mode", mSoundStatus);
@@ -806,7 +824,6 @@ public class TrycorderFragment extends Fragment
 
     private void startsensors(int mode) {
         stopsensors();
-        mSensormode = mode;
         switch (mode) {
             case 1:
                 say("Sensors Magnetic");
@@ -825,13 +842,19 @@ public class TrycorderFragment extends Fragment
                 starttemsensors();
                 break;
             case 5:
-                say("Sensors Animation");
+                say("Sensors Audio Wave");
+                startaudsensors();
+                break;
+            case 7:
+                say("Sensors Fire Animation");
                 startanisensors();
                 break;
             default:
                 say("Sensors OFF");
                 break;
         }
+        if(mode<=4) mSensorpage = mode;
+        mSensormode = mode;
     }
 
     private void stopsensors() {
@@ -839,6 +862,7 @@ public class TrycorderFragment extends Fragment
         stoporisensors();
         stopgrasensors();
         stoptemsensors();
+        stopaudsensors();
         stopanisensors();
     }
 
@@ -857,6 +881,7 @@ public class TrycorderFragment extends Fragment
         mOriSensorView.setVisibility(View.GONE);
         mGraSensorView.setVisibility(View.GONE);
         mTemSensorView.setVisibility(View.GONE);
+        mAudSensorView.setVisibility(View.GONE);
         mAniSensorView.setVisibility(View.GONE);
         mStartrekLogo.setVisibility(View.GONE);
         switch (no) {
@@ -876,9 +901,13 @@ public class TrycorderFragment extends Fragment
                 mTemSensorView.setVisibility(View.VISIBLE);
                 break;
             case 5:
+                mAudSensorView.setVisibility(View.VISIBLE);
+                break;
+            case 7:
                 mAniSensorView.setVisibility(View.VISIBLE);
                 break;
         }
+        if(no<=4) mSensorpage = no;
         mSensormode = no;
     }
 
@@ -935,13 +964,17 @@ public class TrycorderFragment extends Fragment
     private void opencomm() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-        speak("Hailing frequency open.");
+        switchsensorlayout(5);
+        startsensors(5);
+        say("Hailing frequency open.");
     }
 
     private void closecomm() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-        speak("Hailing frequency closed.");
+        switchsensorlayout(5);
+        stopsensors();
+        say("Hailing frequency closed.");
     }
 
     private void transporterout() {
@@ -984,18 +1017,18 @@ public class TrycorderFragment extends Fragment
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.phasertype2);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Fire Phaser");
-        switchsensorlayout(5);
+        switchsensorlayout(7);
         mAniSensorView.setmode(2);
-        startsensors(5);
+        startsensors(7);
     }
 
     private void firemissiles() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.photorp1);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Fire Torpedo");
-        switchsensorlayout(5);
+        switchsensorlayout(7);
         mAniSensorView.setmode(1);
-        startsensors(5);
+        startsensors(7);
     }
 
     // ==========================================================================================
@@ -1024,7 +1057,6 @@ public class TrycorderFragment extends Fragment
                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
                     break;
             }
-
         }
         if (mSensormode != 0)
             mSoundButton.setBackgroundResource(R.drawable.trekbutton_yellow_center);
@@ -1048,6 +1080,144 @@ public class TrycorderFragment extends Fragment
             mSoundStatus = true;
             if (mRunStatus) startmusic();
         }
+    }
+
+    // ==============================================================================
+    // audio sensor, display waveform of ambient sound
+
+    private void stopaudsensors() {
+        mAudSensorView.stop();
+    }
+
+    private void startaudsensors() {
+        mAudSensorView.start();
+    }
+
+    // ============================================================================
+    // class defining the sensor display widget
+    private class AudSensorView extends TextView {
+        private Bitmap mBitmap;
+        private Paint mPaint = new Paint();
+        private Paint mPaint2 = new Paint();
+        private Canvas mCanvas = new Canvas();
+
+        private int mWidth;
+        private int mHeight;
+
+        // initialize the 3 colors, and setup painter
+        public AudSensorView(Context context) {
+            super(context);
+            // text paint
+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint.setStrokeWidth(2);
+            mPaint.setTextSize(24);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setColor(Color.WHITE);
+            // line paint
+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint2.setStrokeWidth(2);
+            mPaint2.setStyle(Paint.Style.STROKE);
+            mPaint2.setColor(Color.YELLOW);
+        }
+
+        // ======= timer section =======
+        private Timer timer=null;
+        private MyTimer myTimer;
+
+        private static final int RECORDER_SAMPLERATE = 8000;
+        private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
+        private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+
+        private AudioRecord mAudioRecord=null;
+        private int bufferSize=0;
+
+        int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
+        int BytesPerElement = 2; // 2 bytes in 16bit format
+
+        public void stop() {
+            if(timer!=null) {
+                timer.cancel();
+                timer=null;
+            }
+            if(mAudioRecord!=null) {
+                mAudioRecord.stop();
+                mAudioRecord.release();
+                mAudioRecord=null;
+            }
+        }
+
+        public void start() {
+            // start the recording
+            bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE,
+                    RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
+            mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                    RECORDER_SAMPLERATE, RECORDER_CHANNELS,
+                    RECORDER_AUDIO_ENCODING, bufferSize);
+            mAudioRecord.startRecording();
+            // start the timer to eat this stuff and display it
+            timer = new Timer("audiowave");
+            myTimer = new MyTimer();
+            timer.schedule(myTimer, 10L, 10L);
+        }
+
+        private short sData[] = new short[BufferElements2Rec];
+        private int nbe=0;
+
+        private class MyTimer extends TimerTask {
+            public void run() {
+                nbe = BufferElements2Rec>mWidth ? mWidth : BufferElements2Rec;
+                mAudioRecord.read(sData,0,nbe);
+                postInvalidate();
+            }
+        }
+
+        // =========== textview callbacks =================
+        // initialize the bitmap to the size of the view, fill it white
+        // init the view state variables to initial values
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+            mCanvas.setBitmap(mBitmap);
+            mCanvas.drawColor(Color.BLACK);
+            mWidth = w;
+            mHeight = h;
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        // draw
+        @Override
+        public void onDraw(Canvas viewcanvas) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    // clear the surface
+                    mCanvas.drawColor(Color.BLACK);
+                    // draw the horizontal line
+                    mCanvas.drawLine(0,mHeight/2,mWidth,mHeight/2,mPaint);
+                    // draw the sound wave
+                    int posx;
+                    int posy;
+                    int newx;
+                    int newy;
+                    int maxy;
+                    int yscale;
+                    maxy=mHeight/2;
+                    yscale=(32768/maxy)/4;    // increase noise level by 4
+                    posx=0;
+                    posy=maxy;
+                    for(int i=1;i<nbe;++i) {
+                        newx=i;
+                        newy=maxy+(sData[i]/yscale);
+                        mCanvas.drawLine((float)posx,(float)posy,(float)newx,(float)newy,mPaint2);
+                        posx=newx;
+                        posy=newy;
+                    }
+                    // transfer the bitmap to the view
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+                }
+            }
+            super.onDraw(viewcanvas);
+        }
+
     }
 
     // ==============================================================================

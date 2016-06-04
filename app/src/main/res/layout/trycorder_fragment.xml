@@ -367,7 +367,6 @@
                             android:src="@drawable/startrek_logo"
                             android:visibility="visible" />
 
-
                     </LinearLayout>
 
                     <ImageView
