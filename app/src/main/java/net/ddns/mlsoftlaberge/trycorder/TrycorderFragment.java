@@ -64,6 +64,8 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -109,6 +111,9 @@ public class TrycorderFragment extends Fragment
 
     // the new scope class
     private TemSensorView mTemSensorView;
+
+    // the new scope class
+    private AniSensorView mAniSensorView;
 
     // the Star-Trek Logo on sensor screen
     private ImageView mStartrekLogo;
@@ -456,6 +461,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 switchbuttonlayout(4);
+                switchsensorlayout(5);
                 buttonsound();
             }
         });
@@ -632,27 +638,28 @@ public class TrycorderFragment extends Fragment
 
         // my sensorview that display the sensors data
         mMagSensorView = new MagSensorView(getContext());
-
         // add my sensorview to the layout 1
         mSensorLayout.addView(mMagSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
         mOriSensorView = new OriSensorView(getContext());
-
         // add my sensorview to the layout 1
         mSensorLayout.addView(mOriSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
         mGraSensorView = new GraSensorView(getContext());
-
         // add my sensorview to the layout 1
         mSensorLayout.addView(mGraSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
         mTemSensorView = new TemSensorView(getContext());
-
         // add my sensorview to the layout 1
         mSensorLayout.addView(mTemSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mAniSensorView = new AniSensorView(getContext());
+        // add my sensorview to the layout 1
+        mSensorLayout.addView(mAniSensorView, tlayoutParams);
 
         // position 0 of layout 1
         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
@@ -709,7 +716,7 @@ public class TrycorderFragment extends Fragment
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
 
-        mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
+        //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
 
         return view;
     }
@@ -817,6 +824,10 @@ public class TrycorderFragment extends Fragment
                 say("Sensors Temperature");
                 starttemsensors();
                 break;
+            case 5:
+                say("Sensors Animation");
+                startanisensors();
+                break;
             default:
                 say("Sensors OFF");
                 break;
@@ -828,6 +839,7 @@ public class TrycorderFragment extends Fragment
         stoporisensors();
         stopgrasensors();
         stoptemsensors();
+        stopanisensors();
     }
 
     // =====================================================================================
@@ -845,6 +857,7 @@ public class TrycorderFragment extends Fragment
         mOriSensorView.setVisibility(View.GONE);
         mGraSensorView.setVisibility(View.GONE);
         mTemSensorView.setVisibility(View.GONE);
+        mAniSensorView.setVisibility(View.GONE);
         mStartrekLogo.setVisibility(View.GONE);
         switch (no) {
             case 0:
@@ -861,6 +874,9 @@ public class TrycorderFragment extends Fragment
                 break;
             case 4:
                 mTemSensorView.setVisibility(View.VISIBLE);
+                break;
+            case 5:
+                mAniSensorView.setVisibility(View.VISIBLE);
                 break;
         }
         mSensormode = no;
@@ -968,12 +984,18 @@ public class TrycorderFragment extends Fragment
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.phasertype2);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Fire Phaser");
+        switchsensorlayout(5);
+        mAniSensorView.setmode(2);
+        startsensors(5);
     }
 
     private void firemissiles() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.photorp1);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Fire Torpedo");
+        switchsensorlayout(5);
+        mAniSensorView.setmode(1);
+        startsensors(5);
     }
 
     // ==========================================================================================
@@ -1026,6 +1048,121 @@ public class TrycorderFragment extends Fragment
             mSoundStatus = true;
             if (mRunStatus) startmusic();
         }
+    }
+
+    // ==============================================================================
+    // animation sensor, (ex: firing missiles)
+
+    private void stopanisensors() {
+        stopmusic();
+    }
+
+    private void startanisensors() {
+        mAniSensorView.resetcount();
+        if (mSoundStatus) startmusic();
+    }
+
+    // ============================================================================
+    // class defining the sensor display widget
+    private class AniSensorView extends TextView {
+        private Bitmap mBitmap;
+        private Paint mPaint = new Paint();
+        private Paint mPaint2 = new Paint();
+        private Canvas mCanvas = new Canvas();
+
+        private int mWidth;
+        private int mHeight;
+
+        private float position = 0.0f;
+        private int aniMode = 0;
+
+        private Timer timer;
+        private MyTimer myTimer;
+
+        // initialize the 3 colors, and setup painter
+        public AniSensorView(Context context) {
+            super(context);
+            // text paint
+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint.setStrokeWidth(2);
+            mPaint.setTextSize(24);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setColor(Color.WHITE);
+            // line paint
+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint2.setStrokeWidth(16);
+            mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
+            mPaint2.setColor(Color.RED);
+
+        }
+
+        public void setmode(int no) {
+            aniMode = no;
+        }
+
+        public void resetcount() {
+            position = 0.0f;
+            timer = new Timer("animation");
+            myTimer = new MyTimer();
+            timer.schedule(myTimer, 10L, 10L);
+        }
+
+        private class MyTimer extends TimerTask {
+            public void run() {
+                if(aniMode==1) position += 10;
+                else position += 5;
+                postInvalidate();
+                if (position > mHeight) {
+                    cancel();
+                    position = 0;
+                    postInvalidate();
+                }
+            }
+        }
+
+        // initialize the bitmap to the size of the view, fill it white
+        // init the view state variables to initial values
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+            mCanvas.setBitmap(mBitmap);
+            mCanvas.drawColor(Color.BLACK);
+            mWidth = w;
+            mHeight = h;
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        // draw
+        @Override
+        public void onDraw(Canvas viewcanvas) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    // clear the surface
+                    mCanvas.drawColor(Color.BLACK);
+                    // draw the grid
+                    mCanvas.drawLine(mWidth/3,0,mWidth/3,mHeight,mPaint);
+                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
+                    mCanvas.drawLine(0,mHeight/3,mWidth,mHeight/3,mPaint);
+                    mCanvas.drawLine(0,mHeight/3.0f*2.0f,mWidth,mHeight/3.0f*2.0f,mPaint);
+                    // draw the shooting line
+                    if (position != 0.0f) {
+                        switch (aniMode) {
+                            case 1:
+                                mCanvas.drawLine(mWidth / 2.0f, mHeight - position + 32, mWidth / 2.0f, mHeight - position, mPaint2);
+                                break;
+                            case 2:
+                                mCanvas.drawLine(mWidth / 3.0f, mHeight, mWidth / 2.0f, mHeight - position, mPaint2);
+                                mCanvas.drawLine(mWidth / 3.0f * 2.0f, mHeight, mWidth / 2.0f, mHeight - position, mPaint2);
+                                break;
+                        }
+                    }
+                    // transfer the bitmap to the view
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+                }
+            }
+            super.onDraw(viewcanvas);
+        }
+
     }
 
     // ============================================================================
@@ -1748,6 +1885,10 @@ public class TrycorderFragment extends Fragment
             imageFileOS.write(data);
             imageFileOS.flush();
             imageFileOS.close();
+            // inform the media manager that we have a new photo in the gallery
+            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            intent.setData(imageFileUri);
+            getActivity().sendBroadcast(intent);
         } catch (Exception e) {
             Toast t = Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT);
             t.show();
@@ -2026,12 +2167,18 @@ public class TrycorderFragment extends Fragment
             startsensors(3);
             return (true);
         }
+        if (texte.contains("temperature") || texte.contains("pressure") || texte.contains("light")) {
+            switchbuttonlayout(1);
+            switchsensorlayout(4);
+            startsensors(4);
+            return (true);
+        }
         if (texte.contains("hailing") && texte.contains("close")) {
             switchbuttonlayout(2);
             closecomm();
             return (true);
         }
-        if (texte.contains("hailing")) {
+        if (texte.contains("hailing") || texte.contains("frequency")) {
             switchbuttonlayout(2);
             opencomm();
             return (true);
@@ -2054,6 +2201,13 @@ public class TrycorderFragment extends Fragment
         if (texte.contains("logs")) {
             switchbuttonlayout(7);
             switchviewer(2);
+            return (true);
+        }
+        if (texte.contains("fuck")) {
+            speak("This is not very polite.");
+            switchviewer(0);
+            switchsensorlayout(0);
+            switchbuttonlayout(0);
             return (true);
         }
         return (false);
@@ -2093,7 +2247,7 @@ public class TrycorderFragment extends Fragment
     // =================== fetch telephone status =======================
 
     public String fetch_tel_status() {
-        Context cx=getContext();
+        Context cx = getContext();
         String result = null;
         TelephonyManager tm = (TelephonyManager) cx
                 .getSystemService(Context.TELEPHONY_SERVICE);//
@@ -2295,7 +2449,7 @@ public class TrycorderFragment extends Fragment
     // fetch the internet connectivity
 
     private String fetch_connectivity() {
-        if(checkInternet()) {
+        if (checkInternet()) {
             return "INTERNET is Active\n";
         }
         return "INTERNET is Off\n";
