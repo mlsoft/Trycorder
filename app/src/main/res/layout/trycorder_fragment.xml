@@ -255,7 +255,7 @@
                 android:layout_marginStart="@dimen/button_margin"
                 android:layout_marginTop="@dimen/button_margin"
                 android:layout_weight="1"
-                android:background="@drawable/trekbutton_pink_right"
+                android:background="@drawable/trekbutton_indigo_right"
                 android:maxLines="1"
                 android:text="TRACTOR"
                 android:textSize="18sp"
@@ -678,7 +678,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
-                        android:background="@drawable/trekbutton_pink_left"
+                        android:background="@drawable/trekbutton_indigo"
                         android:text="TRACTOR PUSH" />
 
                     <Button
@@ -689,7 +689,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="34"
-                        android:background="@drawable/trekbutton_pink_center"
+                        android:background="@drawable/trekbutton_indigo"
                         android:text="TRACTOR OFF" />
 
                     <Button
@@ -700,7 +700,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
-                        android:background="@drawable/trekbutton_pink_right"
+                        android:background="@drawable/trekbutton_indigo"
                         android:text="TRACTOR PULL" />
 
                 </LinearLayout>

@@ -16,6 +16,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -123,10 +124,13 @@ public class TrycorderFragment extends Fragment
     private ShiSensorView mShiSensorView;
 
     // the new scope class
-    private AniSensorView mAniSensorView;
+    private FirSensorView mFirSensorView;
 
     // the new scope class
     private TraSensorView mTraSensorView;
+
+    // the new scope class
+    private TrbSensorView mTrbSensorView;
 
     // the Star-Trek Logo on sensor screen
     private ImageView mStartrekLogo;
@@ -558,7 +562,7 @@ public class TrycorderFragment extends Fragment
         mTractorPushButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tractorbeam();
+                tractorpush();
             }
         });
 
@@ -567,7 +571,7 @@ public class TrycorderFragment extends Fragment
         mTractorOffButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                buttonsound();
+                tractoroff();
             }
         });
 
@@ -576,7 +580,7 @@ public class TrycorderFragment extends Fragment
         mTractorPullButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                tractorbeam();
+                tractorpull();
             }
         });
 
@@ -735,14 +739,19 @@ public class TrycorderFragment extends Fragment
         mSensorLayout.addView(mShiSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
-        mAniSensorView = new AniSensorView(getContext());
+        mFirSensorView = new FirSensorView(getContext());
         // add my sensorview to the layout 1
-        mSensorLayout.addView(mAniSensorView, tlayoutParams);
+        mSensorLayout.addView(mFirSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
         mTraSensorView = new TraSensorView(getContext());
         // add my sensorview to the layout 1
         mSensorLayout.addView(mTraSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mTrbSensorView = new TrbSensorView(getContext());
+        // add my sensorview to the layout 1
+        mSensorLayout.addView(mTrbSensorView, tlayoutParams);
 
         // position 0 of layout 1
         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
@@ -760,9 +769,9 @@ public class TrycorderFragment extends Fragment
         // Define the criteria how to select the locatioin provider -> use
         // default
         Location location = null;
-        //Criteria criteria = new Criteria();
-        //locationProvider = locationManager.getBestProvider(criteria, false);
-        locationProvider = "gps";
+        Criteria criteria = new Criteria();
+        locationProvider = locationManager.getBestProvider(criteria, false);
+        //locationProvider = "gps";
         try {
             location = locationManager.getLastKnownLocation(locationProvider);
         } catch (SecurityException e) {
@@ -848,20 +857,20 @@ public class TrycorderFragment extends Fragment
         mPhaserButton.setTypeface(face3);
         mTorpedoButton.setTypeface(face3);
 
-        mTransportOutButton.setTypeface(face);
-        mTransportInButton.setTypeface(face);
+        mTransportOutButton.setTypeface(face3);
+        mTransportInButton.setTypeface(face3);
 
-        mTractorPushButton.setTypeface(face);
-        mTractorOffButton.setTypeface(face);
-        mTractorPullButton.setTypeface(face);
+        mTractorPushButton.setTypeface(face3);
+        mTractorOffButton.setTypeface(face3);
+        mTractorPullButton.setTypeface(face3);
 
-        mViewerOnButton.setTypeface(face);
-        mViewerFrontButton.setTypeface(face);
-        mViewerOffButton.setTypeface(face);
+        mViewerOnButton.setTypeface(face3);
+        mViewerFrontButton.setTypeface(face3);
+        mViewerOffButton.setTypeface(face3);
 
-        mLogsConsoleButton.setTypeface(face);
-        mLogsInfoButton.setTypeface(face);
-        mLogsPlansButton.setTypeface(face);
+        mLogsConsoleButton.setTypeface(face3);
+        mLogsInfoButton.setTypeface(face3);
+        mLogsPlansButton.setTypeface(face3);
     }
 
     @Override
@@ -923,7 +932,7 @@ public class TrycorderFragment extends Fragment
                 break;
             case 7:
                 say("Sensors Fire Animation");
-                startanisensors();
+                startfirsensors();
                 break;
             case 8:
                 say("Sensors Transport Animation");
@@ -931,7 +940,7 @@ public class TrycorderFragment extends Fragment
                 break;
             case 9:
                 say("Sensors Tractor Animation");
-                //starttrbsensors();
+                starttrbsensors();
                 break;
             default:
                 say("Sensors OFF");
@@ -948,9 +957,9 @@ public class TrycorderFragment extends Fragment
         stoptemsensors();
         stopaudsensors();
         stopshisensors();
-        stopanisensors();
+        stopfirsensors();
         stoptrasensors();
-        //stoptrbsensors();
+        stoptrbsensors();
     }
 
     // =====================================================================================
@@ -970,9 +979,9 @@ public class TrycorderFragment extends Fragment
         mTemSensorView.setVisibility(View.GONE);
         mAudSensorView.setVisibility(View.GONE);
         mShiSensorView.setVisibility(View.GONE);
-        mAniSensorView.setVisibility(View.GONE);
+        mFirSensorView.setVisibility(View.GONE);
         mTraSensorView.setVisibility(View.GONE);
-        //mTrbSensorView.setVisibility(View.GONE);
+        mTrbSensorView.setVisibility(View.GONE);
         mStartrekLogo.setVisibility(View.GONE);
         switch (no) {
             case 0:
@@ -997,13 +1006,13 @@ public class TrycorderFragment extends Fragment
                 mShiSensorView.setVisibility(View.VISIBLE);
                 break;
             case 7:
-                mAniSensorView.setVisibility(View.VISIBLE);
+                mFirSensorView.setVisibility(View.VISIBLE);
                 break;
             case 8:
                 mTraSensorView.setVisibility(View.VISIBLE);
                 break;
             case 9:
-                //mTrbSensorView.setVisibility(View.VISIBLE);
+                mTrbSensorView.setVisibility(View.VISIBLE);
                 break;
         }
         if(no<=4) mSensorpage = no;
@@ -1123,10 +1132,31 @@ public class TrycorderFragment extends Fragment
         startsensors(6);
     }
 
-    private void tractorbeam() {
+    private void tractorpush() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_tractor_clean);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-        say("Engage Tractor Beam");
+        say("Engage Tractor Beam Push");
+        switchsensorlayout(9);
+        mTrbSensorView.setmode(1);
+        startsensors(9);
+    }
+
+    private void tractoroff() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Tractor Beam Off");
+        switchsensorlayout(9);
+        mTrbSensorView.setmode(0);
+        stopsensors();
+    }
+
+    private void tractorpull() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_tractor_clean);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Engage Tractor Beam Pull");
+        switchsensorlayout(9);
+        mTrbSensorView.setmode(2);
+        startsensors(9);
     }
 
     private void firephaser() {
@@ -1134,7 +1164,7 @@ public class TrycorderFragment extends Fragment
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Fire Phaser");
         switchsensorlayout(7);
-        mAniSensorView.setmode(2);
+        mFirSensorView.setmode(2);
         startsensors(7);
     }
 
@@ -1143,7 +1173,7 @@ public class TrycorderFragment extends Fragment
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Fire Torpedo");
         switchsensorlayout(7);
-        mAniSensorView.setmode(1);
+        mFirSensorView.setmode(1);
         startsensors(7);
     }
 
@@ -1163,12 +1193,17 @@ public class TrycorderFragment extends Fragment
                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
                     break;
                 case 3:
-                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.tng_tractor_clean);
+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.scan_low);
                     mMediaPlayer.setLooping(true);
                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
                     break;
                 case 4:
                     mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.scan_high);
+                    mMediaPlayer.setLooping(true);
+                    mMediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    break;
+                case 9:
+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.tng_tractor_clean);
                     mMediaPlayer.setLooping(true);
                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
                     break;
@@ -1199,7 +1234,126 @@ public class TrycorderFragment extends Fragment
     }
 
     // ==============================================================================
-    // transporter sensor, display person disappearing
+    // shield sensor, display person disappearing
+
+    private void stoptrbsensors() {
+        stopmusic();
+        mTrbSensorView.stop();
+    }
+
+    private void starttrbsensors() {
+        mTrbSensorView.start();
+        if (mSoundStatus) startmusic();
+    }
+
+    // ============================================================================
+    // class defining the sensor display widget
+    private class TrbSensorView extends TextView {
+        private Bitmap mBitmap;
+        private Paint mPaint = new Paint();
+        private Paint mPaint2 = new Paint();
+        private Canvas mCanvas = new Canvas();
+
+        private int mWidth;
+        private int mHeight;
+
+        private int mode;   // 1=in 2=out
+
+        private int position=0;
+
+        // initialize the 3 colors, and setup painter
+        public TrbSensorView(Context context) {
+            super(context);
+            // text paint
+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint.setStrokeWidth(2);
+            mPaint.setTextSize(24);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setColor(Color.WHITE);
+            // line paint
+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint2.setStrokeWidth(2);
+            mPaint2.setStyle(Paint.Style.STROKE);
+            mPaint2.setColor(Color.MAGENTA);
+        }
+
+        public void setmode(int no) {
+            mode=no;
+            if(mode==0) stop();
+        }
+
+        // ======= timer section =======
+        private Timer timer=null;
+        private MyTimer myTimer;
+
+        public void stop() {
+            if(timer!=null) {
+                timer.cancel();
+                timer=null;
+            }
+            position=0;
+            invalidate();
+        }
+
+        public void start() {
+            // start the timer to eat this stuff and display it
+            position=1;
+            timer = new Timer("tractor");
+            myTimer = new MyTimer();
+            timer.schedule(myTimer, 10L, 10L);
+        }
+
+        private class MyTimer extends TimerTask {
+            public void run() {
+                position+=3;
+                postInvalidate();
+                if(position>=100) {
+                    position=1;
+                    postInvalidate();
+                }
+            }
+        }
+
+        // =========== textview callbacks =================
+        // initialize the bitmap to the size of the view, fill it white
+        // init the view state variables to initial values
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+            mCanvas.setBitmap(mBitmap);
+            mCanvas.drawColor(Color.BLACK);
+            mWidth = w;
+            mHeight = h;
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        // draw
+        @Override
+        public void onDraw(Canvas viewcanvas) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    // clear the surface
+                    mCanvas.drawColor(Color.BLACK);
+                    // draw the shield effect
+                    if(position!=0) {
+                        // compute positions
+                        float px=mWidth/2;
+                        float dx=position;
+                        mCanvas.drawLine(px,mHeight,px-dx,0,mPaint2);
+                        mCanvas.drawLine(px,mHeight,px,0,mPaint2);
+                        mCanvas.drawLine(px,mHeight,px+dx,0,mPaint2);
+                    }
+                    // transfer the bitmap to the view
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+                }
+            }
+            super.onDraw(viewcanvas);
+        }
+
+    }
+
+    // ==============================================================================
+    // shield sensor, display shields effects
 
     private void stopshisensors() {
         mShiSensorView.stop();
@@ -1330,12 +1484,13 @@ public class TrycorderFragment extends Fragment
         private Bitmap mBitmap;
         private Paint mPaint = new Paint();
         private Paint mPaint2 = new Paint();
+        private Paint mPaint3 = new Paint();
         private Canvas mCanvas = new Canvas();
 
         private int mWidth;
         private int mHeight;
 
-        private int mode;   // 1=in 2=out
+        private int mode=1;   // 1=in 2=out
 
         private int position=0;
 
@@ -1348,11 +1503,16 @@ public class TrycorderFragment extends Fragment
             mPaint.setTextSize(24);
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setColor(Color.WHITE);
-            // line paint
+            // circle paint
             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
             mPaint2.setStrokeWidth(2);
             mPaint2.setStyle(Paint.Style.STROKE);
             mPaint2.setColor(Color.BLUE);
+            // line paint
+            mPaint3.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint3.setStrokeWidth(2);
+            mPaint3.setStyle(Paint.Style.STROKE);
+            mPaint3.setColor(Color.LTGRAY);
         }
 
         public void setmode(int no) {
@@ -1371,6 +1531,7 @@ public class TrycorderFragment extends Fragment
         }
 
         public void start() {
+            position=1;
             // start the timer to eat this stuff and display it
             timer = new Timer("transporter");
             myTimer = new MyTimer();
@@ -1409,9 +1570,30 @@ public class TrycorderFragment extends Fragment
                 if (mBitmap != null) {
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
-                    // draw the vertical line
-                    mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
-                    // draw the transport man
+                    // ajust alpha level of person
+                    if(position==0) {
+                        if(mode==1) {
+                            mPaint3.setAlpha(255);
+                        } else {
+                            mPaint3.setAlpha(0);
+                        }
+                    } else {
+                        if(mode==1) {
+                            mPaint3.setAlpha(position);
+                        } else {
+                            mPaint3.setAlpha(255-position);
+                        }
+                    }
+                    // draw the vertical person
+                    int px=mWidth/2;
+                    int py=mHeight/2;
+                    int len=mHeight/5;
+                    mCanvas.drawLine(px,py-len,px,py+len,mPaint3);
+                    mCanvas.drawLine(px-len/2,py,px+len/2,py,mPaint3);
+                    mCanvas.drawLine(px,py+len,px-len/2,py+len*2,mPaint3);
+                    mCanvas.drawLine(px,py+len,px+len/2,py+len*2,mPaint3);
+                    mCanvas.drawCircle(px,py-len-len/2,len/2,mPaint3);
+                    // draw the transport circle effect
                     if(position!=0) {
                         if (mode == 1) {
                             mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
@@ -1567,20 +1749,20 @@ public class TrycorderFragment extends Fragment
     }
 
     // ==============================================================================
-    // animation sensor, (ex: firing missiles)
+    // firmation sensor, (ex: firing missiles)
 
-    private void stopanisensors() {
+    private void stopfirsensors() {
         stopmusic();
     }
 
-    private void startanisensors() {
-        mAniSensorView.resetcount();
+    private void startfirsensors() {
+        mFirSensorView.resetcount();
         if (mSoundStatus) startmusic();
     }
 
     // ============================================================================
     // class defining the sensor display widget
-    private class AniSensorView extends TextView {
+    private class FirSensorView extends TextView {
         private Bitmap mBitmap;
         private Paint mPaint = new Paint();
         private Paint mPaint2 = new Paint();
@@ -1590,13 +1772,13 @@ public class TrycorderFragment extends Fragment
         private int mHeight;
 
         private float position = 0.0f;
-        private int aniMode = 0;
+        private int firMode = 0;
 
         private Timer timer;
         private MyTimer myTimer;
 
         // initialize the 3 colors, and setup painter
-        public AniSensorView(Context context) {
+        public FirSensorView(Context context) {
             super(context);
             // text paint
             mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
@@ -1613,19 +1795,19 @@ public class TrycorderFragment extends Fragment
         }
 
         public void setmode(int no) {
-            aniMode = no;
+            firMode = no;
         }
 
         public void resetcount() {
             position = 0.0f;
-            timer = new Timer("animation");
+            timer = new Timer("fire");
             myTimer = new MyTimer();
             timer.schedule(myTimer, 10L, 10L);
         }
 
         private class MyTimer extends TimerTask {
             public void run() {
-                if(aniMode==1) position += 10;
+                if(firMode==1) position += 10;
                 else position += 5;
                 postInvalidate();
                 if (position > mHeight) {
@@ -1662,7 +1844,7 @@ public class TrycorderFragment extends Fragment
                     mCanvas.drawLine(0,mHeight/3.0f*2.0f,mWidth,mHeight/3.0f*2.0f,mPaint);
                     // draw the shooting line
                     if (position != 0.0f) {
-                        switch (aniMode) {
+                        switch (firMode) {
                             case 1:
                                 mCanvas.drawLine(mWidth / 2.0f, mHeight - position + 32, mWidth / 2.0f, mHeight - position, mPaint2);
                                 break;
@@ -2719,7 +2901,7 @@ public class TrycorderFragment extends Fragment
             switchviewer(2);
             return (true);
         }
-        if (texte.contains("fuck")) {
+        if (texte.contains("fuck") || texte.contains("shit")) {
             speak("This is not very polite.");
             switchviewer(0);
             switchsensorlayout(0);
