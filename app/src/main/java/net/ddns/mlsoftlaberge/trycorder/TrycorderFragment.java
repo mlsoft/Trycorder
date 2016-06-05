@@ -49,6 +49,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -189,6 +190,12 @@ public class TrycorderFragment extends Fragment
     private Button mTransportInButton;
     private Button mTransportOutButton;
 
+    // the button to fire at ennemys
+    private Button mTractorButton;
+    private Button mTractorPullButton;
+    private Button mTractorOffButton;
+    private Button mTractorPushButton;
+
     // the button to control the viewer
     private Button mViewerButton;
     private Button mViewerOnButton;
@@ -216,13 +223,14 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mSensor2shieldLayout;
     private LinearLayout mSensor2fireLayout;
     private LinearLayout mSensor2transporterLayout;
+    private LinearLayout mSensor2tractorLayout;
     private LinearLayout mSensor2viewerLayout;
     private LinearLayout mSensor2logsLayout;
     private int mSensor2mode = 0;
 
     private LinearLayout mSensor3Layout;
     private ImageView mFederationlogo;
-    private ImageView mStarshipPlan;
+    private ScrollView mStarshipPlans;
 
     // the player for sound background
     private MediaPlayer mMediaPlayer = null;
@@ -533,6 +541,45 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        // ===================== transporter buttons group ============================
+        // the tractor button
+        mTractorButton = (Button) view.findViewById(R.id.tractor_button);
+        mTractorButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchbuttonlayout(6);
+                switchsensorlayout(9);
+            }
+        });
+
+        // the tractor push button
+        mTractorPushButton = (Button) view.findViewById(R.id.tractor_push_button);
+        mTractorPushButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tractorbeam();
+            }
+        });
+
+        // the tractor off button
+        mTractorOffButton = (Button) view.findViewById(R.id.tractor_off_button);
+        mTractorOffButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+            }
+        });
+
+        // the tractor pull button
+        mTractorPullButton = (Button) view.findViewById(R.id.tractor_pull_button);
+        mTractorPullButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tractorbeam();
+            }
+        });
+
         // ===================== viewer buttons group ============================
         // the viewer button
         mViewerButton = (Button) view.findViewById(R.id.viewer_button);
@@ -540,7 +587,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchbuttonlayout(6);
+                switchbuttonlayout(7);
             }
         });
 
@@ -583,7 +630,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchbuttonlayout(7);
+                switchbuttonlayout(8);
             }
         });
 
@@ -625,6 +672,7 @@ public class TrycorderFragment extends Fragment
         mSensor2shieldLayout = (LinearLayout) view.findViewById(R.id.sensor2_shield_layout);
         mSensor2fireLayout = (LinearLayout) view.findViewById(R.id.sensor2_fire_layout);
         mSensor2transporterLayout = (LinearLayout) view.findViewById(R.id.sensor2_transporter_layout);
+        mSensor2tractorLayout = (LinearLayout) view.findViewById(R.id.sensor2_tractor_layout);
         mSensor2viewerLayout = (LinearLayout) view.findViewById(R.id.sensor2_viewer_layout);
         mSensor2logsLayout = (LinearLayout) view.findViewById(R.id.sensor2_logs_layout);
 
@@ -633,7 +681,7 @@ public class TrycorderFragment extends Fragment
         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
         mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
-        mStarshipPlan = (ImageView) view.findViewById(R.id.starship_plans);
+        mStarshipPlans = (ScrollView) view.findViewById(R.id.starship_plans);
 
         // create and activate a textureview to contain camera display
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
@@ -643,7 +691,7 @@ public class TrycorderFragment extends Fragment
         mViewerWindow.setVisibility(View.GONE);
         mLogsConsole.setVisibility(View.GONE);
         mLogsInfo.setVisibility(View.GONE);
-        mStarshipPlan.setVisibility(View.GONE);
+        mStarshipPlans.setVisibility(View.GONE);
         mVieweron = false;
 
         // ==============================================================================
@@ -780,6 +828,7 @@ public class TrycorderFragment extends Fragment
         mShieldButton.setTypeface(face2);
         mFireButton.setTypeface(face2);
         mTransporterButton.setTypeface(face2);
+        mTractorButton.setTypeface(face2);
         mViewerButton.setTypeface(face2);
         mLogsButton.setTypeface(face2);
 
@@ -801,6 +850,10 @@ public class TrycorderFragment extends Fragment
 
         mTransportOutButton.setTypeface(face);
         mTransportInButton.setTypeface(face);
+
+        mTractorPushButton.setTypeface(face);
+        mTractorOffButton.setTypeface(face);
+        mTractorPullButton.setTypeface(face);
 
         mViewerOnButton.setTypeface(face);
         mViewerFrontButton.setTypeface(face);
@@ -876,6 +929,10 @@ public class TrycorderFragment extends Fragment
                 say("Sensors Transport Animation");
                 starttrasensors();
                 break;
+            case 9:
+                say("Sensors Tractor Animation");
+                //starttrbsensors();
+                break;
             default:
                 say("Sensors OFF");
                 break;
@@ -893,6 +950,7 @@ public class TrycorderFragment extends Fragment
         stopshisensors();
         stopanisensors();
         stoptrasensors();
+        //stoptrbsensors();
     }
 
     // =====================================================================================
@@ -914,6 +972,7 @@ public class TrycorderFragment extends Fragment
         mShiSensorView.setVisibility(View.GONE);
         mAniSensorView.setVisibility(View.GONE);
         mTraSensorView.setVisibility(View.GONE);
+        //mTrbSensorView.setVisibility(View.GONE);
         mStartrekLogo.setVisibility(View.GONE);
         switch (no) {
             case 0:
@@ -943,6 +1002,9 @@ public class TrycorderFragment extends Fragment
             case 8:
                 mTraSensorView.setVisibility(View.VISIBLE);
                 break;
+            case 9:
+                //mTrbSensorView.setVisibility(View.VISIBLE);
+                break;
         }
         if(no<=4) mSensorpage = no;
         mSensormode = no;
@@ -956,6 +1018,7 @@ public class TrycorderFragment extends Fragment
         mSensor2shieldLayout.setVisibility(View.GONE);
         mSensor2fireLayout.setVisibility(View.GONE);
         mSensor2transporterLayout.setVisibility(View.GONE);
+        mSensor2tractorLayout.setVisibility(View.GONE);
         mSensor2viewerLayout.setVisibility(View.GONE);
         mSensor2logsLayout.setVisibility(View.GONE);
         switch (no) {
@@ -980,10 +1043,14 @@ public class TrycorderFragment extends Fragment
                 mSensor2transporterLayout.setVisibility(View.VISIBLE);
                 break;
             case 6:
+                say("Tractor Mode");
+                mSensor2tractorLayout.setVisibility(View.VISIBLE);
+                break;
+            case 7:
                 say("Viewer Mode");
                 mSensor2viewerLayout.setVisibility(View.VISIBLE);
                 break;
-            case 7:
+            case 8:
                 say("Logs Mode");
                 mSensor2logsLayout.setVisibility(View.VISIBLE);
                 break;
@@ -1043,7 +1110,7 @@ public class TrycorderFragment extends Fragment
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Raise Shields");
         switchsensorlayout(6);
-        mTraSensorView.setmode(1);
+        mShiSensorView.setmode(1);
         startsensors(6);
     }
 
@@ -1052,7 +1119,7 @@ public class TrycorderFragment extends Fragment
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Lower Shields");
         switchsensorlayout(6);
-        mTraSensorView.setmode(2);
+        mShiSensorView.setmode(2);
         startsensors(6);
     }
 
@@ -1197,7 +1264,7 @@ public class TrycorderFragment extends Fragment
 
         private class MyTimer extends TimerTask {
             public void run() {
-                position++;
+                position+=3;
                 postInvalidate();
                 if(position>=250) {
                     cancel();
@@ -2267,7 +2334,7 @@ public class TrycorderFragment extends Fragment
         mFederationlogo.setVisibility(View.GONE);
         mLogsConsole.setVisibility(View.GONE);
         mLogsInfo.setVisibility(View.GONE);
-        mStarshipPlan.setVisibility(View.GONE);
+        mStarshipPlans.setVisibility(View.GONE);
         switch (no) {
             case 0:
                 say("Viewer OFF");
@@ -2306,7 +2373,7 @@ public class TrycorderFragment extends Fragment
                 break;
             case 4:
                 say("Plans");
-                mStarshipPlan.setVisibility(View.VISIBLE);
+                mStarshipPlans.setVisibility(View.VISIBLE);
                 mVieweron = false;
                 break;
         }

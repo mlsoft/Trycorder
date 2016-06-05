@@ -140,6 +140,12 @@
             android:orientation="vertical"
             android:weightSum="12">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.25"
+                android:ellipsize="middle" />
+
             <Button
                 android:id="@+id/sensor_button"
                 android:layout_width="match_parent"
@@ -238,7 +244,27 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1.5" />
+                android:layout_weight="0.5" />
+
+            <Button
+                android:id="@+id/tractor_button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginBottom="@dimen/button_margin"
+                android:layout_marginEnd="@dimen/button_margin"
+                android:layout_marginStart="@dimen/button_margin"
+                android:layout_marginTop="@dimen/button_margin"
+                android:layout_weight="1"
+                android:background="@drawable/trekbutton_pink_right"
+                android:maxLines="1"
+                android:text="TRACTOR"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.5" />
 
             <Button
                 android:id="@+id/viewer_button"
@@ -278,7 +304,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5"
+                android:layout_weight="0.25"
                 android:ellipsize="middle" />
 
 
@@ -432,7 +458,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
                     <Button
@@ -633,6 +659,52 @@
 
                 </LinearLayout>
 
+                <!-- ========== button layout for tractor beam ============== -->
+                <LinearLayout
+                    android:id="@+id/sensor2_tractor_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="100">
+
+                    <Button
+                        android:id="@+id/tractor_push_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_pink_left"
+                        android:text="TRACTOR PUSH" />
+
+                    <Button
+                        android:id="@+id/tractor_off_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="34"
+                        android:background="@drawable/trekbutton_pink_center"
+                        android:text="TRACTOR OFF" />
+
+                    <Button
+                        android:id="@+id/tractor_pull_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_pink_right"
+                        android:text="TRACTOR PULL" />
+
+                </LinearLayout>
+
                 <!-- ========== button layout for viewer ============== -->
                 <LinearLayout
                     android:id="@+id/sensor2_viewer_layout"
@@ -823,12 +895,56 @@
 
                     </ScrollView>
 
-                    <ImageView
+                    <ScrollView
                         android:id="@+id/starship_plans"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/starship_plans"
-                        android:visibility="gone" />
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:scrollbars="vertical"
+                        android:scrollbarSize="2dp"
+                        android:scrollIndicators="right">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:weightSum="6"
+                            android:orientation="vertical">
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="0dp"
+                                android:layout_gravity="top"
+                                android:layout_weight="1"
+                                android:src="@drawable/starship_view" />
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="0dp"
+                                android:layout_weight="1"
+                                android:src="@drawable/starship_plan" />
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="0dp"
+                                android:layout_weight="1"
+                                android:src="@drawable/starship_topview" />
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="0dp"
+                                android:layout_weight="1"
+                                android:src="@drawable/starship_sideview" />
+
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="0dp"
+                                android:src="@drawable/starship_build"
+                                android:layout_weight="2"
+                                android:visibility="visible"/>
+
+                        </LinearLayout>
+
+                    </ScrollView>
 
                 </LinearLayout>
 

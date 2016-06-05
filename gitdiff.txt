@@ -1,450 +1,437 @@
-diff --git a/app/build.gradle b/app/build.gradle
-index 9c9c6df..ea53715 100644
---- a/app/build.gradle
-+++ b/app/build.gradle
-@@ -9,7 +9,7 @@ android {
-         minSdkVersion 15
-         targetSdkVersion 23
-         versionCode 1
--        versionName "1.2"
-+        versionName "1.4"
-     }
-     buildTypes {
-         release {
 diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-index 777a557..82dec9a 100644
+index 82dec9a..3d1cc8b 100644
 --- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
 +++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-@@ -119,8 +119,14 @@ public class TrycorderFragment extends Fragment
-     private AudSensorView mAudSensorView;
+@@ -49,6 +49,7 @@ import android.widget.Button;
+ import android.widget.ImageButton;
+ import android.widget.ImageView;
+ import android.widget.LinearLayout;
++import android.widget.ScrollView;
+ import android.widget.TextView;
+ import android.widget.Toast;
  
-     // the new scope class
-+    private ShiSensorView mShiSensorView;
+@@ -189,6 +190,12 @@ public class TrycorderFragment extends Fragment
+     private Button mTransportInButton;
+     private Button mTransportOutButton;
+ 
++    // the button to fire at ennemys
++    private Button mTractorButton;
++    private Button mTractorPullButton;
++    private Button mTractorOffButton;
++    private Button mTractorPushButton;
 +
-+    // the new scope class
-     private AniSensorView mAniSensorView;
+     // the button to control the viewer
+     private Button mViewerButton;
+     private Button mViewerOnButton;
+@@ -216,13 +223,14 @@ public class TrycorderFragment extends Fragment
+     private LinearLayout mSensor2shieldLayout;
+     private LinearLayout mSensor2fireLayout;
+     private LinearLayout mSensor2transporterLayout;
++    private LinearLayout mSensor2tractorLayout;
+     private LinearLayout mSensor2viewerLayout;
+     private LinearLayout mSensor2logsLayout;
+     private int mSensor2mode = 0;
  
-+    // the new scope class
-+    private TraSensorView mTraSensorView;
-+
-     // the Star-Trek Logo on sensor screen
-     private ImageView mStartrekLogo;
+     private LinearLayout mSensor3Layout;
+     private ImageView mFederationlogo;
+-    private ImageView mStarshipPlan;
++    private ScrollView mStarshipPlans;
  
-@@ -348,9 +354,10 @@ public class TrycorderFragment extends Fragment
-         mSensorButton.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
+     // the player for sound background
+     private MediaPlayer mMediaPlayer = null;
+@@ -533,6 +541,45 @@ public class TrycorderFragment extends Fragment
+             }
+         });
+ 
++        // ===================== transporter buttons group ============================
++        // the tractor button
++        mTractorButton = (Button) view.findViewById(R.id.tractor_button);
++        mTractorButton.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
 +                buttonsound();
-                 switchbuttonlayout(1);
-                 switchsensorlayout(mSensorpage);
--                buttonsound();
-+                startsensors(mSensorpage);
-             }
-         });
-         // the magnetic button
-@@ -444,8 +451,9 @@ public class TrycorderFragment extends Fragment
-         mShieldButton.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
--                switchbuttonlayout(3);
-                 buttonsound();
-+                switchbuttonlayout(3);
-+                switchsensorlayout(6);
-             }
-         });
-         // the shield up button
-@@ -471,9 +479,9 @@ public class TrycorderFragment extends Fragment
-         mFireButton.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
++                switchbuttonlayout(6);
++                switchsensorlayout(9);
++            }
++        });
++
++        // the tractor push button
++        mTractorPushButton = (Button) view.findViewById(R.id.tractor_push_button);
++        mTractorPushButton.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
++                tractorbeam();
++            }
++        });
++
++        // the tractor off button
++        mTractorOffButton = (Button) view.findViewById(R.id.tractor_off_button);
++        mTractorOffButton.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
 +                buttonsound();
-                 switchbuttonlayout(4);
-                 switchsensorlayout(7);
--                buttonsound();
-             }
-         });
- 
-@@ -501,8 +509,9 @@ public class TrycorderFragment extends Fragment
-         mTransporterButton.setOnClickListener(new View.OnClickListener() {
++            }
++        });
++
++        // the tractor pull button
++        mTractorPullButton = (Button) view.findViewById(R.id.tractor_pull_button);
++        mTractorPullButton.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
++                tractorbeam();
++            }
++        });
++
+         // ===================== viewer buttons group ============================
+         // the viewer button
+         mViewerButton = (Button) view.findViewById(R.id.viewer_button);
+@@ -540,7 +587,7 @@ public class TrycorderFragment extends Fragment
              @Override
              public void onClick(View view) {
--                switchbuttonlayout(5);
                  buttonsound();
-+                switchbuttonlayout(5);
-+                switchsensorlayout(8);
+-                switchbuttonlayout(6);
++                switchbuttonlayout(7);
              }
          });
  
-@@ -673,10 +682,20 @@ public class TrycorderFragment extends Fragment
-         mSensorLayout.addView(mAudSensorView, tlayoutParams);
+@@ -583,7 +630,7 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
+-                switchbuttonlayout(7);
++                switchbuttonlayout(8);
+             }
+         });
  
-         // my sensorview that display the sensors data
-+        mShiSensorView = new ShiSensorView(getContext());
-+        // add my sensorview to the layout 1
-+        mSensorLayout.addView(mShiSensorView, tlayoutParams);
+@@ -625,6 +672,7 @@ public class TrycorderFragment extends Fragment
+         mSensor2shieldLayout = (LinearLayout) view.findViewById(R.id.sensor2_shield_layout);
+         mSensor2fireLayout = (LinearLayout) view.findViewById(R.id.sensor2_fire_layout);
+         mSensor2transporterLayout = (LinearLayout) view.findViewById(R.id.sensor2_transporter_layout);
++        mSensor2tractorLayout = (LinearLayout) view.findViewById(R.id.sensor2_tractor_layout);
+         mSensor2viewerLayout = (LinearLayout) view.findViewById(R.id.sensor2_viewer_layout);
+         mSensor2logsLayout = (LinearLayout) view.findViewById(R.id.sensor2_logs_layout);
+ 
+@@ -633,7 +681,7 @@ public class TrycorderFragment extends Fragment
+         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
+         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
+         mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
+-        mStarshipPlan = (ImageView) view.findViewById(R.id.starship_plans);
++        mStarshipPlans = (ScrollView) view.findViewById(R.id.starship_plans);
+ 
+         // create and activate a textureview to contain camera display
+         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
+@@ -643,7 +691,7 @@ public class TrycorderFragment extends Fragment
+         mViewerWindow.setVisibility(View.GONE);
+         mLogsConsole.setVisibility(View.GONE);
+         mLogsInfo.setVisibility(View.GONE);
+-        mStarshipPlan.setVisibility(View.GONE);
++        mStarshipPlans.setVisibility(View.GONE);
+         mVieweron = false;
+ 
+         // ==============================================================================
+@@ -780,6 +828,7 @@ public class TrycorderFragment extends Fragment
+         mShieldButton.setTypeface(face2);
+         mFireButton.setTypeface(face2);
+         mTransporterButton.setTypeface(face2);
++        mTractorButton.setTypeface(face2);
+         mViewerButton.setTypeface(face2);
+         mLogsButton.setTypeface(face2);
+ 
+@@ -802,6 +851,10 @@ public class TrycorderFragment extends Fragment
+         mTransportOutButton.setTypeface(face);
+         mTransportInButton.setTypeface(face);
+ 
++        mTractorPushButton.setTypeface(face);
++        mTractorOffButton.setTypeface(face);
++        mTractorPullButton.setTypeface(face);
 +
-+        // my sensorview that display the sensors data
-         mAniSensorView = new AniSensorView(getContext());
-         // add my sensorview to the layout 1
-         mSensorLayout.addView(mAniSensorView, tlayoutParams);
- 
-+        // my sensorview that display the sensors data
-+        mTraSensorView = new TraSensorView(getContext());
-+        // add my sensorview to the layout 1
-+        mSensorLayout.addView(mTraSensorView, tlayoutParams);
-+
-         // position 0 of layout 1
-         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
- 
-@@ -845,10 +864,18 @@ public class TrycorderFragment extends Fragment
-                 say("Sensors Audio Wave");
-                 startaudsensors();
+         mViewerOnButton.setTypeface(face);
+         mViewerFrontButton.setTypeface(face);
+         mViewerOffButton.setTypeface(face);
+@@ -876,6 +929,10 @@ public class TrycorderFragment extends Fragment
+                 say("Sensors Transport Animation");
+                 starttrasensors();
                  break;
-+            case 6:
-+                say("Sensors Shields");
-+                startshisensors();
-+                break;
-             case 7:
-                 say("Sensors Fire Animation");
-                 startanisensors();
-                 break;
-+            case 8:
-+                say("Sensors Transport Animation");
-+                starttrasensors();
++            case 9:
++                say("Sensors Tractor Animation");
++                //starttrbsensors();
 +                break;
              default:
                  say("Sensors OFF");
                  break;
-@@ -863,7 +890,9 @@ public class TrycorderFragment extends Fragment
-         stopgrasensors();
-         stoptemsensors();
-         stopaudsensors();
-+        stopshisensors();
+@@ -893,6 +950,7 @@ public class TrycorderFragment extends Fragment
+         stopshisensors();
          stopanisensors();
-+        stoptrasensors();
+         stoptrasensors();
++        //stoptrbsensors();
      }
  
      // =====================================================================================
-@@ -882,7 +911,9 @@ public class TrycorderFragment extends Fragment
-         mGraSensorView.setVisibility(View.GONE);
-         mTemSensorView.setVisibility(View.GONE);
-         mAudSensorView.setVisibility(View.GONE);
-+        mShiSensorView.setVisibility(View.GONE);
+@@ -914,6 +972,7 @@ public class TrycorderFragment extends Fragment
+         mShiSensorView.setVisibility(View.GONE);
          mAniSensorView.setVisibility(View.GONE);
-+        mTraSensorView.setVisibility(View.GONE);
+         mTraSensorView.setVisibility(View.GONE);
++        //mTrbSensorView.setVisibility(View.GONE);
          mStartrekLogo.setVisibility(View.GONE);
          switch (no) {
              case 0:
-@@ -903,9 +934,15 @@ public class TrycorderFragment extends Fragment
-             case 5:
-                 mAudSensorView.setVisibility(View.VISIBLE);
+@@ -943,6 +1002,9 @@ public class TrycorderFragment extends Fragment
+             case 8:
+                 mTraSensorView.setVisibility(View.VISIBLE);
                  break;
-+            case 6:
-+                mShiSensorView.setVisibility(View.VISIBLE);
-+                break;
-             case 7:
-                 mAniSensorView.setVisibility(View.VISIBLE);
-                 break;
-+            case 8:
-+                mTraSensorView.setVisibility(View.VISIBLE);
++            case 9:
++                //mTrbSensorView.setVisibility(View.VISIBLE);
 +                break;
          }
          if(no<=4) mSensorpage = no;
          mSensormode = no;
-@@ -981,12 +1018,18 @@ public class TrycorderFragment extends Fragment
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-         say("Transport Out");
-+        switchsensorlayout(8);
-+        mTraSensorView.setmode(2);
-+        startsensors(8);
-     }
- 
-     private void transporterin() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
-         mediaPlayer.start(); // no need to call prepare(); create() does that for you
-         say("Transport In");
-+        switchsensorlayout(8);
-+        mTraSensorView.setmode(1);
-+        startsensors(8);
-     }
- 
-     private void longrangesensor() {
-@@ -999,12 +1042,18 @@ public class TrycorderFragment extends Fragment
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shieldup);
+@@ -956,6 +1018,7 @@ public class TrycorderFragment extends Fragment
+         mSensor2shieldLayout.setVisibility(View.GONE);
+         mSensor2fireLayout.setVisibility(View.GONE);
+         mSensor2transporterLayout.setVisibility(View.GONE);
++        mSensor2tractorLayout.setVisibility(View.GONE);
+         mSensor2viewerLayout.setVisibility(View.GONE);
+         mSensor2logsLayout.setVisibility(View.GONE);
+         switch (no) {
+@@ -980,10 +1043,14 @@ public class TrycorderFragment extends Fragment
+                 mSensor2transporterLayout.setVisibility(View.VISIBLE);
+                 break;
+             case 6:
++                say("Tractor Mode");
++                mSensor2tractorLayout.setVisibility(View.VISIBLE);
++                break;
++            case 7:
+                 say("Viewer Mode");
+                 mSensor2viewerLayout.setVisibility(View.VISIBLE);
+                 break;
+-            case 7:
++            case 8:
+                 say("Logs Mode");
+                 mSensor2logsLayout.setVisibility(View.VISIBLE);
+                 break;
+@@ -1043,7 +1110,7 @@ public class TrycorderFragment extends Fragment
          mediaPlayer.start(); // no need to call prepare(); create() does that for you
          say("Raise Shields");
-+        switchsensorlayout(6);
-+        mTraSensorView.setmode(1);
-+        startsensors(6);
+         switchsensorlayout(6);
+-        mTraSensorView.setmode(1);
++        mShiSensorView.setmode(1);
+         startsensors(6);
      }
  
-     private void lowershields() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shielddown);
+@@ -1052,7 +1119,7 @@ public class TrycorderFragment extends Fragment
          mediaPlayer.start(); // no need to call prepare(); create() does that for you
          say("Lower Shields");
-+        switchsensorlayout(6);
-+        mTraSensorView.setmode(2);
-+        startsensors(6);
+         switchsensorlayout(6);
+-        mTraSensorView.setmode(2);
++        mShiSensorView.setmode(2);
+         startsensors(6);
      }
  
-     private void tractorbeam() {
-@@ -1083,6 +1132,236 @@ public class TrycorderFragment extends Fragment
-     }
+@@ -1197,7 +1264,7 @@ public class TrycorderFragment extends Fragment
  
-     // ==============================================================================
-+    // transporter sensor, display person disappearing
-+
-+    private void stopshisensors() {
-+        mShiSensorView.stop();
-+    }
-+
-+    private void startshisensors() {
-+        mShiSensorView.start();
-+    }
-+
-+    // ============================================================================
-+    // class defining the sensor display widget
-+    private class ShiSensorView extends TextView {
-+        private Bitmap mBitmap;
-+        private Paint mPaint = new Paint();
-+        private Paint mPaint2 = new Paint();
-+        private Canvas mCanvas = new Canvas();
-+
-+        private int mWidth;
-+        private int mHeight;
-+
-+        private int mode;   // 1=in 2=out
-+
-+        private int position=0;
-+
-+        // initialize the 3 colors, and setup painter
-+        public ShiSensorView(Context context) {
-+            super(context);
-+            // text paint
-+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-+            mPaint.setStrokeWidth(2);
-+            mPaint.setTextSize(24);
-+            mPaint.setStyle(Paint.Style.STROKE);
-+            mPaint.setColor(Color.WHITE);
-+            // line paint
-+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
-+            mPaint2.setStrokeWidth(2);
-+            mPaint2.setStyle(Paint.Style.STROKE);
-+            mPaint2.setColor(Color.GREEN);
-+        }
-+
-+        public void setmode(int no) {
-+            mode=no;
-+        }
-+
-+        // ======= timer section =======
-+        private Timer timer=null;
-+        private MyTimer myTimer;
-+
-+        public void stop() {
-+            if(timer!=null) {
-+                timer.cancel();
-+                timer=null;
-+            }
-+        }
-+
-+        public void start() {
-+            // start the timer to eat this stuff and display it
-+            timer = new Timer("shield");
-+            myTimer = new MyTimer();
-+            timer.schedule(myTimer, 10L, 10L);
-+        }
-+
-+        private class MyTimer extends TimerTask {
-+            public void run() {
-+                position++;
-+                postInvalidate();
-+                if(position>=250) {
-+                    cancel();
-+                    position=0;
-+                    postInvalidate();
-+                }
-+            }
-+        }
-+
-+        // =========== textview callbacks =================
-+        // initialize the bitmap to the size of the view, fill it white
-+        // init the view state variables to initial values
-+        @Override
-+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
-+            mCanvas.setBitmap(mBitmap);
-+            mCanvas.drawColor(Color.BLACK);
-+            mWidth = w;
-+            mHeight = h;
-+            super.onSizeChanged(w, h, oldw, oldh);
-+        }
-+
-+        // draw
-+        @Override
-+        public void onDraw(Canvas viewcanvas) {
-+            synchronized (this) {
-+                if (mBitmap != null) {
-+                    // clear the surface
-+                    mCanvas.drawColor(Color.BLACK);
-+                    // draw the vertical line
-+                    //mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
-+                    // draw the shield effect
-+                    if(position!=0) {
-+                        if (mode == 1) {
-+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
-+                        } else {
-+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, 250 - position, mPaint2);
-+                        }
-+                    }
-+                    // transfer the bitmap to the view
-+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
-+                }
-+            }
-+            super.onDraw(viewcanvas);
-+        }
-+
-+    }
-+
-+    // ==============================================================================
-+    // transporter sensor, display person disappearing
-+
-+    private void stoptrasensors() {
-+        mTraSensorView.stop();
-+    }
-+
-+    private void starttrasensors() {
-+        mTraSensorView.start();
-+    }
-+
-+    // ============================================================================
-+    // class defining the sensor display widget
-+    private class TraSensorView extends TextView {
-+        private Bitmap mBitmap;
-+        private Paint mPaint = new Paint();
-+        private Paint mPaint2 = new Paint();
-+        private Canvas mCanvas = new Canvas();
-+
-+        private int mWidth;
-+        private int mHeight;
-+
-+        private int mode;   // 1=in 2=out
-+
-+        private int position=0;
-+
-+        // initialize the 3 colors, and setup painter
-+        public TraSensorView(Context context) {
-+            super(context);
-+            // text paint
-+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-+            mPaint.setStrokeWidth(2);
-+            mPaint.setTextSize(24);
-+            mPaint.setStyle(Paint.Style.STROKE);
-+            mPaint.setColor(Color.WHITE);
-+            // line paint
-+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
-+            mPaint2.setStrokeWidth(2);
-+            mPaint2.setStyle(Paint.Style.STROKE);
-+            mPaint2.setColor(Color.BLUE);
-+        }
-+
-+        public void setmode(int no) {
-+            mode=no;
-+        }
-+
-+        // ======= timer section =======
-+        private Timer timer=null;
-+        private MyTimer myTimer;
-+
-+        public void stop() {
-+            if(timer!=null) {
-+                timer.cancel();
-+                timer=null;
-+            }
-+        }
-+
-+        public void start() {
-+            // start the timer to eat this stuff and display it
-+            timer = new Timer("transporter");
-+            myTimer = new MyTimer();
-+            timer.schedule(myTimer, 10L, 10L);
-+        }
-+
-+        private class MyTimer extends TimerTask {
-+            public void run() {
-+                position++;
-+                postInvalidate();
-+                if(position>=250) {
-+                    cancel();
-+                    position=0;
-+                    postInvalidate();
-+                }
-+            }
-+        }
-+
-+        // =========== textview callbacks =================
-+        // initialize the bitmap to the size of the view, fill it white
-+        // init the view state variables to initial values
-+        @Override
-+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
-+            mCanvas.setBitmap(mBitmap);
-+            mCanvas.drawColor(Color.BLACK);
-+            mWidth = w;
-+            mHeight = h;
-+            super.onSizeChanged(w, h, oldw, oldh);
-+        }
-+
-+        // draw
-+        @Override
-+        public void onDraw(Canvas viewcanvas) {
-+            synchronized (this) {
-+                if (mBitmap != null) {
-+                    // clear the surface
-+                    mCanvas.drawColor(Color.BLACK);
-+                    // draw the vertical line
-+                    mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
-+                    // draw the transport man
-+                    if(position!=0) {
-+                        if (mode == 1) {
-+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
-+                        } else {
-+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, 250 - position, mPaint2);
-+                        }
-+                    }
-+                    // transfer the bitmap to the view
-+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
-+                }
-+            }
-+            super.onDraw(viewcanvas);
-+        }
-+
-+    }
-+
-+    // ==============================================================================
-     // audio sensor, display waveform of ambient sound
- 
-     private void stopaudsensors() {
+         private class MyTimer extends TimerTask {
+             public void run() {
+-                position++;
++                position+=3;
+                 postInvalidate();
+                 if(position>=250) {
+                     cancel();
+@@ -2267,7 +2334,7 @@ public class TrycorderFragment extends Fragment
+         mFederationlogo.setVisibility(View.GONE);
+         mLogsConsole.setVisibility(View.GONE);
+         mLogsInfo.setVisibility(View.GONE);
+-        mStarshipPlan.setVisibility(View.GONE);
++        mStarshipPlans.setVisibility(View.GONE);
+         switch (no) {
+             case 0:
+                 say("Viewer OFF");
+@@ -2306,7 +2373,7 @@ public class TrycorderFragment extends Fragment
+                 break;
+             case 4:
+                 say("Plans");
+-                mStarshipPlan.setVisibility(View.VISIBLE);
++                mStarshipPlans.setVisibility(View.VISIBLE);
+                 mVieweron = false;
+                 break;
+         }
+diff --git a/app/src/main/res/drawable/trycorder_icon.png b/app/src/main/res/drawable/trycorder_icon.png
+index 1511285..136d1aa 100644
+Binary files a/app/src/main/res/drawable/trycorder_icon.png and b/app/src/main/res/drawable/trycorder_icon.png differ
 diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
-index 2f92102..39fed23 100644
+index 39fed23..fd0e643 100644
 --- a/app/src/main/res/layout/trycorder_fragment.xml
 +++ b/app/src/main/res/layout/trycorder_fragment.xml
-@@ -238,7 +238,7 @@
+@@ -140,6 +140,12 @@
+             android:orientation="vertical"
+             android:weightSum="12">
+ 
++            <TextView
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_weight="0.25"
++                android:ellipsize="middle" />
++
+             <Button
+                 android:id="@+id/sensor_button"
+                 android:layout_width="match_parent"
+@@ -238,7 +244,27 @@
              <TextView
                  android:layout_width="match_parent"
                  android:layout_height="0dp"
--                android:layout_weight="0.5" />
-+                android:layout_weight="1.5" />
+-                android:layout_weight="1.5" />
++                android:layout_weight="0.5" />
++
++            <Button
++                android:id="@+id/tractor_button"
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_marginBottom="@dimen/button_margin"
++                android:layout_marginEnd="@dimen/button_margin"
++                android:layout_marginStart="@dimen/button_margin"
++                android:layout_marginTop="@dimen/button_margin"
++                android:layout_weight="1"
++                android:background="@drawable/trekbutton_pink_right"
++                android:maxLines="1"
++                android:text="TRACTOR"
++                android:textSize="18sp"
++                android:textStyle="bold" />
++
++            <TextView
++                android:layout_width="match_parent"
++                android:layout_height="0dp"
++                android:layout_weight="0.5" />
  
              <Button
                  android:id="@+id/viewer_button"
-@@ -278,7 +278,7 @@
+@@ -278,7 +304,7 @@
              <TextView
                  android:layout_width="match_parent"
                  android:layout_height="0dp"
--                android:layout_weight="1"
-+                android:layout_weight="0.5"
+-                android:layout_weight="0.5"
++                android:layout_weight="0.25"
                  android:ellipsize="middle" />
  
+ 
+@@ -432,7 +458,7 @@
+                     android:background="@android:color/black"
+                     android:gravity="center"
+                     android:orientation="horizontal"
+-                    android:visibility="visible"
++                    android:visibility="gone"
+                     android:weightSum="100">
+ 
+                     <Button
+@@ -633,6 +659,52 @@
+ 
+                 </LinearLayout>
+ 
++                <!-- ========== button layout for tractor beam ============== -->
++                <LinearLayout
++                    android:id="@+id/sensor2_tractor_layout"
++                    android:layout_width="match_parent"
++                    android:layout_height="match_parent"
++                    android:background="@android:color/black"
++                    android:gravity="center"
++                    android:orientation="horizontal"
++                    android:visibility="visible"
++                    android:weightSum="100">
++
++                    <Button
++                        android:id="@+id/tractor_push_button"
++                        android:layout_width="0dp"
++                        android:layout_height="48dp"
++                        android:layout_gravity="center"
++                        android:layout_marginLeft="2dp"
++                        android:layout_marginRight="2dp"
++                        android:layout_weight="33"
++                        android:background="@drawable/trekbutton_pink_left"
++                        android:text="TRACTOR PUSH" />
++
++                    <Button
++                        android:id="@+id/tractor_off_button"
++                        android:layout_width="0dp"
++                        android:layout_height="48dp"
++                        android:layout_gravity="center"
++                        android:layout_marginLeft="2dp"
++                        android:layout_marginRight="2dp"
++                        android:layout_weight="34"
++                        android:background="@drawable/trekbutton_pink_center"
++                        android:text="TRACTOR OFF" />
++
++                    <Button
++                        android:id="@+id/tractor_pull_button"
++                        android:layout_width="0dp"
++                        android:layout_height="48dp"
++                        android:layout_gravity="center"
++                        android:layout_marginLeft="2dp"
++                        android:layout_marginRight="2dp"
++                        android:layout_weight="33"
++                        android:background="@drawable/trekbutton_pink_right"
++                        android:text="TRACTOR PULL" />
++
++                </LinearLayout>
++
+                 <!-- ========== button layout for viewer ============== -->
+                 <LinearLayout
+                     android:id="@+id/sensor2_viewer_layout"
+@@ -823,12 +895,56 @@
+ 
+                     </ScrollView>
+ 
+-                    <ImageView
++                    <ScrollView
+                         android:id="@+id/starship_plans"
+                         android:layout_width="match_parent"
+-                        android:layout_height="match_parent"
+-                        android:src="@drawable/starship_plans"
+-                        android:visibility="gone" />
++                        android:layout_height="wrap_content"
++                        android:visibility="gone"
++                        android:scrollbars="vertical"
++                        android:scrollbarSize="2dp"
++                        android:scrollIndicators="right">
++
++                        <LinearLayout
++                            android:layout_width="wrap_content"
++                            android:layout_height="wrap_content"
++                            android:weightSum="6"
++                            android:orientation="vertical">
++
++                            <ImageView
++                                android:layout_width="wrap_content"
++                                android:layout_height="0dp"
++                                android:layout_gravity="top"
++                                android:layout_weight="1"
++                                android:src="@drawable/starship_view" />
++
++                            <ImageView
++                                android:layout_width="wrap_content"
++                                android:layout_height="0dp"
++                                android:layout_weight="1"
++                                android:src="@drawable/starship_plan" />
++
++                            <ImageView
++                                android:layout_width="wrap_content"
++                                android:layout_height="0dp"
++                                android:layout_weight="1"
++                                android:src="@drawable/starship_topview" />
++
++                            <ImageView
++                                android:layout_width="wrap_content"
++                                android:layout_height="0dp"
++                                android:layout_weight="1"
++                                android:src="@drawable/starship_sideview" />
++
++                            <ImageView
++                                android:layout_width="wrap_content"
++                                android:layout_height="0dp"
++                                android:src="@drawable/starship_build"
++                                android:layout_weight="2"
++                                android:visibility="visible"/>
++
++                        </LinearLayout>
++
++                    </ScrollView>
+ 
+                 </LinearLayout>
  
