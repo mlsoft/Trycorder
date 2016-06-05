@@ -119,7 +119,13 @@ public class TrycorderFragment extends Fragment
     private AudSensorView mAudSensorView;
 
     // the new scope class
+    private ShiSensorView mShiSensorView;
+
+    // the new scope class
     private AniSensorView mAniSensorView;
+
+    // the new scope class
+    private TraSensorView mTraSensorView;
 
     // the Star-Trek Logo on sensor screen
     private ImageView mStartrekLogo;
@@ -348,9 +354,10 @@ public class TrycorderFragment extends Fragment
         mSensorButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                buttonsound();
                 switchbuttonlayout(1);
                 switchsensorlayout(mSensorpage);
-                buttonsound();
+                startsensors(mSensorpage);
             }
         });
         // the magnetic button
@@ -444,8 +451,9 @@ public class TrycorderFragment extends Fragment
         mShieldButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                switchbuttonlayout(3);
                 buttonsound();
+                switchbuttonlayout(3);
+                switchsensorlayout(6);
             }
         });
         // the shield up button
@@ -471,9 +479,9 @@ public class TrycorderFragment extends Fragment
         mFireButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                buttonsound();
                 switchbuttonlayout(4);
                 switchsensorlayout(7);
-                buttonsound();
             }
         });
 
@@ -501,8 +509,9 @@ public class TrycorderFragment extends Fragment
         mTransporterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                switchbuttonlayout(5);
                 buttonsound();
+                switchbuttonlayout(5);
+                switchsensorlayout(8);
             }
         });
 
@@ -673,9 +682,19 @@ public class TrycorderFragment extends Fragment
         mSensorLayout.addView(mAudSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
+        mShiSensorView = new ShiSensorView(getContext());
+        // add my sensorview to the layout 1
+        mSensorLayout.addView(mShiSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
         mAniSensorView = new AniSensorView(getContext());
         // add my sensorview to the layout 1
         mSensorLayout.addView(mAniSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mTraSensorView = new TraSensorView(getContext());
+        // add my sensorview to the layout 1
+        mSensorLayout.addView(mTraSensorView, tlayoutParams);
 
         // position 0 of layout 1
         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
@@ -845,9 +864,17 @@ public class TrycorderFragment extends Fragment
                 say("Sensors Audio Wave");
                 startaudsensors();
                 break;
+            case 6:
+                say("Sensors Shields");
+                startshisensors();
+                break;
             case 7:
                 say("Sensors Fire Animation");
                 startanisensors();
+                break;
+            case 8:
+                say("Sensors Transport Animation");
+                starttrasensors();
                 break;
             default:
                 say("Sensors OFF");
@@ -863,7 +890,9 @@ public class TrycorderFragment extends Fragment
         stopgrasensors();
         stoptemsensors();
         stopaudsensors();
+        stopshisensors();
         stopanisensors();
+        stoptrasensors();
     }
 
     // =====================================================================================
@@ -882,7 +911,9 @@ public class TrycorderFragment extends Fragment
         mGraSensorView.setVisibility(View.GONE);
         mTemSensorView.setVisibility(View.GONE);
         mAudSensorView.setVisibility(View.GONE);
+        mShiSensorView.setVisibility(View.GONE);
         mAniSensorView.setVisibility(View.GONE);
+        mTraSensorView.setVisibility(View.GONE);
         mStartrekLogo.setVisibility(View.GONE);
         switch (no) {
             case 0:
@@ -903,8 +934,14 @@ public class TrycorderFragment extends Fragment
             case 5:
                 mAudSensorView.setVisibility(View.VISIBLE);
                 break;
+            case 6:
+                mShiSensorView.setVisibility(View.VISIBLE);
+                break;
             case 7:
                 mAniSensorView.setVisibility(View.VISIBLE);
+                break;
+            case 8:
+                mTraSensorView.setVisibility(View.VISIBLE);
                 break;
         }
         if(no<=4) mSensorpage = no;
@@ -981,12 +1018,18 @@ public class TrycorderFragment extends Fragment
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Transport Out");
+        switchsensorlayout(8);
+        mTraSensorView.setmode(2);
+        startsensors(8);
     }
 
     private void transporterin() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Transport In");
+        switchsensorlayout(8);
+        mTraSensorView.setmode(1);
+        startsensors(8);
     }
 
     private void longrangesensor() {
@@ -999,12 +1042,18 @@ public class TrycorderFragment extends Fragment
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shieldup);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Raise Shields");
+        switchsensorlayout(6);
+        mTraSensorView.setmode(1);
+        startsensors(6);
     }
 
     private void lowershields() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shielddown);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Lower Shields");
+        switchsensorlayout(6);
+        mTraSensorView.setmode(2);
+        startsensors(6);
     }
 
     private void tractorbeam() {
@@ -1080,6 +1129,236 @@ public class TrycorderFragment extends Fragment
             mSoundStatus = true;
             if (mRunStatus) startmusic();
         }
+    }
+
+    // ==============================================================================
+    // transporter sensor, display person disappearing
+
+    private void stopshisensors() {
+        mShiSensorView.stop();
+    }
+
+    private void startshisensors() {
+        mShiSensorView.start();
+    }
+
+    // ============================================================================
+    // class defining the sensor display widget
+    private class ShiSensorView extends TextView {
+        private Bitmap mBitmap;
+        private Paint mPaint = new Paint();
+        private Paint mPaint2 = new Paint();
+        private Canvas mCanvas = new Canvas();
+
+        private int mWidth;
+        private int mHeight;
+
+        private int mode;   // 1=in 2=out
+
+        private int position=0;
+
+        // initialize the 3 colors, and setup painter
+        public ShiSensorView(Context context) {
+            super(context);
+            // text paint
+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint.setStrokeWidth(2);
+            mPaint.setTextSize(24);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setColor(Color.WHITE);
+            // line paint
+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint2.setStrokeWidth(2);
+            mPaint2.setStyle(Paint.Style.STROKE);
+            mPaint2.setColor(Color.GREEN);
+        }
+
+        public void setmode(int no) {
+            mode=no;
+        }
+
+        // ======= timer section =======
+        private Timer timer=null;
+        private MyTimer myTimer;
+
+        public void stop() {
+            if(timer!=null) {
+                timer.cancel();
+                timer=null;
+            }
+        }
+
+        public void start() {
+            // start the timer to eat this stuff and display it
+            timer = new Timer("shield");
+            myTimer = new MyTimer();
+            timer.schedule(myTimer, 10L, 10L);
+        }
+
+        private class MyTimer extends TimerTask {
+            public void run() {
+                position++;
+                postInvalidate();
+                if(position>=250) {
+                    cancel();
+                    position=0;
+                    postInvalidate();
+                }
+            }
+        }
+
+        // =========== textview callbacks =================
+        // initialize the bitmap to the size of the view, fill it white
+        // init the view state variables to initial values
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+            mCanvas.setBitmap(mBitmap);
+            mCanvas.drawColor(Color.BLACK);
+            mWidth = w;
+            mHeight = h;
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        // draw
+        @Override
+        public void onDraw(Canvas viewcanvas) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    // clear the surface
+                    mCanvas.drawColor(Color.BLACK);
+                    // draw the vertical line
+                    //mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
+                    // draw the shield effect
+                    if(position!=0) {
+                        if (mode == 1) {
+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
+                        } else {
+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, 250 - position, mPaint2);
+                        }
+                    }
+                    // transfer the bitmap to the view
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+                }
+            }
+            super.onDraw(viewcanvas);
+        }
+
+    }
+
+    // ==============================================================================
+    // transporter sensor, display person disappearing
+
+    private void stoptrasensors() {
+        mTraSensorView.stop();
+    }
+
+    private void starttrasensors() {
+        mTraSensorView.start();
+    }
+
+    // ============================================================================
+    // class defining the sensor display widget
+    private class TraSensorView extends TextView {
+        private Bitmap mBitmap;
+        private Paint mPaint = new Paint();
+        private Paint mPaint2 = new Paint();
+        private Canvas mCanvas = new Canvas();
+
+        private int mWidth;
+        private int mHeight;
+
+        private int mode;   // 1=in 2=out
+
+        private int position=0;
+
+        // initialize the 3 colors, and setup painter
+        public TraSensorView(Context context) {
+            super(context);
+            // text paint
+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint.setStrokeWidth(2);
+            mPaint.setTextSize(24);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setColor(Color.WHITE);
+            // line paint
+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint2.setStrokeWidth(2);
+            mPaint2.setStyle(Paint.Style.STROKE);
+            mPaint2.setColor(Color.BLUE);
+        }
+
+        public void setmode(int no) {
+            mode=no;
+        }
+
+        // ======= timer section =======
+        private Timer timer=null;
+        private MyTimer myTimer;
+
+        public void stop() {
+            if(timer!=null) {
+                timer.cancel();
+                timer=null;
+            }
+        }
+
+        public void start() {
+            // start the timer to eat this stuff and display it
+            timer = new Timer("transporter");
+            myTimer = new MyTimer();
+            timer.schedule(myTimer, 10L, 10L);
+        }
+
+        private class MyTimer extends TimerTask {
+            public void run() {
+                position++;
+                postInvalidate();
+                if(position>=250) {
+                    cancel();
+                    position=0;
+                    postInvalidate();
+                }
+            }
+        }
+
+        // =========== textview callbacks =================
+        // initialize the bitmap to the size of the view, fill it white
+        // init the view state variables to initial values
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+            mCanvas.setBitmap(mBitmap);
+            mCanvas.drawColor(Color.BLACK);
+            mWidth = w;
+            mHeight = h;
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        // draw
+        @Override
+        public void onDraw(Canvas viewcanvas) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    // clear the surface
+                    mCanvas.drawColor(Color.BLACK);
+                    // draw the vertical line
+                    mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
+                    // draw the transport man
+                    if(position!=0) {
+                        if (mode == 1) {
+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
+                        } else {
+                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, 250 - position, mPaint2);
+                        }
+                    }
+                    // transfer the bitmap to the view
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+                }
+            }
+            super.onDraw(viewcanvas);
+        }
+
     }
 
     // ==============================================================================

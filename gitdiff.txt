@@ -1,255 +1,211 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index 17d1ccd..9c9c6df 100644
+index 9c9c6df..ea53715 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -9,7 +9,7 @@ android {
          minSdkVersion 15
          targetSdkVersion 23
          versionCode 1
--        versionName "1.1"
-+        versionName "1.2"
+-        versionName "1.2"
++        versionName "1.4"
      }
      buildTypes {
          release {
 diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-index a7800d3..777a557 100644
+index 777a557..82dec9a 100644
 --- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
 +++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-@@ -19,8 +19,11 @@ import android.hardware.SensorManager;
- import android.location.Location;
- import android.location.LocationListener;
- import android.location.LocationManager;
-+import android.media.AudioFormat;
- import android.media.AudioManager;
-+import android.media.AudioRecord;
- import android.media.MediaPlayer;
-+import android.media.MediaRecorder;
- import android.net.ConnectivityManager;
- import android.net.NetworkInfo;
- import android.net.Uri;
-@@ -113,6 +116,9 @@ public class TrycorderFragment extends Fragment
-     private TemSensorView mTemSensorView;
+@@ -119,8 +119,14 @@ public class TrycorderFragment extends Fragment
+     private AudSensorView mAudSensorView;
  
      // the new scope class
-+    private AudSensorView mAudSensorView;
++    private ShiSensorView mShiSensorView;
 +
 +    // the new scope class
      private AniSensorView mAniSensorView;
  
++    // the new scope class
++    private TraSensorView mTraSensorView;
++
      // the Star-Trek Logo on sensor screen
-@@ -155,6 +161,7 @@ public class TrycorderFragment extends Fragment
-     private Button mTemperatureButton;
-     private Button mSensoroffButton;
-     private int mSensormode = 0;
-+    private int mSensorpage = 0;
+     private ImageView mStartrekLogo;
  
-     // the button to open a channel
-     private Button mCommButton;
-@@ -342,6 +349,7 @@ public class TrycorderFragment extends Fragment
+@@ -348,9 +354,10 @@ public class TrycorderFragment extends Fragment
+         mSensorButton.setOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View view) {
++                buttonsound();
                  switchbuttonlayout(1);
-+                switchsensorlayout(mSensorpage);
+                 switchsensorlayout(mSensorpage);
+-                buttonsound();
++                startsensors(mSensorpage);
+             }
+         });
+         // the magnetic button
+@@ -444,8 +451,9 @@ public class TrycorderFragment extends Fragment
+         mShieldButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View view) {
+-                switchbuttonlayout(3);
                  buttonsound();
++                switchbuttonlayout(3);
++                switchsensorlayout(6);
              }
          });
-@@ -407,6 +415,7 @@ public class TrycorderFragment extends Fragment
+         // the shield up button
+@@ -471,9 +479,9 @@ public class TrycorderFragment extends Fragment
+         mFireButton.setOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View view) {
-                 switchbuttonlayout(2);
-+                switchsensorlayout(5);
-                 buttonsound();
-             }
-         });
-@@ -415,6 +424,7 @@ public class TrycorderFragment extends Fragment
-         mOpenCommButton.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-+                switchsensorlayout(5);
-                 opencomm();
-             }
-         });
-@@ -423,6 +433,7 @@ public class TrycorderFragment extends Fragment
-         mCloseCommButton.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View view) {
-+                switchsensorlayout(5);
-                 closecomm();
-             }
-         });
-@@ -461,7 +472,7 @@ public class TrycorderFragment extends Fragment
-             @Override
-             public void onClick(View view) {
++                buttonsound();
                  switchbuttonlayout(4);
--                switchsensorlayout(5);
-+                switchsensorlayout(7);
-                 buttonsound();
+                 switchsensorlayout(7);
+-                buttonsound();
              }
          });
-@@ -657,6 +668,11 @@ public class TrycorderFragment extends Fragment
-         mSensorLayout.addView(mTemSensorView, tlayoutParams);
+ 
+@@ -501,8 +509,9 @@ public class TrycorderFragment extends Fragment
+         mTransporterButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View view) {
+-                switchbuttonlayout(5);
+                 buttonsound();
++                switchbuttonlayout(5);
++                switchsensorlayout(8);
+             }
+         });
+ 
+@@ -673,10 +682,20 @@ public class TrycorderFragment extends Fragment
+         mSensorLayout.addView(mAudSensorView, tlayoutParams);
  
          // my sensorview that display the sensors data
-+        mAudSensorView = new AudSensorView(getContext());
++        mShiSensorView = new ShiSensorView(getContext());
 +        // add my sensorview to the layout 1
-+        mSensorLayout.addView(mAudSensorView, tlayoutParams);
++        mSensorLayout.addView(mShiSensorView, tlayoutParams);
 +
 +        // my sensorview that display the sensors data
          mAniSensorView = new AniSensorView(getContext());
          // add my sensorview to the layout 1
          mSensorLayout.addView(mAniSensorView, tlayoutParams);
-@@ -780,14 +796,15 @@ public class TrycorderFragment extends Fragment
-     public void onResume() {
-         super.onResume();
-         mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
-+        mSensorpage = sharedPref.getInt("pref_key_sensor_page", 0);
-         mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode", 0);
-         mViewermode = sharedPref.getInt("pref_key_viewer_mode", 0);
-         mSoundStatus = sharedPref.getBoolean("pref_key_audio_mode", false);
-         mViewerfront = sharedPref.getBoolean("pref_key_viewer_front", false);
-         switchbuttonlayout(mSensor2mode);
-         switchsensorlayout(mSensormode);
--        startsensors(mSensormode);
-         switchviewer(mViewermode);
-+        if(mSensormode<=4) startsensors(mSensormode);
-     }
  
-     @Override
-@@ -795,6 +812,7 @@ public class TrycorderFragment extends Fragment
-         stopsensors();
-         SharedPreferences.Editor editor = sharedPref.edit();
-         editor.putInt("pref_key_sensor_mode", mSensormode);
-+        editor.putInt("pref_key_sensor_page", mSensorpage);
-         editor.putInt("pref_key_sensor2_mode", mSensor2mode);
-         editor.putInt("pref_key_viewer_mode", mViewermode);
-         editor.putBoolean("pref_key_audio_mode", mSoundStatus);
-@@ -806,7 +824,6 @@ public class TrycorderFragment extends Fragment
++        // my sensorview that display the sensors data
++        mTraSensorView = new TraSensorView(getContext());
++        // add my sensorview to the layout 1
++        mSensorLayout.addView(mTraSensorView, tlayoutParams);
++
+         // position 0 of layout 1
+         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
  
-     private void startsensors(int mode) {
-         stopsensors();
--        mSensormode = mode;
-         switch (mode) {
-             case 1:
-                 say("Sensors Magnetic");
-@@ -825,13 +842,19 @@ public class TrycorderFragment extends Fragment
-                 starttemsensors();
+@@ -845,10 +864,18 @@ public class TrycorderFragment extends Fragment
+                 say("Sensors Audio Wave");
+                 startaudsensors();
                  break;
-             case 5:
--                say("Sensors Animation");
-+                say("Sensors Audio Wave");
-+                startaudsensors();
++            case 6:
++                say("Sensors Shields");
++                startshisensors();
 +                break;
-+            case 7:
-+                say("Sensors Fire Animation");
+             case 7:
+                 say("Sensors Fire Animation");
                  startanisensors();
                  break;
++            case 8:
++                say("Sensors Transport Animation");
++                starttrasensors();
++                break;
              default:
                  say("Sensors OFF");
                  break;
-         }
-+        if(mode<=4) mSensorpage = mode;
-+        mSensormode = mode;
-     }
- 
-     private void stopsensors() {
-@@ -839,6 +862,7 @@ public class TrycorderFragment extends Fragment
-         stoporisensors();
+@@ -863,7 +890,9 @@ public class TrycorderFragment extends Fragment
          stopgrasensors();
          stoptemsensors();
-+        stopaudsensors();
+         stopaudsensors();
++        stopshisensors();
          stopanisensors();
++        stoptrasensors();
      }
  
-@@ -857,6 +881,7 @@ public class TrycorderFragment extends Fragment
-         mOriSensorView.setVisibility(View.GONE);
+     // =====================================================================================
+@@ -882,7 +911,9 @@ public class TrycorderFragment extends Fragment
          mGraSensorView.setVisibility(View.GONE);
          mTemSensorView.setVisibility(View.GONE);
-+        mAudSensorView.setVisibility(View.GONE);
+         mAudSensorView.setVisibility(View.GONE);
++        mShiSensorView.setVisibility(View.GONE);
          mAniSensorView.setVisibility(View.GONE);
++        mTraSensorView.setVisibility(View.GONE);
          mStartrekLogo.setVisibility(View.GONE);
          switch (no) {
-@@ -876,9 +901,13 @@ public class TrycorderFragment extends Fragment
-                 mTemSensorView.setVisibility(View.VISIBLE);
-                 break;
+             case 0:
+@@ -903,9 +934,15 @@ public class TrycorderFragment extends Fragment
              case 5:
-+                mAudSensorView.setVisibility(View.VISIBLE);
+                 mAudSensorView.setVisibility(View.VISIBLE);
+                 break;
++            case 6:
++                mShiSensorView.setVisibility(View.VISIBLE);
 +                break;
-+            case 7:
+             case 7:
                  mAniSensorView.setVisibility(View.VISIBLE);
                  break;
++            case 8:
++                mTraSensorView.setVisibility(View.VISIBLE);
++                break;
          }
-+        if(no<=4) mSensorpage = no;
+         if(no<=4) mSensorpage = no;
          mSensormode = no;
-     }
- 
-@@ -935,13 +964,17 @@ public class TrycorderFragment extends Fragment
-     private void opencomm() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
+@@ -981,12 +1018,18 @@ public class TrycorderFragment extends Fragment
+         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
          mediaPlayer.start(); // no need to call prepare(); create() does that for you
--        speak("Hailing frequency open.");
-+        switchsensorlayout(5);
-+        startsensors(5);
-+        say("Hailing frequency open.");
+         say("Transport Out");
++        switchsensorlayout(8);
++        mTraSensorView.setmode(2);
++        startsensors(8);
      }
  
-     private void closecomm() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
+     private void transporterin() {
+         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
          mediaPlayer.start(); // no need to call prepare(); create() does that for you
--        speak("Hailing frequency closed.");
-+        switchsensorlayout(5);
-+        stopsensors();
-+        say("Hailing frequency closed.");
+         say("Transport In");
++        switchsensorlayout(8);
++        mTraSensorView.setmode(1);
++        startsensors(8);
      }
  
-     private void transporterout() {
-@@ -984,18 +1017,18 @@ public class TrycorderFragment extends Fragment
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.phasertype2);
+     private void longrangesensor() {
+@@ -999,12 +1042,18 @@ public class TrycorderFragment extends Fragment
+         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shieldup);
          mediaPlayer.start(); // no need to call prepare(); create() does that for you
-         say("Fire Phaser");
--        switchsensorlayout(5);
-+        switchsensorlayout(7);
-         mAniSensorView.setmode(2);
--        startsensors(5);
-+        startsensors(7);
+         say("Raise Shields");
++        switchsensorlayout(6);
++        mTraSensorView.setmode(1);
++        startsensors(6);
      }
  
-     private void firemissiles() {
-         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.photorp1);
+     private void lowershields() {
+         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shielddown);
          mediaPlayer.start(); // no need to call prepare(); create() does that for you
-         say("Fire Torpedo");
--        switchsensorlayout(5);
-+        switchsensorlayout(7);
-         mAniSensorView.setmode(1);
--        startsensors(5);
-+        startsensors(7);
+         say("Lower Shields");
++        switchsensorlayout(6);
++        mTraSensorView.setmode(2);
++        startsensors(6);
      }
  
-     // ==========================================================================================
-@@ -1024,7 +1057,6 @@ public class TrycorderFragment extends Fragment
-                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
-                     break;
-             }
--
-         }
-         if (mSensormode != 0)
-             mSoundButton.setBackgroundResource(R.drawable.trekbutton_yellow_center);
-@@ -1051,6 +1083,144 @@ public class TrycorderFragment extends Fragment
+     private void tractorbeam() {
+@@ -1083,6 +1132,236 @@ public class TrycorderFragment extends Fragment
      }
  
      // ==============================================================================
-+    // audio sensor, display waveform of ambient sound
++    // transporter sensor, display person disappearing
 +
-+    private void stopaudsensors() {
-+        mAudSensorView.stop();
++    private void stopshisensors() {
++        mShiSensorView.stop();
 +    }
 +
-+    private void startaudsensors() {
-+        mAudSensorView.start();
++    private void startshisensors() {
++        mShiSensorView.start();
 +    }
 +
 +    // ============================================================================
 +    // class defining the sensor display widget
-+    private class AudSensorView extends TextView {
++    private class ShiSensorView extends TextView {
 +        private Bitmap mBitmap;
 +        private Paint mPaint = new Paint();
 +        private Paint mPaint2 = new Paint();
@@ -258,8 +214,12 @@ index a7800d3..777a557 100644
 +        private int mWidth;
 +        private int mHeight;
 +
++        private int mode;   // 1=in 2=out
++
++        private int position=0;
++
 +        // initialize the 3 colors, and setup painter
-+        public AudSensorView(Context context) {
++        public ShiSensorView(Context context) {
 +            super(context);
 +            // text paint
 +            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
@@ -271,57 +231,40 @@ index a7800d3..777a557 100644
 +            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
 +            mPaint2.setStrokeWidth(2);
 +            mPaint2.setStyle(Paint.Style.STROKE);
-+            mPaint2.setColor(Color.YELLOW);
++            mPaint2.setColor(Color.GREEN);
++        }
++
++        public void setmode(int no) {
++            mode=no;
 +        }
 +
 +        // ======= timer section =======
 +        private Timer timer=null;
 +        private MyTimer myTimer;
 +
-+        private static final int RECORDER_SAMPLERATE = 8000;
-+        private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
-+        private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
-+
-+        private AudioRecord mAudioRecord=null;
-+        private int bufferSize=0;
-+
-+        int BufferElements2Rec = 1024; // want to play 2048 (2K) since 2 bytes we use only 1024
-+        int BytesPerElement = 2; // 2 bytes in 16bit format
-+
 +        public void stop() {
 +            if(timer!=null) {
 +                timer.cancel();
 +                timer=null;
 +            }
-+            if(mAudioRecord!=null) {
-+                mAudioRecord.stop();
-+                mAudioRecord.release();
-+                mAudioRecord=null;
-+            }
 +        }
 +
 +        public void start() {
-+            // start the recording
-+            bufferSize = AudioRecord.getMinBufferSize(RECORDER_SAMPLERATE,
-+                    RECORDER_CHANNELS, RECORDER_AUDIO_ENCODING);
-+            mAudioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
-+                    RECORDER_SAMPLERATE, RECORDER_CHANNELS,
-+                    RECORDER_AUDIO_ENCODING, bufferSize);
-+            mAudioRecord.startRecording();
 +            // start the timer to eat this stuff and display it
-+            timer = new Timer("audiowave");
++            timer = new Timer("shield");
 +            myTimer = new MyTimer();
 +            timer.schedule(myTimer, 10L, 10L);
 +        }
 +
-+        private short sData[] = new short[BufferElements2Rec];
-+        private int nbe=0;
-+
 +        private class MyTimer extends TimerTask {
 +            public void run() {
-+                nbe = BufferElements2Rec>mWidth ? mWidth : BufferElements2Rec;
-+                mAudioRecord.read(sData,0,nbe);
++                position++;
 +                postInvalidate();
++                if(position>=250) {
++                    cancel();
++                    position=0;
++                    postInvalidate();
++                }
 +            }
 +        }
 +
@@ -345,25 +288,15 @@ index a7800d3..777a557 100644
 +                if (mBitmap != null) {
 +                    // clear the surface
 +                    mCanvas.drawColor(Color.BLACK);
-+                    // draw the horizontal line
-+                    mCanvas.drawLine(0,mHeight/2,mWidth,mHeight/2,mPaint);
-+                    // draw the sound wave
-+                    int posx;
-+                    int posy;
-+                    int newx;
-+                    int newy;
-+                    int maxy;
-+                    int yscale;
-+                    maxy=mHeight/2;
-+                    yscale=(32768/maxy)/4;    // increase noise level by 4
-+                    posx=0;
-+                    posy=maxy;
-+                    for(int i=1;i<nbe;++i) {
-+                        newx=i;
-+                        newy=maxy+(sData[i]/yscale);
-+                        mCanvas.drawLine((float)posx,(float)posy,(float)newx,(float)newy,mPaint2);
-+                        posx=newx;
-+                        posy=newy;
++                    // draw the vertical line
++                    //mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
++                    // draw the shield effect
++                    if(position!=0) {
++                        if (mode == 1) {
++                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
++                        } else {
++                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, 250 - position, mPaint2);
++                        }
 +                    }
 +                    // transfer the bitmap to the view
 +                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
@@ -375,653 +308,143 @@ index a7800d3..777a557 100644
 +    }
 +
 +    // ==============================================================================
-     // animation sensor, (ex: firing missiles)
++    // transporter sensor, display person disappearing
++
++    private void stoptrasensors() {
++        mTraSensorView.stop();
++    }
++
++    private void starttrasensors() {
++        mTraSensorView.start();
++    }
++
++    // ============================================================================
++    // class defining the sensor display widget
++    private class TraSensorView extends TextView {
++        private Bitmap mBitmap;
++        private Paint mPaint = new Paint();
++        private Paint mPaint2 = new Paint();
++        private Canvas mCanvas = new Canvas();
++
++        private int mWidth;
++        private int mHeight;
++
++        private int mode;   // 1=in 2=out
++
++        private int position=0;
++
++        // initialize the 3 colors, and setup painter
++        public TraSensorView(Context context) {
++            super(context);
++            // text paint
++            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
++            mPaint.setStrokeWidth(2);
++            mPaint.setTextSize(24);
++            mPaint.setStyle(Paint.Style.STROKE);
++            mPaint.setColor(Color.WHITE);
++            // line paint
++            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
++            mPaint2.setStrokeWidth(2);
++            mPaint2.setStyle(Paint.Style.STROKE);
++            mPaint2.setColor(Color.BLUE);
++        }
++
++        public void setmode(int no) {
++            mode=no;
++        }
++
++        // ======= timer section =======
++        private Timer timer=null;
++        private MyTimer myTimer;
++
++        public void stop() {
++            if(timer!=null) {
++                timer.cancel();
++                timer=null;
++            }
++        }
++
++        public void start() {
++            // start the timer to eat this stuff and display it
++            timer = new Timer("transporter");
++            myTimer = new MyTimer();
++            timer.schedule(myTimer, 10L, 10L);
++        }
++
++        private class MyTimer extends TimerTask {
++            public void run() {
++                position++;
++                postInvalidate();
++                if(position>=250) {
++                    cancel();
++                    position=0;
++                    postInvalidate();
++                }
++            }
++        }
++
++        // =========== textview callbacks =================
++        // initialize the bitmap to the size of the view, fill it white
++        // init the view state variables to initial values
++        @Override
++        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
++            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
++            mCanvas.setBitmap(mBitmap);
++            mCanvas.drawColor(Color.BLACK);
++            mWidth = w;
++            mHeight = h;
++            super.onSizeChanged(w, h, oldw, oldh);
++        }
++
++        // draw
++        @Override
++        public void onDraw(Canvas viewcanvas) {
++            synchronized (this) {
++                if (mBitmap != null) {
++                    // clear the surface
++                    mCanvas.drawColor(Color.BLACK);
++                    // draw the vertical line
++                    mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
++                    // draw the transport man
++                    if(position!=0) {
++                        if (mode == 1) {
++                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
++                        } else {
++                            mCanvas.drawCircle(mWidth / 2, mHeight / 2, 250 - position, mPaint2);
++                        }
++                    }
++                    // transfer the bitmap to the view
++                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
++                }
++            }
++            super.onDraw(viewcanvas);
++        }
++
++    }
++
++    // ==============================================================================
+     // audio sensor, display waveform of ambient sound
  
-     private void stopanisensors() {
+     private void stopaudsensors() {
 diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
-index 1e5a156..2f92102 100644
+index 2f92102..39fed23 100644
 --- a/app/src/main/res/layout/trycorder_fragment.xml
 +++ b/app/src/main/res/layout/trycorder_fragment.xml
-@@ -367,7 +367,6 @@
-                             android:src="@drawable/startrek_logo"
-                             android:visibility="visible" />
+@@ -238,7 +238,7 @@
+             <TextView
+                 android:layout_width="match_parent"
+                 android:layout_height="0dp"
+-                android:layout_weight="0.5" />
++                android:layout_weight="1.5" />
  
--
-                     </LinearLayout>
+             <Button
+                 android:id="@+id/viewer_button"
+@@ -278,7 +278,7 @@
+             <TextView
+                 android:layout_width="match_parent"
+                 android:layout_height="0dp"
+-                android:layout_weight="1"
++                android:layout_weight="0.5"
+                 android:ellipsize="middle" />
  
-                     <ImageView
-diff --git a/gitdiff.txt b/gitdiff.txt
-index 11c7228..17a2b45 100644
---- a/gitdiff.txt
-+++ b/gitdiff.txt
-@@ -1,630 +0,0 @@
--diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
--index 1c9348a..f9ee4e2 100644
----- a/app/src/main/AndroidManifest.xml
--+++ b/app/src/main/AndroidManifest.xml
--@@ -18,8 +18,6 @@
--     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
--     <uses-permission android:name="android.permission.GET_TASKS" />
-- 
---    <uses-feature android:name="android.hardware.camera" android:required="false" />
---
--     <application
--         android:allowBackup="true"
--         android:icon="@drawable/trycorder_icon"
--diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--index ff08619..a7800d3 100644
----- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--+++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--@@ -64,6 +64,8 @@ import java.util.Enumeration;
-- import java.util.Iterator;
-- import java.util.List;
-- import java.util.Locale;
--+import java.util.Timer;
--+import java.util.TimerTask;
-- 
-- /**
--  * A placeholder fragment containing a simple view.
--@@ -110,6 +112,9 @@ public class TrycorderFragment extends Fragment
--     // the new scope class
--     private TemSensorView mTemSensorView;
-- 
--+    // the new scope class
--+    private AniSensorView mAniSensorView;
--+
--     // the Star-Trek Logo on sensor screen
--     private ImageView mStartrekLogo;
-- 
--@@ -456,6 +461,7 @@ public class TrycorderFragment extends Fragment
--             @Override
--             public void onClick(View view) {
--                 switchbuttonlayout(4);
--+                switchsensorlayout(5);
--                 buttonsound();
--             }
--         });
--@@ -632,28 +638,29 @@ public class TrycorderFragment extends Fragment
-- 
--         // my sensorview that display the sensors data
--         mMagSensorView = new MagSensorView(getContext());
---
--         // add my sensorview to the layout 1
--         mSensorLayout.addView(mMagSensorView, tlayoutParams);
-- 
--         // my sensorview that display the sensors data
--         mOriSensorView = new OriSensorView(getContext());
---
--         // add my sensorview to the layout 1
--         mSensorLayout.addView(mOriSensorView, tlayoutParams);
-- 
--         // my sensorview that display the sensors data
--         mGraSensorView = new GraSensorView(getContext());
---
--         // add my sensorview to the layout 1
--         mSensorLayout.addView(mGraSensorView, tlayoutParams);
-- 
--         // my sensorview that display the sensors data
--         mTemSensorView = new TemSensorView(getContext());
---
--         // add my sensorview to the layout 1
--         mSensorLayout.addView(mTemSensorView, tlayoutParams);
-- 
--+        // my sensorview that display the sensors data
--+        mAniSensorView = new AniSensorView(getContext());
--+        // add my sensorview to the layout 1
--+        mSensorLayout.addView(mAniSensorView, tlayoutParams);
--+
--         // position 0 of layout 1
--         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
-- 
--@@ -709,7 +716,7 @@ public class TrycorderFragment extends Fragment
--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
--         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
-- 
---        mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
--+        //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
-- 
--         return view;
--     }
--@@ -817,6 +824,10 @@ public class TrycorderFragment extends Fragment
--                 say("Sensors Temperature");
--                 starttemsensors();
--                 break;
--+            case 5:
--+                say("Sensors Animation");
--+                startanisensors();
--+                break;
--             default:
--                 say("Sensors OFF");
--                 break;
--@@ -828,6 +839,7 @@ public class TrycorderFragment extends Fragment
--         stoporisensors();
--         stopgrasensors();
--         stoptemsensors();
--+        stopanisensors();
--     }
-- 
--     // =====================================================================================
--@@ -845,6 +857,7 @@ public class TrycorderFragment extends Fragment
--         mOriSensorView.setVisibility(View.GONE);
--         mGraSensorView.setVisibility(View.GONE);
--         mTemSensorView.setVisibility(View.GONE);
--+        mAniSensorView.setVisibility(View.GONE);
--         mStartrekLogo.setVisibility(View.GONE);
--         switch (no) {
--             case 0:
--@@ -862,6 +875,9 @@ public class TrycorderFragment extends Fragment
--             case 4:
--                 mTemSensorView.setVisibility(View.VISIBLE);
--                 break;
--+            case 5:
--+                mAniSensorView.setVisibility(View.VISIBLE);
--+                break;
--         }
--         mSensormode = no;
--     }
--@@ -968,12 +984,18 @@ public class TrycorderFragment extends Fragment
--         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.phasertype2);
--         mediaPlayer.start(); // no need to call prepare(); create() does that for you
--         say("Fire Phaser");
--+        switchsensorlayout(5);
--+        mAniSensorView.setmode(2);
--+        startsensors(5);
--     }
-- 
--     private void firemissiles() {
--         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.photorp1);
--         mediaPlayer.start(); // no need to call prepare(); create() does that for you
--         say("Fire Torpedo");
--+        switchsensorlayout(5);
--+        mAniSensorView.setmode(1);
--+        startsensors(5);
--     }
-- 
--     // ==========================================================================================
--@@ -1028,6 +1050,121 @@ public class TrycorderFragment extends Fragment
--         }
--     }
-- 
--+    // ==============================================================================
--+    // animation sensor, (ex: firing missiles)
--+
--+    private void stopanisensors() {
--+        stopmusic();
--+    }
--+
--+    private void startanisensors() {
--+        mAniSensorView.resetcount();
--+        if (mSoundStatus) startmusic();
--+    }
--+
--+    // ============================================================================
--+    // class defining the sensor display widget
--+    private class AniSensorView extends TextView {
--+        private Bitmap mBitmap;
--+        private Paint mPaint = new Paint();
--+        private Paint mPaint2 = new Paint();
--+        private Canvas mCanvas = new Canvas();
--+
--+        private int mWidth;
--+        private int mHeight;
--+
--+        private float position = 0.0f;
--+        private int aniMode = 0;
--+
--+        private Timer timer;
--+        private MyTimer myTimer;
--+
--+        // initialize the 3 colors, and setup painter
--+        public AniSensorView(Context context) {
--+            super(context);
--+            // text paint
--+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
--+            mPaint.setStrokeWidth(2);
--+            mPaint.setTextSize(24);
--+            mPaint.setStyle(Paint.Style.STROKE);
--+            mPaint.setColor(Color.WHITE);
--+            // line paint
--+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
--+            mPaint2.setStrokeWidth(16);
--+            mPaint2.setStyle(Paint.Style.FILL_AND_STROKE);
--+            mPaint2.setColor(Color.RED);
--+
--+        }
--+
--+        public void setmode(int no) {
--+            aniMode = no;
--+        }
--+
--+        public void resetcount() {
--+            position = 0.0f;
--+            timer = new Timer("animation");
--+            myTimer = new MyTimer();
--+            timer.schedule(myTimer, 10L, 10L);
--+        }
--+
--+        private class MyTimer extends TimerTask {
--+            public void run() {
--+                if(aniMode==1) position += 10;
--+                else position += 5;
--+                postInvalidate();
--+                if (position > mHeight) {
--+                    cancel();
--+                    position = 0;
--+                    postInvalidate();
--+                }
--+            }
--+        }
--+
--+        // initialize the bitmap to the size of the view, fill it white
--+        // init the view state variables to initial values
--+        @Override
--+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
--+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
--+            mCanvas.setBitmap(mBitmap);
--+            mCanvas.drawColor(Color.BLACK);
--+            mWidth = w;
--+            mHeight = h;
--+            super.onSizeChanged(w, h, oldw, oldh);
--+        }
--+
--+        // draw
--+        @Override
--+        public void onDraw(Canvas viewcanvas) {
--+            synchronized (this) {
--+                if (mBitmap != null) {
--+                    // clear the surface
--+                    mCanvas.drawColor(Color.BLACK);
--+                    // draw the grid
--+                    mCanvas.drawLine(mWidth/3,0,mWidth/3,mHeight,mPaint);
--+                    mCanvas.drawLine(mWidth/3.0f*2.0f,0,mWidth/3.0f*2.0f,mHeight,mPaint);
--+                    mCanvas.drawLine(0,mHeight/3,mWidth,mHeight/3,mPaint);
--+                    mCanvas.drawLine(0,mHeight/3.0f*2.0f,mWidth,mHeight/3.0f*2.0f,mPaint);
--+                    // draw the shooting line
--+                    if (position != 0.0f) {
--+                        switch (aniMode) {
--+                            case 1:
--+                                mCanvas.drawLine(mWidth / 2.0f, mHeight - position + 32, mWidth / 2.0f, mHeight - position, mPaint2);
--+                                break;
--+                            case 2:
--+                                mCanvas.drawLine(mWidth / 3.0f, mHeight, mWidth / 2.0f, mHeight - position, mPaint2);
--+                                mCanvas.drawLine(mWidth / 3.0f * 2.0f, mHeight, mWidth / 2.0f, mHeight - position, mPaint2);
--+                                break;
--+                        }
--+                    }
--+                    // transfer the bitmap to the view
--+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
--+                }
--+            }
--+            super.onDraw(viewcanvas);
--+        }
--+
--+    }
--+
--     // ============================================================================
--     // stop the sensor updates
--     private void stoptemsensors() {
--@@ -1748,6 +1885,10 @@ public class TrycorderFragment extends Fragment
--             imageFileOS.write(data);
--             imageFileOS.flush();
--             imageFileOS.close();
--+            // inform the media manager that we have a new photo in the gallery
--+            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
--+            intent.setData(imageFileUri);
--+            getActivity().sendBroadcast(intent);
--         } catch (Exception e) {
--             Toast t = Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT);
--             t.show();
--@@ -2026,12 +2167,18 @@ public class TrycorderFragment extends Fragment
--             startsensors(3);
--             return (true);
--         }
--+        if (texte.contains("temperature") || texte.contains("pressure") || texte.contains("light")) {
--+            switchbuttonlayout(1);
--+            switchsensorlayout(4);
--+            startsensors(4);
--+            return (true);
--+        }
--         if (texte.contains("hailing") && texte.contains("close")) {
--             switchbuttonlayout(2);
--             closecomm();
--             return (true);
--         }
---        if (texte.contains("hailing")) {
--+        if (texte.contains("hailing") || texte.contains("frequency")) {
--             switchbuttonlayout(2);
--             opencomm();
--             return (true);
--@@ -2056,6 +2203,13 @@ public class TrycorderFragment extends Fragment
--             switchviewer(2);
--             return (true);
--         }
--+        if (texte.contains("fuck")) {
--+            speak("This is not very polite.");
--+            switchviewer(0);
--+            switchsensorlayout(0);
--+            switchbuttonlayout(0);
--+            return (true);
--+        }
--         return (false);
--     }
-- 
--@@ -2093,7 +2247,7 @@ public class TrycorderFragment extends Fragment
--     // =================== fetch telephone status =======================
-- 
--     public String fetch_tel_status() {
---        Context cx=getContext();
--+        Context cx = getContext();
--         String result = null;
--         TelephonyManager tm = (TelephonyManager) cx
--                 .getSystemService(Context.TELEPHONY_SERVICE);//
--@@ -2295,7 +2449,7 @@ public class TrycorderFragment extends Fragment
--     // fetch the internet connectivity
-- 
--     private String fetch_connectivity() {
---        if(checkInternet()) {
--+        if (checkInternet()) {
--             return "INTERNET is Active\n";
--         }
--         return "INTERNET is Off\n";
--diff --git a/gitdiff.txt b/gitdiff.txt
--index 612e423..2a1ec44 100644
----- a/gitdiff.txt
--+++ b/gitdiff.txt
--@@ -1,297 +0,0 @@
---diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
---index 0095518..1c9348a 100644
------ a/app/src/main/AndroidManifest.xml
---+++ b/app/src/main/AndroidManifest.xml
---@@ -9,6 +9,7 @@
---     <uses-permission android:name="android.permission.CAMERA" />
---     <uses-permission android:name="android.permission.RECORD_AUDIO" />
---     <uses-permission android:name="android.permission.INTERNET" />
---+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
---     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
---     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
---     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
---diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
---index d610745..ff08619 100644
------ a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
---+++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
---@@ -21,7 +21,11 @@ import android.location.LocationListener;
--- import android.location.LocationManager;
--- import android.media.AudioManager;
--- import android.media.MediaPlayer;
---+import android.net.ConnectivityManager;
---+import android.net.NetworkInfo;
--- import android.net.Uri;
---+import android.net.wifi.WifiInfo;
---+import android.net.wifi.WifiManager;
--- import android.os.Environment;
--- import android.preference.PreferenceManager;
--- import android.provider.MediaStore;
---@@ -50,9 +54,13 @@ import java.io.File;
--- import java.io.IOException;
--- import java.io.InputStream;
--- import java.io.OutputStream;
---+import java.net.InetAddress;
---+import java.net.NetworkInterface;
---+import java.net.SocketException;
--- import java.text.SimpleDateFormat;
--- import java.util.ArrayList;
--- import java.util.Date;
---+import java.util.Enumeration;
--- import java.util.Iterator;
--- import java.util.List;
--- import java.util.Locale;
---@@ -228,7 +236,7 @@ public class TrycorderFragment extends Fragment
---         mTalkButton.setOnClickListener(new View.OnClickListener() {
---             @Override
---             public void onClick(View view) {
----                listenandtalk();
---+                listen();
---             }
---         });
--- 
---@@ -903,12 +911,6 @@ public class TrycorderFragment extends Fragment
--- 
---     // =====================================================================================
--- 
----    private void listenandtalk() {
----        listen();
----    }
----
----    // =====================================================================================
----
---     private void buttonsound() {
---         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
---         mediaPlayer.start(); // no need to call prepare(); create() does that for you
---@@ -917,13 +919,13 @@ public class TrycorderFragment extends Fragment
---     private void opencomm() {
---         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
---         mediaPlayer.start(); // no need to call prepare(); create() does that for you
----        say("Healing frequency open");
---+        speak("Hailing frequency open.");
---     }
--- 
---     private void closecomm() {
---         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
---         mediaPlayer.start(); // no need to call prepare(); create() does that for you
----        say("Healing frequency closed");
---+        speak("Hailing frequency closed.");
---     }
--- 
---     private void transporterout() {
---@@ -1146,11 +1148,13 @@ public class TrycorderFragment extends Fragment
---             mCanvas.drawLine(px + (nx / 2) - 32, py + 32, px + (nx / 2) + 32, py + 32, mPaint); // top white line
---             mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32, px + (nx / 2) + 32, py + ny - 32, mPaint); // bottom white line
---             float zerolen = (ny - 64.0f) * ((0.0f - minvalue) / (maxvalue - minvalue));
----            if(zerolen>0.0f) mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32 - zerolen, px + (nx / 2) + 32, py + ny - 32 - zerolen, mPaint); // zero white line
---+            if (zerolen > 0.0f)
---+                mCanvas.drawLine(px + (nx / 2) - 32, py + ny - 32 - zerolen, px + (nx / 2) + 32, py + ny - 32 - zerolen, mPaint); // zero white line
---             // draw scale texts
---             mCanvas.drawText(String.format("%.0f", maxvalue), px + 4, py + 56, mPaint);  // max value indicator
---             mCanvas.drawText(String.format("%.0f", minvalue), px + 4, py + ny - 32, mPaint);  // min value indicator
----            if(zerolen>0.0f) mCanvas.drawText("0.0", px + 4, py + ny - 32 - zerolen, mPaint);  // zero indicator
---+            if (zerolen > 0.0f)
---+                mCanvas.drawText("0.0", px + 4, py + ny - 32 - zerolen, mPaint);  // zero indicator
---         }
--- 
---         // extract sensor data and plot them on view
---@@ -1698,16 +1702,19 @@ public class TrycorderFragment extends Fragment
---                 say("Logs Info");
---                 mLogsInfo.setVisibility(View.VISIBLE);
---                 mVieweron = false;
----                mLogsInfo.setText("--------------------\nTelephony\n--------------------\n");
----                mLogsInfo.append(fetch_tel_status(getContext()));
---+                mLogsInfo.setText("");
---+                mLogsInfo.append("--------------------\nConnectivity\n--------------------\n");
---+                mLogsInfo.append(fetch_connectivity());
---+                mLogsInfo.append("--------------------\nTelephony\n--------------------\n");
---+                mLogsInfo.append(fetch_tel_status());
---                 mLogsInfo.append("--------------------\nNetwork\n--------------------\n");
---                 mLogsInfo.append(fetch_network_info());
----                //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
----                //mLogsInfo.append(fetch_dmesg_info());
---                 mLogsInfo.append("--------------------\nSystem\n--------------------\n");
---                 mLogsInfo.append(fetch_system_info());
---                 mLogsInfo.append("--------------------\nOperSys\n--------------------\n");
---                 mLogsInfo.append(fetch_os_info());
---+                //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
---+                //mLogsInfo.append(fetch_dmesg_info());
---                 //mLogsInfo.append("--------------------\nProcess\n--------------------\n");
---                 //mLogsInfo.append(fetch_process_info());
---                 break;
---@@ -1985,14 +1992,14 @@ public class TrycorderFragment extends Fragment
---             firemissiles();
---             return (true);
---         }
----        if (texte.contains("shield") || texte.contains("raise")) {
---+        if (texte.contains("shield") && texte.contains("down")) {
---             switchbuttonlayout(3);
----            raiseshields();
---+            lowershields();
---             return (true);
---         }
----        if (texte.contains("shield") && texte.contains("down")) {
---+        if (texte.contains("shield") || texte.contains("raise")) {
---             switchbuttonlayout(3);
----            lowershields();
---+            raiseshields();
---             return (true);
---         }
---         if (texte.contains("sensor off")) {
---@@ -2024,7 +2031,7 @@ public class TrycorderFragment extends Fragment
---             closecomm();
---             return (true);
---         }
----        if (texte.contains("hailing") && texte.contains("open")) {
---+        if (texte.contains("hailing")) {
---             switchbuttonlayout(2);
---             opencomm();
---             return (true);
---@@ -2085,7 +2092,8 @@ public class TrycorderFragment extends Fragment
--- 
---     // =================== fetch telephone status =======================
--- 
----    public String fetch_tel_status(Context cx) {
---+    public String fetch_tel_status() {
---+        Context cx=getContext();
---         String result = null;
---         TelephonyManager tm = (TelephonyManager) cx
---                 .getSystemService(Context.TELEPHONY_SERVICE);//
---@@ -2130,19 +2138,6 @@ public class TrycorderFragment extends Fragment
--- 
---     // ================= fetch network info ===================
--- 
----    public String fetch_network_info() {
----        String result = "";
----        try {
----            String[] args = {"/system/bin/netcfg"};
----            result = run(args, "/system/bin/");
----        } catch (IOException ex) {
----            say("fetch_network_info ex=" + ex.toString());
----        }
----        return result;
----    }
----
----    // ================= fetch network info ===================
----
---     public String fetch_dmesg_info() {
---         String result = "";
---         try {
---@@ -2204,6 +2199,118 @@ public class TrycorderFragment extends Fragment
---         return sInfo.toString();
---     }
--- 
---+    // ================= fetch network info ===================
---+
---+    public String fetch_network_info() {
---+        String result = "";
---+        NetInfo netinfo = new NetInfo(getContext());
---+        result += String.format("Network type : %d\n", netinfo.getCurrentNetworkType());
---+        result += String.format("Wifi IP Addr : %s\n", netinfo.getWifiIpAddress());
---+        result += String.format("Wifi MAC Addr : %s\n", netinfo.getWiFiMACAddress());
---+        result += String.format("Wifi SSID : %s\n", netinfo.getWiFiSSID());
---+        result += String.format("IP Address : %s\n", netinfo.getIPAddress());
---+        return result;
---+    }
---+
---+    // ====================================================================================
---+    // public functions to obtain different infos from network interface
---+
---+    public class NetInfo {
---+        private ConnectivityManager connManager = null;
---+        private WifiManager wifiManager = null;
---+        private WifiInfo wifiInfo = null;
---+
---+        public NetInfo(Context context) {
---+            connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
---+            wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
---+            wifiInfo = wifiManager.getConnectionInfo();
---+        }
---+
---+        public int getCurrentNetworkType() {
---+            if (null == connManager)
---+                return 0;
---+
---+            NetworkInfo netinfo = connManager.getActiveNetworkInfo();
---+
---+            return netinfo.getType();
---+        }
---+
---+        public String getWifiIpAddress() {
---+            if (null == wifiManager || null == wifiInfo)
---+                return "";
---+
---+            int ipAddress = wifiInfo.getIpAddress();
---+
---+            return String.format("%d.%d.%d.%d",
---+                    (ipAddress & 0xff),
---+                    (ipAddress >> 8 & 0xff),
---+                    (ipAddress >> 16 & 0xff),
---+                    (ipAddress >> 24 & 0xff));
---+        }
---+
---+        public String getWiFiMACAddress() {
---+            if (null == wifiManager || null == wifiInfo)
---+                return "";
---+
---+            return wifiInfo.getMacAddress();
---+        }
---+
---+        public String getWiFiSSID() {
---+            if (null == wifiManager || null == wifiInfo)
---+                return "";
---+
---+            return wifiInfo.getSSID();
---+        }
---+
---+        public String getIPAddress() {
---+            String ipaddress = "";
---+
---+            try {
---+                Enumeration<NetworkInterface> enumnet = NetworkInterface.getNetworkInterfaces();
---+                NetworkInterface netinterface = null;
---+
---+                while (enumnet.hasMoreElements()) {
---+                    netinterface = enumnet.nextElement();
---+
---+                    for (Enumeration<InetAddress> enumip = netinterface.getInetAddresses();
---+                         enumip.hasMoreElements(); ) {
---+                        InetAddress inetAddress = enumip.nextElement();
---+
---+                        if (!inetAddress.isLoopbackAddress()) {
---+                            ipaddress = inetAddress.getHostAddress();
---+
---+                            break;
---+                        }
---+                    }
---+                }
---+            } catch (SocketException e) {
---+                e.printStackTrace();
---+            }
---+
---+            return ipaddress;
---+        }
---+    }
---+
---+    // =================================================================================
---+    // fetch the internet connectivity
---+
---+    private String fetch_connectivity() {
---+        if(checkInternet()) {
---+            return "INTERNET is Active\n";
---+        }
---+        return "INTERNET is Off\n";
---+    }
---+
---+    // check internet connectivity
---+    public boolean checkInternet() {
---+        ConnectivityManager connect = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
---+        if (connect.getNetworkInfo(0).getState() == NetworkInfo.State.CONNECTED
---+                || connect.getNetworkInfo(1).getState() == NetworkInfo.State.CONNECTED) {
---+            return true;
---+        }
---+        return false;
---+    }
---+
--- }
--- 
--- 
+ 

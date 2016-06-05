@@ -238,7 +238,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="1.5" />
 
             <Button
                 android:id="@+id/viewer_button"
@@ -278,7 +278,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_weight="0.5"
                 android:ellipsize="middle" />
 
 
