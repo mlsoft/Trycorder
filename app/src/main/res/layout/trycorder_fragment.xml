@@ -667,7 +667,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
                     <Button
@@ -678,7 +678,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
-                        android:background="@drawable/trekbutton_indigo"
+                        android:background="@drawable/trekbutton_indigo_left"
                         android:text="TRACTOR PUSH" />
 
                     <Button
@@ -689,7 +689,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="34"
-                        android:background="@drawable/trekbutton_indigo"
+                        android:background="@drawable/trekbutton_indigo_center"
                         android:text="TRACTOR OFF" />
 
                     <Button
@@ -700,7 +700,7 @@
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
                         android:layout_weight="33"
-                        android:background="@drawable/trekbutton_indigo"
+                        android:background="@drawable/trekbutton_indigo_right"
                         android:text="TRACTOR PULL" />
 
                 </LinearLayout>
@@ -713,7 +713,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     android:weightSum="100">
 
                     <Button
@@ -723,7 +723,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="33"
+                        android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_left"
                         android:text="Main Viewer" />
 
@@ -734,7 +734,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="34"
+                        android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_center"
                         android:text="Local Viewer" />
 
@@ -745,9 +745,20 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="33"
+                        android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_right"
                         android:text="Viewer Off" />
+
+                    <Button
+                        android:id="@+id/viewerphoto_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_mauve"
+                        android:text="Viewer Photo" />
 
                 </LinearLayout>
 
@@ -854,7 +865,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/federation_logo"
-                        android:visibility="visible" />
+                        android:visibility="gone" />
 
                     <TextureView
                         android:id="@+id/viewer_window"
@@ -945,6 +956,13 @@
                         </LinearLayout>
 
                     </ScrollView>
+
+                    <ImageView
+                        android:id="@+id/photo_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/martin"
+                        android:visibility="visible" />
 
                 </LinearLayout>
 

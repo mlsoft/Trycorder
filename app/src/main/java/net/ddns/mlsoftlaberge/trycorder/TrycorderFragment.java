@@ -1,14 +1,18 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
+import android.Manifest;
 import android.app.ActivityManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
 import android.hardware.Camera;
@@ -23,6 +27,7 @@ import android.location.LocationManager;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
+import android.media.FaceDetector;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.ConnectivityManager;
@@ -38,6 +43,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -56,6 +62,8 @@ import android.widget.Toast;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -205,6 +213,7 @@ public class TrycorderFragment extends Fragment
     private Button mViewerOnButton;
     private Button mViewerFrontButton;
     private Button mViewerOffButton;
+    private Button mViewerPhotoButton;
     private boolean mVieweron = false;
     private boolean mViewerfront = false;
     private int mViewermode = 0;
@@ -235,6 +244,7 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mSensor3Layout;
     private ImageView mFederationlogo;
     private ScrollView mStarshipPlans;
+    private ImageView mViewerPhoto;
 
     // the player for sound background
     private MediaPlayer mMediaPlayer = null;
@@ -247,6 +257,8 @@ public class TrycorderFragment extends Fragment
 
     // the preferences holder
     private SharedPreferences sharedPref;
+
+    // ==========================================================================
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -627,6 +639,16 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        mViewerPhotoButton = (Button) view.findViewById(R.id.viewerphoto_button);
+        mViewerPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchcam(0);
+                switchviewer(5);
+            }
+        });
+
         // ===================== viewer buttons group ============================
         // the viewer button
         mLogsButton = (Button) view.findViewById(R.id.logs_button);
@@ -686,6 +708,7 @@ public class TrycorderFragment extends Fragment
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
         mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
         mStarshipPlans = (ScrollView) view.findViewById(R.id.starship_plans);
+        mViewerPhoto =  (ImageView) view.findViewById(R.id.photo_view);
 
         // create and activate a textureview to contain camera display
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
@@ -766,25 +789,6 @@ public class TrycorderFragment extends Fragment
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             startActivity(intent);
         }
-        // Define the criteria how to select the locatioin provider -> use
-        // default
-        Location location = null;
-        Criteria criteria = new Criteria();
-        locationProvider = locationManager.getBestProvider(criteria, false);
-        //locationProvider = "gps";
-        try {
-            location = locationManager.getLastKnownLocation(locationProvider);
-        } catch (SecurityException e) {
-            say("No GPS available");
-        }
-        // Initialize the location fields
-        if (location != null) {
-            say("Provider " + locationProvider + " has been selected.");
-            mOriSensorView.setLocation(location);
-        } else {
-            say("No location available. " + locationProvider);
-        }
-
         // ============== initialize the audio listener and talker ==============
 
         tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
@@ -808,6 +812,7 @@ public class TrycorderFragment extends Fragment
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
 
+        // produce a FC on android 4.0.3
         //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
 
         return view;
@@ -1335,6 +1340,8 @@ public class TrycorderFragment extends Fragment
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
                     // draw the shield effect
+                    if(mode==1) mPaint2.setColor(Color.MAGENTA);
+                    else mPaint2.setColor(Color.BLUE);
                     if(position!=0) {
                         // compute positions
                         float px=mWidth/2;
@@ -1369,6 +1376,7 @@ public class TrycorderFragment extends Fragment
         private Bitmap mBitmap;
         private Paint mPaint = new Paint();
         private Paint mPaint2 = new Paint();
+        private Paint mPaint3 = new Paint();
         private Canvas mCanvas = new Canvas();
 
         private int mWidth;
@@ -1387,11 +1395,16 @@ public class TrycorderFragment extends Fragment
             mPaint.setTextSize(24);
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setColor(Color.WHITE);
-            // line paint
+            // circle paint
             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
             mPaint2.setStrokeWidth(2);
             mPaint2.setStyle(Paint.Style.STROKE);
             mPaint2.setColor(Color.GREEN);
+            // line paint
+            mPaint3.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint3.setStrokeWidth(2);
+            mPaint3.setStyle(Paint.Style.STROKE);
+            mPaint3.setColor(Color.LTGRAY);
         }
 
         public void setmode(int no) {
@@ -1410,6 +1423,7 @@ public class TrycorderFragment extends Fragment
         }
 
         public void start() {
+            position=1;
             // start the timer to eat this stuff and display it
             timer = new Timer("shield");
             myTimer = new MyTimer();
@@ -1448,9 +1462,26 @@ public class TrycorderFragment extends Fragment
                 if (mBitmap != null) {
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
-                    // draw the vertical line
-                    //mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
-                    // draw the shield effect
+                    // ajust alpha of grid
+                    if(position==0) {
+                        if(mode==1) {
+                            mPaint3.setAlpha(255);
+                        } else {
+                            mPaint3.setAlpha(0);
+                        }
+                    } else {
+                        if(mode==1) {
+                            mPaint3.setAlpha(position);
+                        } else {
+                            mPaint3.setAlpha(255-position);
+                        }
+                    }
+                    // draw the grid
+                    for(int i=0;i<10;++i) {
+                        mCanvas.drawLine(0,mHeight/10*i,mWidth,mHeight/10*i,mPaint3);
+                        mCanvas.drawLine(mWidth/10*i,0,mWidth/10*i,mHeight,mPaint3);
+                    }
+                    // draw the circle effect
                     if(position!=0) {
                         if (mode == 1) {
                             mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
@@ -2034,6 +2065,25 @@ public class TrycorderFragment extends Fragment
     // here we start the sensor reading
     private void startorisensors() {
         mRunStatus = true;
+        // Define the criteria how to select the location provider -> use
+        // default
+        Location location = null;
+        Criteria criteria = new Criteria();
+        locationProvider = locationManager.getBestProvider(criteria, false);
+        //locationProvider = "gps";
+        try {
+            location = locationManager.getLastKnownLocation(locationProvider);
+        } catch (SecurityException e) {
+            say("No GPS available");
+        }
+        // Initialize the location fields
+        if (location != null) {
+            say("Provider " + locationProvider + " has been selected.");
+            mOriSensorView.setLocation(location);
+        } else {
+            say("No location available. " + locationProvider);
+        }
+
         // link a sensor to the sensorview
         mSensorManager.registerListener(mOriSensorView,
                 mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
@@ -2421,33 +2471,9 @@ public class TrycorderFragment extends Fragment
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
         mCamera = null;
         if (mViewerfront == false) {
-            try {
-                mCamera = Camera.open();
-                mCamera.setPreviewTexture(surface);
-                Camera.Parameters parameters = mCamera.getParameters();
-                parameters.set("orientation", "portrait");
-                mCamera.setParameters(parameters);
-                mCamera.setDisplayOrientation(90);
-                mCamera.startPreview();
-            } catch (IOException ioe) {
-                say("Something bad happened with camera");
-            } catch (Exception sex) {
-                say("camera permission refused");
-            }
+            switchcam(1);
         } else {
-            try {
-                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
-                mCamera.setPreviewTexture(surface);
-                Camera.Parameters parameters = mCamera.getParameters();
-                parameters.set("orientation", "portrait");
-                mCamera.setParameters(parameters);
-                mCamera.setDisplayOrientation(90);
-                mCamera.startPreview();
-            } catch (IOException ioe) {
-                say("Something bad happened with camera");
-            } catch (Exception sex) {
-                say("camera permission refused");
-            }
+            switchcam(2);
         }
     }
 
@@ -2482,6 +2508,8 @@ public class TrycorderFragment extends Fragment
                     mCamera.setPreviewTexture(mViewerWindow.getSurfaceTexture());
                     Camera.Parameters parameters = mCamera.getParameters();
                     parameters.set("orientation", "portrait");
+                    parameters.set("scene-mode", "portrait");
+                    parameters.set("rotation", "90");
                     mCamera.setParameters(parameters);
                     mCamera.setDisplayOrientation(90);
                     mCamera.startPreview();
@@ -2497,6 +2525,8 @@ public class TrycorderFragment extends Fragment
                     mCamera.setPreviewTexture(mViewerWindow.getSurfaceTexture());
                     Camera.Parameters parameters = mCamera.getParameters();
                     parameters.set("orientation", "portrait");
+                    parameters.set("scene-mode", "portrait");
+                    parameters.set("rotation", "270");
                     mCamera.setParameters(parameters);
                     mCamera.setDisplayOrientation(90);
                     mCamera.startPreview();
@@ -2517,6 +2547,7 @@ public class TrycorderFragment extends Fragment
         mLogsConsole.setVisibility(View.GONE);
         mLogsInfo.setVisibility(View.GONE);
         mStarshipPlans.setVisibility(View.GONE);
+        mViewerPhoto.setVisibility(View.GONE);
         switch (no) {
             case 0:
                 say("Viewer OFF");
@@ -2558,6 +2589,11 @@ public class TrycorderFragment extends Fragment
                 mStarshipPlans.setVisibility(View.VISIBLE);
                 mVieweron = false;
                 break;
+            case 5:
+                say("Photo");
+                mViewerPhoto.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
         }
         mViewermode = no;
     }
@@ -2568,31 +2604,91 @@ public class TrycorderFragment extends Fragment
 
     private void snapphoto() {
         if (mVieweron) {
-            say("Picture Taken !");
             mCamera.takePicture(null, null, this);
         }
     }
 
     // photo saving of picture taken callback
     public void onPictureTaken(byte[] data, Camera camera) {
-        Uri imageFileUri = getActivity().getContentResolver().insert(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
+        // Uri imageFileUri = getActivity().getContentResolver().insert(
+        //         MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
+        File file = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+        Uri imageFileUri = Uri.fromFile(file);
         try {
-            OutputStream imageFileOS = getActivity().getContentResolver().openOutputStream(
-                    imageFileUri);
+            OutputStream imageFileOS = getActivity().getContentResolver().openOutputStream(imageFileUri);
             imageFileOS.write(data);
             imageFileOS.flush();
             imageFileOS.close();
-            // inform the media manager that we have a new photo in the gallery
-            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-            intent.setData(imageFileUri);
-            getActivity().sendBroadcast(intent);
+            say("Picture taken and saved!");
+            // Toast.makeText(getActivity(), "Saved " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast t = Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT);
-            t.show();
+            Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
         }
-        camera.startPreview();
-        say("Picture taken !");
+        // inform the media manager that we have a new photo in the gallery
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        intent.setData(imageFileUri);
+        getActivity().sendBroadcast(intent);
+        // transfer the photo in the imageview
+        switchviewer(5);
+        mViewerPhoto.setImageURI(imageFileUri);
+        Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
+        if(image!=null) processbitmap(image);
+        // do not restart camera if we switch the viewer page before
+        // camera.startPreview();
+    }
+
+    private void processbitmap(Bitmap image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+
+        //For Exception handling , odd width throws exception .
+        if (width % 2 != 0)
+            width = width - 1;
+
+        FaceDetector detector = new FaceDetector(width, height, 5);
+        FaceDetector.Face[] faces = new FaceDetector.Face[5];
+
+        Bitmap bitmap565 = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
+
+        Paint ditherPaint = new Paint();
+        ditherPaint.setDither(true);
+
+        Paint headPaint = new Paint();
+        headPaint.setColor(Color.RED);
+        headPaint.setStyle(Paint.Style.STROKE);
+        headPaint.setStrokeWidth(3);
+
+        Paint eyePaint = new Paint();
+        eyePaint.setColor(Color.BLUE);
+        eyePaint.setStyle(Paint.Style.STROKE);
+        eyePaint.setStrokeWidth(1);
+
+        Canvas canvas = new Canvas();
+        canvas.setBitmap(bitmap565);
+        canvas.drawBitmap(image, 0, 0, ditherPaint);
+
+        int facesFound = detector.findFaces(bitmap565, faces);
+        PointF midPoint = new PointF();
+        float eyeDistance = 0.0f;
+        float confidence = 0.0f;
+
+        Toast.makeText(getActivity(), "Faces Found " + facesFound, Toast.LENGTH_LONG).show();
+
+        if (facesFound > 0) {
+            for (int index = 0; index < facesFound; ++index) {
+                // get values from the faces
+                faces[index].getMidPoint(midPoint);
+                eyeDistance = faces[index].eyesDistance();
+                confidence = faces[index].confidence();
+                // draw circles around features
+                canvas.drawCircle(midPoint.x, midPoint.y, (float) 1.5 * eyeDistance, headPaint);
+                canvas.drawCircle((float) (midPoint.x - eyeDistance / 2), (float) (midPoint.y - eyeDistance / 8), (float) eyeDistance / (float) 2.5, eyePaint);
+                canvas.drawCircle(midPoint.x + eyeDistance / 2, midPoint.y - eyeDistance / 8, (float) eyeDistance / (float) 2.5, eyePaint);
+
+            }
+        }
+
+        mViewerPhoto.setImageBitmap(bitmap565);
     }
 
     // ===================================================================================
@@ -2654,6 +2750,7 @@ public class TrycorderFragment extends Fragment
 
     private void takephoto() {
         say("Open Photo application");
+        switchviewer(5);
         // create Intent to take a picture and return control to the calling application
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         fileUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);  // create a file to save the picture
@@ -2683,6 +2780,13 @@ public class TrycorderFragment extends Fragment
                 Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 intent.setData(fileUri);
                 getActivity().sendBroadcast(intent);
+                // process the bitmap from the photo application (thumbnail data)
+                //Bitmap cameraBitmap = (Bitmap) data.getExtras().get("data");
+                //switchviewer(5);
+                //mViewerPhoto.setImageBitmap(cameraBitmap);
+                // Process the file, and view it
+                switchviewer(5);
+                mViewerPhoto.setImageURI(fileUri);
             } else if (resultCode == getActivity().RESULT_CANCELED) {
                 // User cancelled the image capture
                 say("Cancelled Photo");
