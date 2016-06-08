@@ -42,6 +42,19 @@
                 android:weightSum="6">
 
                 <Button
+                    android:id="@+id/sound_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_gravity="center"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_gray_center"
+                    android:maxLines="1"
+                    android:text="Sound"
+                    android:textSize="18sp" />
+
+                <Button
                     android:id="@+id/start_button"
                     android:layout_width="0dp"
                     android:layout_height="32dp"
@@ -66,20 +79,6 @@
                     android:text="Stop"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-
-                <Button
-                    android:id="@+id/sound_button"
-                    android:layout_width="0dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="@dimen/button_margin"
-                    android:layout_marginStart="@dimen/button_margin"
-                    android:layout_gravity="center"
-                    android:layout_weight="1.5"
-                    android:background="@drawable/trekbutton_gray_center"
-                    android:maxLines="1"
-                    android:text="Sound"
-                    android:textSize="18sp" />
-
 
                 <Button
                     android:id="@+id/settings_button"
@@ -470,6 +469,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_left"
+                        android:textSize="18sp"
                         android:text="Magn" />
 
                     <Button
@@ -481,6 +481,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_center"
+                        android:textSize="18sp"
                         android:text="Orient" />
 
                     <Button
@@ -492,6 +493,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_center"
+                        android:textSize="18sp"
                         android:text="Grav" />
 
                     <Button
@@ -503,6 +505,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_center"
+                        android:textSize="18sp"
                         android:text="Temp" />
 
                     <Button
@@ -514,6 +517,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_right"
+                        android:textSize="18sp"
                         android:text="OFF" />
 
 
@@ -713,7 +717,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
                     <Button
@@ -725,6 +729,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_left"
+                        android:textSize="18sp"
                         android:text="Main Viewer" />
 
                     <Button
@@ -736,6 +741,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_center"
+                        android:textSize="18sp"
                         android:text="Local Viewer" />
 
                     <Button
@@ -747,6 +753,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_right"
+                        android:textSize="18sp"
                         android:text="Viewer Off" />
 
                     <Button
@@ -758,6 +765,7 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve"
+                        android:textSize="18sp"
                         android:text="Viewer Photo" />
 
                 </LinearLayout>
@@ -770,9 +778,8 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     android:weightSum="100">
-
 
                     <Button
                         android:id="@+id/logsconsole_button"
@@ -781,8 +788,9 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="33"
-                        android:background="@drawable/trekbutton_blue"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_blue_left"
+                        android:textSize="18sp"
                         android:text="Console log" />
 
                     <Button
@@ -792,8 +800,9 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="33"
-                        android:background="@drawable/trekbutton_blue"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_blue_center"
+                        android:textSize="18sp"
                         android:text="Info log" />
 
                     <Button
@@ -803,9 +812,22 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="33"
-                        android:background="@drawable/trekbutton_blue"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_blue_center"
+                        android:textSize="18sp"
                         android:text="Plans" />
+
+                    <Button
+                        android:id="@+id/logssys_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_blue_right"
+                        android:textSize="18sp"
+                        android:text="System" />
 
                 </LinearLayout>
 
@@ -898,7 +920,7 @@
                             android:id="@+id/logs_info"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Information log\n------------------"
+                            android:text="Information log\n------------------\n"
                             android:textColor="@android:color/white"
                             android:textSize="14sp"
                             android:textStyle="bold"
@@ -906,63 +928,37 @@
 
                     </ScrollView>
 
-                    <ScrollView
+                    <ImageView
                         android:id="@+id/starship_plans"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:scrollbars="vertical"
-                        android:scrollbarSize="2dp"
-                        android:scrollIndicators="right">
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:weightSum="6"
-                            android:orientation="vertical">
-
-                            <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="0dp"
-                                android:layout_gravity="top"
-                                android:layout_weight="1"
-                                android:src="@drawable/starship_view" />
-
-                            <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="0dp"
-                                android:layout_weight="1"
-                                android:src="@drawable/starship_plan" />
-
-                            <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="0dp"
-                                android:layout_weight="1"
-                                android:src="@drawable/starship_topview" />
-
-                            <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="0dp"
-                                android:layout_weight="1"
-                                android:src="@drawable/starship_sideview" />
-
-                            <ImageView
-                                android:layout_width="wrap_content"
-                                android:layout_height="0dp"
-                                android:src="@drawable/starship_build"
-                                android:layout_weight="2"
-                                android:visibility="visible"/>
-
-                        </LinearLayout>
-
-                    </ScrollView>
+                        android:layout_height="match_parent"
+                        android:visibility="visible"
+                        android:src="@drawable/starship_view"
+                        android:clickable="true" />
 
                     <ImageView
                         android:id="@+id/photo_view"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/martin"
-                        android:visibility="visible" />
+                        android:visibility="gone" />
+
+                    <ScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollIndicators="right">
+
+                        <TextView
+                            android:id="@+id/logs_sys"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="System log\n------------------\n"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:visibility="gone" />
+
+                    </ScrollView>
 
                 </LinearLayout>
 
@@ -1057,7 +1053,21 @@
                 android:layout_weight="1"
                 android:background="@android:color/black"
                 android:orientation="horizontal"
-                android:weightSum="6">
+                android:weightSum="8">
+
+                <Button
+                    android:id="@+id/snap_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="bottom"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_weight="2"
+                    android:background="@drawable/trekbutton_gray_center"
+                    android:maxLines="1"
+                    android:text="Snap"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/photo_button"

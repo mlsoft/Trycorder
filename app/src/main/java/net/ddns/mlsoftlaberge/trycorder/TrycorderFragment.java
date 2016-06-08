@@ -95,19 +95,13 @@ public class TrycorderFragment extends Fragment
     private Camera mCamera = null;
     private TextureView mViewerWindow;
 
-    // handles for the 2 logs pages
-    private TextView mLogsConsole;
-    private TextView mLogsInfo;
-
     // handles for the conversation functions
-    private TextToSpeech tts;
-    private AudioManager mAudioManager;
-    private SpeechRecognizer mSpeechRecognizer;
-    private Intent mSpeechRecognizerIntent;
-    private String mSentence;
+    private TextToSpeech tts=null;
+    private SpeechRecognizer mSpeechRecognizer=null;
+    private Intent mSpeechRecognizerIntent=null;
 
     // handle for the gps
-    private LocationManager locationManager;
+    private LocationManager locationManager=null;
     private String locationProvider;
 
     // the handle to the sensors
@@ -162,6 +156,9 @@ public class TrycorderFragment extends Fragment
 
     // the button to talk to computer
     private ImageButton mAskButton;
+
+    // the button to start it all
+    private Button mSnapButton;
 
     // the button to start it all
     private Button mPhotoButton;
@@ -222,6 +219,7 @@ public class TrycorderFragment extends Fragment
     private Button mLogsConsoleButton;
     private Button mLogsInfoButton;
     private Button mLogsPlansButton;
+    private Button mLogsSysButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -243,8 +241,11 @@ public class TrycorderFragment extends Fragment
 
     private LinearLayout mSensor3Layout;
     private ImageView mFederationlogo;
-    private ScrollView mStarshipPlans;
+    private ImageView mStarshipPlans;
     private ImageView mViewerPhoto;
+    private TextView mLogsConsole;
+    private TextView mLogsInfo;
+    private TextView mLogsSys;
 
     // the player for sound background
     private MediaPlayer mMediaPlayer = null;
@@ -327,7 +328,15 @@ public class TrycorderFragment extends Fragment
         mAskButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                buttonsound();
+                snapphoto();
+            }
+        });
+
+        // the snap button do the same than the ask button
+        mSnapButton = (Button) view.findViewById(R.id.snap_button);
+        mSnapButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
                 snapphoto();
             }
         });
@@ -634,8 +643,8 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchviewer(0);
                 switchcam(0);
+                switchviewer(0);
             }
         });
 
@@ -649,7 +658,7 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        // ===================== viewer buttons group ============================
+        // ===================== logs buttons group ============================
         // the viewer button
         mLogsButton = (Button) view.findViewById(R.id.logs_button);
         mLogsButton.setOnClickListener(new View.OnClickListener() {
@@ -665,6 +674,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                switchcam(0);
                 switchviewer(2);
             }
         });
@@ -674,6 +684,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                switchcam(0);
                 switchviewer(3);
             }
         });
@@ -683,7 +694,18 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                switchcam(0);
                 switchviewer(4);
+            }
+        });
+
+        mLogsSysButton = (Button) view.findViewById(R.id.logssys_button);
+        mLogsSysButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchcam(0);
+                switchviewer(6);
             }
         });
 
@@ -707,8 +729,16 @@ public class TrycorderFragment extends Fragment
         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
         mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
-        mStarshipPlans = (ScrollView) view.findViewById(R.id.starship_plans);
+        mStarshipPlans = (ImageView) view.findViewById(R.id.starship_plans);
+        mStarshipPlans.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchplans();
+            }
+        });
         mViewerPhoto =  (ImageView) view.findViewById(R.id.photo_view);
+        mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
 
         // create and activate a textureview to contain camera display
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
@@ -719,6 +749,8 @@ public class TrycorderFragment extends Fragment
         mLogsConsole.setVisibility(View.GONE);
         mLogsInfo.setVisibility(View.GONE);
         mStarshipPlans.setVisibility(View.GONE);
+        mViewerPhoto.setVisibility(View.GONE);
+        mLogsSys.setVisibility(View.GONE);
         mVieweron = false;
 
         // ==============================================================================
@@ -779,42 +811,6 @@ public class TrycorderFragment extends Fragment
         // position 0 of layout 1
         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
 
-        // initialize the gps service
-        locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
-        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        // check if enabled and if not send user to the GSP settings
-        // Better solution would be to display a dialog and suggesting to
-        // go to the settings
-        if (!enabled) {
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivity(intent);
-        }
-        // ============== initialize the audio listener and talker ==============
-
-        tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status != TextToSpeech.ERROR) {
-                    tts.setLanguage(Locale.FRENCH);
-                }
-            }
-        });
-
-        mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
-
-        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
-        mSpeechRecognizer.setRecognitionListener(this);
-        mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
-        //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
-
-        // produce a FC on android 4.0.3
-        //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
-
         return view;
     }
 
@@ -828,6 +824,7 @@ public class TrycorderFragment extends Fragment
         mTextstatus_top.setTypeface(face);
         mTextstatus_bottom.setTypeface(face);
         // bottom buttons
+        mSnapButton.setTypeface(face2);
         mPhotoButton.setTypeface(face2);
         mRecordButton.setTypeface(face2);
         mGalleryButton.setTypeface(face2);
@@ -847,11 +844,11 @@ public class TrycorderFragment extends Fragment
         mLogsButton.setTypeface(face2);
 
         // center buttons
-        mMagneticButton.setTypeface(face);
-        mOrientationButton.setTypeface(face);
-        mGravityButton.setTypeface(face);
-        mTemperatureButton.setTypeface(face);
-        mSensoroffButton.setTypeface(face);
+        mMagneticButton.setTypeface(face2);
+        mOrientationButton.setTypeface(face2);
+        mGravityButton.setTypeface(face2);
+        mTemperatureButton.setTypeface(face2);
+        mSensoroffButton.setTypeface(face2);
 
         mOpenCommButton.setTypeface(face3);
         mCloseCommButton.setTypeface(face3);
@@ -869,13 +866,15 @@ public class TrycorderFragment extends Fragment
         mTractorOffButton.setTypeface(face3);
         mTractorPullButton.setTypeface(face3);
 
-        mViewerOnButton.setTypeface(face3);
-        mViewerFrontButton.setTypeface(face3);
-        mViewerOffButton.setTypeface(face3);
+        mViewerOnButton.setTypeface(face2);
+        mViewerFrontButton.setTypeface(face2);
+        mViewerOffButton.setTypeface(face2);
+        mViewerPhotoButton.setTypeface(face2);
 
-        mLogsConsoleButton.setTypeface(face3);
-        mLogsInfoButton.setTypeface(face3);
-        mLogsPlansButton.setTypeface(face3);
+        mLogsConsoleButton.setTypeface(face2);
+        mLogsInfoButton.setTypeface(face2);
+        mLogsPlansButton.setTypeface(face2);
+        mLogsSysButton.setTypeface(face2);
     }
 
     @Override
@@ -895,7 +894,6 @@ public class TrycorderFragment extends Fragment
 
     @Override
     public void onPause() {
-        stopsensors();
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt("pref_key_sensor_mode", mSensormode);
         editor.putInt("pref_key_sensor_page", mSensorpage);
@@ -904,9 +902,35 @@ public class TrycorderFragment extends Fragment
         editor.putBoolean("pref_key_audio_mode", mSoundStatus);
         editor.putBoolean("pref_key_viewer_front", mViewerfront);
         editor.commit();
+        stopsensors();
+        switchcam(0);
         super.onPause();
     }
 
+    private int planno=0;
+
+    private void switchplans() {
+        planno++;
+        if (planno>=5) planno=0;
+        switch(planno) {
+            case 0:
+                mStarshipPlans.setImageResource(R.drawable.starship_view);
+                break;
+            case 1:
+                mStarshipPlans.setImageResource(R.drawable.starship_build);
+                break;
+            case 2:
+                mStarshipPlans.setImageResource(R.drawable.starship_plan);
+                break;
+            case 3:
+                mStarshipPlans.setImageResource(R.drawable.starship_sideview);
+                break;
+            case 4:
+                mStarshipPlans.setImageResource(R.drawable.starship_topview);
+                break;
+
+        }
+    }
 
     private void startsensors(int mode) {
         stopsensors();
@@ -1079,6 +1103,11 @@ public class TrycorderFragment extends Fragment
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
     }
 
+    private void buttonbad() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.denybeep1);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+    }
+
     private void opencomm() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
@@ -1111,12 +1140,6 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(8);
         mTraSensorView.setmode(1);
         startsensors(8);
-    }
-
-    private void longrangesensor() {
-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.long_range_scan);
-        mediaPlayer.start(); // no need to call prepare(); create() does that for you
-        say("Long range Sensors");
     }
 
     private void raiseshields() {
@@ -2056,7 +2079,7 @@ public class TrycorderFragment extends Fragment
         mSensorManager.unregisterListener(mOriSensorView);
         mRunStatus = false;
         try {
-            locationManager.removeUpdates(mOriSensorView);
+            if(locationManager!=null) locationManager.removeUpdates(mOriSensorView);
         } catch (SecurityException e) {
             say("Error closing GPS");
         }
@@ -2065,6 +2088,18 @@ public class TrycorderFragment extends Fragment
     // here we start the sensor reading
     private void startorisensors() {
         mRunStatus = true;
+        // initialize the gps service
+        if(locationManager==null) {
+            locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+            boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            // check if enabled and if not send user to the GSP settings
+            // Better solution would be to display a dialog and suggesting to
+            // go to the settings
+            if (!enabled) {
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
+        }
         // Define the criteria how to select the location provider -> use
         // default
         Location location = null;
@@ -2548,6 +2583,7 @@ public class TrycorderFragment extends Fragment
         mLogsInfo.setVisibility(View.GONE);
         mStarshipPlans.setVisibility(View.GONE);
         mViewerPhoto.setVisibility(View.GONE);
+        mLogsSys.setVisibility(View.GONE);
         switch (no) {
             case 0:
                 say("Viewer OFF");
@@ -2590,9 +2626,21 @@ public class TrycorderFragment extends Fragment
                 mVieweron = false;
                 break;
             case 5:
-                say("Photo");
+                say("View Snap Photo");
                 mViewerPhoto.setVisibility(View.VISIBLE);
                 mVieweron = false;
+                break;
+            case 6:
+                say("System Info");
+                mLogsSys.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                mLogsSys.setText("");
+                mLogsSys.append("--------------------\nConnectivity\n--------------------\n");
+                mLogsSys.append(fetch_connectivity());
+                mLogsSys.append("--------------------\nCPU Info\n--------------------\n");
+                mLogsSys.append(fetch_cpu_info());
+                mLogsSys.append("--------------------\nMemory Info\n--------------------\n");
+                mLogsSys.append(fetch_memory_info());
                 break;
         }
         mViewermode = no;
@@ -2604,7 +2652,10 @@ public class TrycorderFragment extends Fragment
 
     private void snapphoto() {
         if (mVieweron) {
+            buttonsound();
             mCamera.takePicture(null, null, this);
+        } else {
+            buttonbad();
         }
     }
 
@@ -2864,7 +2915,7 @@ public class TrycorderFragment extends Fragment
         ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         if (dutexte != null && dutexte.size() > 0) {
             for (int i = 0; i < dutexte.size(); ++i) {
-                mSentence = dutexte.get(i);
+                String mSentence = dutexte.get(i);
                 if (matchvoice(mSentence)) {
                     mTextstatus_top.setText(mSentence);
                     say("Said: " + mSentence);
@@ -2877,7 +2928,6 @@ public class TrycorderFragment extends Fragment
         }
     }
 
-
     @Override
     public void onRmsChanged(float rmsdB) {
     }
@@ -2886,6 +2936,25 @@ public class TrycorderFragment extends Fragment
     // functions to control the speech process
 
     private void listen() {
+        if(mSpeechRecognizer==null) {
+            // ============== initialize the audio listener and talker ==============
+
+            //AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+
+            mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
+            mSpeechRecognizer.setRecognitionListener(this);
+            mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
+
+            // produce a FC on android 4.0.3
+            //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
+        }
+
         if (listenLanguage.equals("FR")) {
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
         } else if (listenLanguage.equals("EN")) {
@@ -2899,6 +2968,16 @@ public class TrycorderFragment extends Fragment
     }
 
     private void speak(String texte) {
+        if(tts==null) {
+            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    if (status != TextToSpeech.ERROR) {
+                        tts.setLanguage(Locale.US);
+                    }
+                }
+            });
+        }
         if (speakLanguage.equals("FR")) {
             tts.setLanguage(Locale.FRENCH);
         } else if (speakLanguage.equals("EN")) {
@@ -3267,6 +3346,44 @@ public class TrycorderFragment extends Fragment
         return false;
     }
 
+    // ================= fetch cpu info ===================
+
+    public String fetch_cpu_info() {
+        String result = "";
+        try {
+            String[] args = {"/system/bin/cat", "/proc/cpuinfo"};
+            result = run(args, "/system/bin/");
+        } catch (IOException ex) {
+            say("fetch_cpu_info ex=" + ex.toString());
+        }
+        return result;
+    }
+
+    // ================= fetch memory info ===================
+
+    public String fetch_memory_info() {
+        Context context = getContext();
+        StringBuffer memoryInfo = new StringBuffer();
+        final ActivityManager activityManager = (ActivityManager) context
+                .getSystemService(Context.ACTIVITY_SERVICE);
+
+        ActivityManager.MemoryInfo outInfo = new ActivityManager.MemoryInfo();
+        activityManager.getMemoryInfo(outInfo);
+        memoryInfo.append("\nTotal Available Memory :")
+                .append(outInfo.availMem >> 10).append("k");
+        memoryInfo.append("\nTotal Available Memory :")
+                .append(outInfo.availMem >> 20).append("M");
+        memoryInfo.append("\nIn low memory situation:").append(
+                outInfo.lowMemory);
+
+        String result = null;
+        try {
+            String[] args = { "/system/bin/cat", "/proc/meminfo" };
+            result = run(args, "/system/bin/");
+        } catch (IOException ex) {
+            Log.i("fetch_memory_info", "ex=" + ex.toString());
+        }
+
+        return memoryInfo.toString() + "\n\n" + result;
+    }
 }
-
-

@@ -1,605 +1,714 @@
 diff --git a/app/build.gradle b/app/build.gradle
-index ea53715..9694a3d 100644
+index 9694a3d..63deb26 100644
 --- a/app/build.gradle
 +++ b/app/build.gradle
 @@ -9,7 +9,7 @@ android {
          minSdkVersion 15
          targetSdkVersion 23
          versionCode 1
--        versionName "1.4"
-+        versionName "1.5"
+-        versionName "1.5"
++        versionName "1.7"
      }
      buildTypes {
          release {
 diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderActivity.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderActivity.java
-index e98b85c..70a53e8 100644
+index 70a53e8..e84482d 100644
 --- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderActivity.java
 +++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderActivity.java
-@@ -1,6 +1,9 @@
- package net.ddns.mlsoftlaberge.trycorder;
- 
-+import android.Manifest;
-+import android.content.pm.PackageManager;
- import android.os.Bundle;
-+import android.support.v4.app.ActivityCompat;
+@@ -7,14 +7,13 @@ import android.support.v4.app.ActivityCompat;
  import android.support.v4.app.FragmentActivity;
  import android.support.v4.app.FragmentTransaction;
  import android.view.View;
-@@ -16,6 +19,8 @@ public class TrycorderActivity extends FragmentActivity {
+-import android.view.WindowManager;
+ 
+ /**
+  * Created by mlsoft on 16-05-13.
+  */
+ public class TrycorderActivity extends FragmentActivity {
+ 
+-    private static String TAG="Trycorder";
++    private static String TAG = "Trycorder";
+ 
      @Override
      protected void onCreate(Bundle savedInstanceState) {
-         super.onCreate(savedInstanceState);
-+        // ask the permissions
-+        askpermissions();
-         // start the fragment full screen
-         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-         ft.add(android.R.id.content, new TrycorderFragment(), TAG);
-@@ -37,4 +42,67 @@ public class TrycorderActivity extends FragmentActivity {
+@@ -33,7 +32,7 @@ public class TrycorderActivity extends FragmentActivity {
+         super.onWindowFocusChanged(hasFocus);
+         if (hasFocus) {
+             getWindow().getDecorView().setSystemUiVisibility(
+-                              View.SYSTEM_UI_FLAG_LAYOUT_STABLE
++                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                             | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+@@ -44,20 +43,19 @@ public class TrycorderActivity extends FragmentActivity {
+ 
+     // ==========================================================================
+ 
+-    //    <uses-permission android:name="android.permission.CAMERA" />
+-    //    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+-    //    <uses-permission android:name="android.permission.INTERNET" />
+-    //    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+-    //    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+-    //    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+-    //    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+-    //    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+-    //    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+-    //    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+-    //    <uses-permission android:name="android.permission.GET_TASKS" />
+-
+     private void askpermissions() {
+-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
++        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED
++                || ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_TASKS) != PackageManager.PERMISSION_GRANTED
++                ) {
+             ActivityCompat.requestPermissions(this,
+                     new String[]{
+                             Manifest.permission.CAMERA,
+@@ -73,36 +71,6 @@ public class TrycorderActivity extends FragmentActivity {
+                             Manifest.permission.GET_TASKS
+                     }, 1);
          }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 2);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, 3);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_WIFI_STATE}, 4);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_NETWORK_STATE}, 5);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 6);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 7);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 8);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 9);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 10);
+-    //        }
+-    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_TASKS) != PackageManager.PERMISSION_GRANTED) {
+-    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.GET_TASKS}, 11);
+-    //        }
      }
  
-+    // ==========================================================================
-+
-+    //    <uses-permission android:name="android.permission.CAMERA" />
-+    //    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-+    //    <uses-permission android:name="android.permission.INTERNET" />
-+    //    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-+    //    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-+    //    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-+    //    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-+    //    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-+    //    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-+    //    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-+    //    <uses-permission android:name="android.permission.GET_TASKS" />
-+
-+    private void askpermissions() {
-+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-+            ActivityCompat.requestPermissions(this,
-+                    new String[]{
-+                            Manifest.permission.CAMERA,
-+                            Manifest.permission.RECORD_AUDIO,
-+                            Manifest.permission.INTERNET,
-+                            Manifest.permission.ACCESS_WIFI_STATE,
-+                            Manifest.permission.ACCESS_NETWORK_STATE,
-+                            Manifest.permission.READ_EXTERNAL_STORAGE,
-+                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-+                            Manifest.permission.ACCESS_COARSE_LOCATION,
-+                            Manifest.permission.ACCESS_FINE_LOCATION,
-+                            Manifest.permission.READ_PHONE_STATE,
-+                            Manifest.permission.GET_TASKS
-+                    }, 1);
-+        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 2);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, 3);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_WIFI_STATE}, 4);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NETWORK_STATE) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_NETWORK_STATE}, 5);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 6);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 7);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 8);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 9);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, 10);
-+    //        }
-+    //        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.GET_TASKS) != PackageManager.PERMISSION_GRANTED) {
-+    //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.GET_TASKS}, 11);
-+    //        }
-+    }
-+
  }
 diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-index fd3d6ed..1a52361 100644
+index 1a52361..bb2e791 100644
 --- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
 +++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
-@@ -1,14 +1,18 @@
- package net.ddns.mlsoftlaberge.trycorder;
+@@ -95,19 +95,13 @@ public class TrycorderFragment extends Fragment
+     private Camera mCamera = null;
+     private TextureView mViewerWindow;
  
-+import android.Manifest;
- import android.app.ActivityManager;
- import android.content.ContentValues;
- import android.content.Context;
- import android.content.Intent;
- import android.content.SharedPreferences;
-+import android.content.pm.PackageManager;
- import android.graphics.Bitmap;
-+import android.graphics.BitmapFactory;
- import android.graphics.Canvas;
- import android.graphics.Color;
- import android.graphics.Paint;
-+import android.graphics.PointF;
- import android.graphics.SurfaceTexture;
- import android.graphics.Typeface;
- import android.hardware.Camera;
-@@ -23,6 +27,7 @@ import android.location.LocationManager;
- import android.media.AudioFormat;
- import android.media.AudioManager;
- import android.media.AudioRecord;
-+import android.media.FaceDetector;
- import android.media.MediaPlayer;
- import android.media.MediaRecorder;
- import android.net.ConnectivityManager;
-@@ -38,6 +43,7 @@ import android.speech.RecognitionListener;
- import android.speech.RecognizerIntent;
- import android.speech.SpeechRecognizer;
- import android.speech.tts.TextToSpeech;
-+import android.support.v4.app.ActivityCompat;
- import android.support.v4.app.Fragment;
- import android.os.Bundle;
- import android.telephony.TelephonyManager;
-@@ -56,6 +62,8 @@ import android.widget.Toast;
+-    // handles for the 2 logs pages
+-    private TextView mLogsConsole;
+-    private TextView mLogsInfo;
+-
+     // handles for the conversation functions
+-    private TextToSpeech tts;
+-    private AudioManager mAudioManager;
+-    private SpeechRecognizer mSpeechRecognizer;
+-    private Intent mSpeechRecognizerIntent;
+-    private String mSentence;
++    private TextToSpeech tts=null;
++    private SpeechRecognizer mSpeechRecognizer=null;
++    private Intent mSpeechRecognizerIntent=null;
  
+     // handle for the gps
+-    private LocationManager locationManager;
++    private LocationManager locationManager=null;
+     private String locationProvider;
  
- import java.io.File;
-+import java.io.FileNotFoundException;
-+import java.io.FileOutputStream;
- import java.io.IOException;
- import java.io.InputStream;
- import java.io.OutputStream;
-@@ -205,6 +213,7 @@ public class TrycorderFragment extends Fragment
-     private Button mViewerOnButton;
-     private Button mViewerFrontButton;
-     private Button mViewerOffButton;
-+    private Button mViewerPhotoButton;
-     private boolean mVieweron = false;
-     private boolean mViewerfront = false;
-     private int mViewermode = 0;
-@@ -235,6 +244,7 @@ public class TrycorderFragment extends Fragment
+     // the handle to the sensors
+@@ -164,6 +158,9 @@ public class TrycorderFragment extends Fragment
+     private ImageButton mAskButton;
+ 
+     // the button to start it all
++    private Button mSnapButton;
++
++    // the button to start it all
+     private Button mPhotoButton;
+ 
+     // the button to stop it all
+@@ -222,6 +219,7 @@ public class TrycorderFragment extends Fragment
+     private Button mLogsConsoleButton;
+     private Button mLogsInfoButton;
+     private Button mLogsPlansButton;
++    private Button mLogsSysButton;
+ 
+     // the button to control sound-effects
+     private Button mSoundButton;
+@@ -243,8 +241,11 @@ public class TrycorderFragment extends Fragment
+ 
      private LinearLayout mSensor3Layout;
      private ImageView mFederationlogo;
-     private ScrollView mStarshipPlans;
-+    private ImageView mViewerPhoto;
+-    private ScrollView mStarshipPlans;
++    private ImageView mStarshipPlans;
+     private ImageView mViewerPhoto;
++    private TextView mLogsConsole;
++    private TextView mLogsInfo;
++    private TextView mLogsSys;
  
      // the player for sound background
      private MediaPlayer mMediaPlayer = null;
-@@ -248,6 +258,8 @@ public class TrycorderFragment extends Fragment
-     // the preferences holder
-     private SharedPreferences sharedPref;
- 
-+    // ==========================================================================
+@@ -327,7 +328,15 @@ public class TrycorderFragment extends Fragment
+         mAskButton.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View view) {
+-                buttonsound();
++                snapphoto();
++            }
++        });
 +
-     @Override
-     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-         View view = inflater.inflate(R.layout.trycorder_fragment, container, false);
-@@ -627,6 +639,16 @@ public class TrycorderFragment extends Fragment
++        // the snap button do the same than the ask button
++        mSnapButton = (Button) view.findViewById(R.id.snap_button);
++        mSnapButton.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
+                 snapphoto();
+             }
+         });
+@@ -634,8 +643,8 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
+-                switchviewer(0);
+                 switchcam(0);
++                switchviewer(0);
              }
          });
  
-+        mViewerPhotoButton = (Button) view.findViewById(R.id.viewerphoto_button);
-+        mViewerPhotoButton.setOnClickListener(new View.OnClickListener() {
+@@ -649,7 +658,7 @@ public class TrycorderFragment extends Fragment
+             }
+         });
+ 
+-        // ===================== viewer buttons group ============================
++        // ===================== logs buttons group ============================
+         // the viewer button
+         mLogsButton = (Button) view.findViewById(R.id.logs_button);
+         mLogsButton.setOnClickListener(new View.OnClickListener() {
+@@ -665,6 +674,7 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
++                switchcam(0);
+                 switchviewer(2);
+             }
+         });
+@@ -674,6 +684,7 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
++                switchcam(0);
+                 switchviewer(3);
+             }
+         });
+@@ -683,10 +694,21 @@ public class TrycorderFragment extends Fragment
+             @Override
+             public void onClick(View view) {
+                 buttonsound();
++                switchcam(0);
+                 switchviewer(4);
+             }
+         });
+ 
++        mLogsSysButton = (Button) view.findViewById(R.id.logssys_button);
++        mLogsSysButton.setOnClickListener(new View.OnClickListener() {
 +            @Override
 +            public void onClick(View view) {
 +                buttonsound();
 +                switchcam(0);
-+                switchviewer(5);
++                switchviewer(6);
 +            }
 +        });
 +
-         // ===================== viewer buttons group ============================
-         // the viewer button
-         mLogsButton = (Button) view.findViewById(R.id.logs_button);
-@@ -686,6 +708,7 @@ public class TrycorderFragment extends Fragment
+         // ================== get handles on the 3 layout containers ===================
+         // the sensor layout, to contain my sensorview
+         mSensorLayout = (LinearLayout) view.findViewById(R.id.sensor_layout);
+@@ -707,8 +729,16 @@ public class TrycorderFragment extends Fragment
+         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
          mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
          mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
-         mStarshipPlans = (ScrollView) view.findViewById(R.id.starship_plans);
-+        mViewerPhoto =  (ImageView) view.findViewById(R.id.photo_view);
+-        mStarshipPlans = (ScrollView) view.findViewById(R.id.starship_plans);
++        mStarshipPlans = (ImageView) view.findViewById(R.id.starship_plans);
++        mStarshipPlans.setOnClickListener(new View.OnClickListener() {
++            @Override
++            public void onClick(View view) {
++                buttonsound();
++                switchplans();
++            }
++        });
+         mViewerPhoto =  (ImageView) view.findViewById(R.id.photo_view);
++        mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
  
          // create and activate a textureview to contain camera display
          mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
-@@ -766,25 +789,6 @@ public class TrycorderFragment extends Fragment
-             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-             startActivity(intent);
-         }
--        // Define the criteria how to select the locatioin provider -> use
--        // default
--        Location location = null;
--        Criteria criteria = new Criteria();
--        locationProvider = locationManager.getBestProvider(criteria, false);
--        //locationProvider = "gps";
--        try {
--            location = locationManager.getLastKnownLocation(locationProvider);
--        } catch (SecurityException e) {
--            say("No GPS available");
--        }
--        // Initialize the location fields
--        if (location != null) {
--            say("Provider " + locationProvider + " has been selected.");
--            mOriSensorView.setLocation(location);
--        } else {
--            say("No location available. " + locationProvider);
--        }
--
-         // ============== initialize the audio listener and talker ==============
- 
-         tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
-@@ -808,6 +812,7 @@ public class TrycorderFragment extends Fragment
-         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
-         mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
- 
-+        // produce a FC on android 4.0.3
-         //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
- 
-         return view;
-@@ -1335,6 +1340,8 @@ public class TrycorderFragment extends Fragment
-                     // clear the surface
-                     mCanvas.drawColor(Color.BLACK);
-                     // draw the shield effect
-+                    if(mode==1) mPaint2.setColor(Color.MAGENTA);
-+                    else mPaint2.setColor(Color.BLUE);
-                     if(position!=0) {
-                         // compute positions
-                         float px=mWidth/2;
-@@ -1369,6 +1376,7 @@ public class TrycorderFragment extends Fragment
-         private Bitmap mBitmap;
-         private Paint mPaint = new Paint();
-         private Paint mPaint2 = new Paint();
-+        private Paint mPaint3 = new Paint();
-         private Canvas mCanvas = new Canvas();
- 
-         private int mWidth;
-@@ -1387,11 +1395,16 @@ public class TrycorderFragment extends Fragment
-             mPaint.setTextSize(24);
-             mPaint.setStyle(Paint.Style.STROKE);
-             mPaint.setColor(Color.WHITE);
--            // line paint
-+            // circle paint
-             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
-             mPaint2.setStrokeWidth(2);
-             mPaint2.setStyle(Paint.Style.STROKE);
-             mPaint2.setColor(Color.GREEN);
-+            // line paint
-+            mPaint3.setFlags(Paint.ANTI_ALIAS_FLAG);
-+            mPaint3.setStrokeWidth(2);
-+            mPaint3.setStyle(Paint.Style.STROKE);
-+            mPaint3.setColor(Color.LTGRAY);
-         }
- 
-         public void setmode(int no) {
-@@ -1410,6 +1423,7 @@ public class TrycorderFragment extends Fragment
-         }
- 
-         public void start() {
-+            position=1;
-             // start the timer to eat this stuff and display it
-             timer = new Timer("shield");
-             myTimer = new MyTimer();
-@@ -1448,9 +1462,26 @@ public class TrycorderFragment extends Fragment
-                 if (mBitmap != null) {
-                     // clear the surface
-                     mCanvas.drawColor(Color.BLACK);
--                    // draw the vertical line
--                    //mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
--                    // draw the shield effect
-+                    // ajust alpha of grid
-+                    if(position==0) {
-+                        if(mode==1) {
-+                            mPaint3.setAlpha(255);
-+                        } else {
-+                            mPaint3.setAlpha(0);
-+                        }
-+                    } else {
-+                        if(mode==1) {
-+                            mPaint3.setAlpha(position);
-+                        } else {
-+                            mPaint3.setAlpha(255-position);
-+                        }
-+                    }
-+                    // draw the grid
-+                    for(int i=0;i<10;++i) {
-+                        mCanvas.drawLine(0,mHeight/10*i,mWidth,mHeight/10*i,mPaint3);
-+                        mCanvas.drawLine(mWidth/10*i,0,mWidth/10*i,mHeight,mPaint3);
-+                    }
-+                    // draw the circle effect
-                     if(position!=0) {
-                         if (mode == 1) {
-                             mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
-@@ -2034,6 +2065,25 @@ public class TrycorderFragment extends Fragment
-     // here we start the sensor reading
-     private void startorisensors() {
-         mRunStatus = true;
-+        // Define the criteria how to select the location provider -> use
-+        // default
-+        Location location = null;
-+        Criteria criteria = new Criteria();
-+        locationProvider = locationManager.getBestProvider(criteria, false);
-+        //locationProvider = "gps";
-+        try {
-+            location = locationManager.getLastKnownLocation(locationProvider);
-+        } catch (SecurityException e) {
-+            say("No GPS available");
-+        }
-+        // Initialize the location fields
-+        if (location != null) {
-+            say("Provider " + locationProvider + " has been selected.");
-+            mOriSensorView.setLocation(location);
-+        } else {
-+            say("No location available. " + locationProvider);
-+        }
-+
-         // link a sensor to the sensorview
-         mSensorManager.registerListener(mOriSensorView,
-                 mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
-@@ -2421,33 +2471,9 @@ public class TrycorderFragment extends Fragment
-     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-         mCamera = null;
-         if (mViewerfront == false) {
--            try {
--                mCamera = Camera.open();
--                mCamera.setPreviewTexture(surface);
--                Camera.Parameters parameters = mCamera.getParameters();
--                parameters.set("orientation", "portrait");
--                mCamera.setParameters(parameters);
--                mCamera.setDisplayOrientation(90);
--                mCamera.startPreview();
--            } catch (IOException ioe) {
--                say("Something bad happened with camera");
--            } catch (Exception sex) {
--                say("camera permission refused");
--            }
-+            switchcam(1);
-         } else {
--            try {
--                mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
--                mCamera.setPreviewTexture(surface);
--                Camera.Parameters parameters = mCamera.getParameters();
--                parameters.set("orientation", "portrait");
--                mCamera.setParameters(parameters);
--                mCamera.setDisplayOrientation(90);
--                mCamera.startPreview();
--            } catch (IOException ioe) {
--                say("Something bad happened with camera");
--            } catch (Exception sex) {
--                say("camera permission refused");
--            }
-+            switchcam(2);
-         }
-     }
- 
-@@ -2482,6 +2508,8 @@ public class TrycorderFragment extends Fragment
-                     mCamera.setPreviewTexture(mViewerWindow.getSurfaceTexture());
-                     Camera.Parameters parameters = mCamera.getParameters();
-                     parameters.set("orientation", "portrait");
-+                    parameters.set("scene-mode", "portrait");
-+                    parameters.set("rotation", "90");
-                     mCamera.setParameters(parameters);
-                     mCamera.setDisplayOrientation(90);
-                     mCamera.startPreview();
-@@ -2497,6 +2525,8 @@ public class TrycorderFragment extends Fragment
-                     mCamera.setPreviewTexture(mViewerWindow.getSurfaceTexture());
-                     Camera.Parameters parameters = mCamera.getParameters();
-                     parameters.set("orientation", "portrait");
-+                    parameters.set("scene-mode", "portrait");
-+                    parameters.set("rotation", "270");
-                     mCamera.setParameters(parameters);
-                     mCamera.setDisplayOrientation(90);
-                     mCamera.startPreview();
-@@ -2517,6 +2547,7 @@ public class TrycorderFragment extends Fragment
+@@ -719,6 +749,8 @@ public class TrycorderFragment extends Fragment
          mLogsConsole.setVisibility(View.GONE);
          mLogsInfo.setVisibility(View.GONE);
          mStarshipPlans.setVisibility(View.GONE);
 +        mViewerPhoto.setVisibility(View.GONE);
++        mLogsSys.setVisibility(View.GONE);
+         mVieweron = false;
+ 
+         // ==============================================================================
+@@ -779,42 +811,6 @@ public class TrycorderFragment extends Fragment
+         // position 0 of layout 1
+         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
+ 
+-        // initialize the gps service
+-        locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+-        boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+-        // check if enabled and if not send user to the GSP settings
+-        // Better solution would be to display a dialog and suggesting to
+-        // go to the settings
+-        if (!enabled) {
+-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+-            startActivity(intent);
+-        }
+-        // ============== initialize the audio listener and talker ==============
+-
+-        tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+-            @Override
+-            public void onInit(int status) {
+-                if (status != TextToSpeech.ERROR) {
+-                    tts.setLanguage(Locale.FRENCH);
+-                }
+-            }
+-        });
+-
+-        mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+-
+-        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
+-        mSpeechRecognizer.setRecognitionListener(this);
+-        mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
+-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+-        //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
+-        mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
+-
+-        // produce a FC on android 4.0.3
+-        //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
+-
+         return view;
+     }
+ 
+@@ -828,6 +824,7 @@ public class TrycorderFragment extends Fragment
+         mTextstatus_top.setTypeface(face);
+         mTextstatus_bottom.setTypeface(face);
+         // bottom buttons
++        mSnapButton.setTypeface(face2);
+         mPhotoButton.setTypeface(face2);
+         mRecordButton.setTypeface(face2);
+         mGalleryButton.setTypeface(face2);
+@@ -847,11 +844,11 @@ public class TrycorderFragment extends Fragment
+         mLogsButton.setTypeface(face2);
+ 
+         // center buttons
+-        mMagneticButton.setTypeface(face);
+-        mOrientationButton.setTypeface(face);
+-        mGravityButton.setTypeface(face);
+-        mTemperatureButton.setTypeface(face);
+-        mSensoroffButton.setTypeface(face);
++        mMagneticButton.setTypeface(face2);
++        mOrientationButton.setTypeface(face2);
++        mGravityButton.setTypeface(face2);
++        mTemperatureButton.setTypeface(face2);
++        mSensoroffButton.setTypeface(face2);
+ 
+         mOpenCommButton.setTypeface(face3);
+         mCloseCommButton.setTypeface(face3);
+@@ -869,13 +866,15 @@ public class TrycorderFragment extends Fragment
+         mTractorOffButton.setTypeface(face3);
+         mTractorPullButton.setTypeface(face3);
+ 
+-        mViewerOnButton.setTypeface(face3);
+-        mViewerFrontButton.setTypeface(face3);
+-        mViewerOffButton.setTypeface(face3);
++        mViewerOnButton.setTypeface(face2);
++        mViewerFrontButton.setTypeface(face2);
++        mViewerOffButton.setTypeface(face2);
++        mViewerPhotoButton.setTypeface(face2);
+ 
+-        mLogsConsoleButton.setTypeface(face3);
+-        mLogsInfoButton.setTypeface(face3);
+-        mLogsPlansButton.setTypeface(face3);
++        mLogsConsoleButton.setTypeface(face2);
++        mLogsInfoButton.setTypeface(face2);
++        mLogsPlansButton.setTypeface(face2);
++        mLogsSysButton.setTypeface(face2);
+     }
+ 
+     @Override
+@@ -895,7 +894,6 @@ public class TrycorderFragment extends Fragment
+ 
+     @Override
+     public void onPause() {
+-        stopsensors();
+         SharedPreferences.Editor editor = sharedPref.edit();
+         editor.putInt("pref_key_sensor_mode", mSensormode);
+         editor.putInt("pref_key_sensor_page", mSensorpage);
+@@ -904,9 +902,35 @@ public class TrycorderFragment extends Fragment
+         editor.putBoolean("pref_key_audio_mode", mSoundStatus);
+         editor.putBoolean("pref_key_viewer_front", mViewerfront);
+         editor.commit();
++        stopsensors();
++        switchcam(0);
+         super.onPause();
+     }
+ 
++    private int planno=0;
++
++    private void switchplans() {
++        planno++;
++        if (planno>=5) planno=0;
++        switch(planno) {
++            case 0:
++                mStarshipPlans.setImageResource(R.drawable.starship_view);
++                break;
++            case 1:
++                mStarshipPlans.setImageResource(R.drawable.starship_build);
++                break;
++            case 2:
++                mStarshipPlans.setImageResource(R.drawable.starship_plan);
++                break;
++            case 3:
++                mStarshipPlans.setImageResource(R.drawable.starship_sideview);
++                break;
++            case 4:
++                mStarshipPlans.setImageResource(R.drawable.starship_topview);
++                break;
++
++        }
++    }
+ 
+     private void startsensors(int mode) {
+         stopsensors();
+@@ -1079,6 +1103,11 @@ public class TrycorderFragment extends Fragment
+         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+     }
+ 
++    private void buttonbad() {
++        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.denybeep1);
++        mediaPlayer.start(); // no need to call prepare(); create() does that for you
++    }
++
+     private void opencomm() {
+         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
+         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+@@ -1113,12 +1142,6 @@ public class TrycorderFragment extends Fragment
+         startsensors(8);
+     }
+ 
+-    private void longrangesensor() {
+-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.long_range_scan);
+-        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+-        say("Long range Sensors");
+-    }
+-
+     private void raiseshields() {
+         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.shieldup);
+         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+@@ -2056,7 +2079,7 @@ public class TrycorderFragment extends Fragment
+         mSensorManager.unregisterListener(mOriSensorView);
+         mRunStatus = false;
+         try {
+-            locationManager.removeUpdates(mOriSensorView);
++            if(locationManager!=null) locationManager.removeUpdates(mOriSensorView);
+         } catch (SecurityException e) {
+             say("Error closing GPS");
+         }
+@@ -2065,6 +2088,18 @@ public class TrycorderFragment extends Fragment
+     // here we start the sensor reading
+     private void startorisensors() {
+         mRunStatus = true;
++        // initialize the gps service
++        if(locationManager==null) {
++            locationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
++            boolean enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
++            // check if enabled and if not send user to the GSP settings
++            // Better solution would be to display a dialog and suggesting to
++            // go to the settings
++            if (!enabled) {
++                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
++                startActivity(intent);
++            }
++        }
+         // Define the criteria how to select the location provider -> use
+         // default
+         Location location = null;
+@@ -2548,6 +2583,7 @@ public class TrycorderFragment extends Fragment
+         mLogsInfo.setVisibility(View.GONE);
+         mStarshipPlans.setVisibility(View.GONE);
+         mViewerPhoto.setVisibility(View.GONE);
++        mLogsSys.setVisibility(View.GONE);
          switch (no) {
              case 0:
                  say("Viewer OFF");
-@@ -2558,6 +2589,11 @@ public class TrycorderFragment extends Fragment
-                 mStarshipPlans.setVisibility(View.VISIBLE);
+@@ -2590,10 +2626,22 @@ public class TrycorderFragment extends Fragment
                  mVieweron = false;
                  break;
-+            case 5:
-+                say("Photo");
-+                mViewerPhoto.setVisibility(View.VISIBLE);
+             case 5:
+-                say("Photo");
++                say("View Snap Photo");
+                 mViewerPhoto.setVisibility(View.VISIBLE);
+                 mVieweron = false;
+                 break;
++            case 6:
++                say("System Info");
++                mLogsSys.setVisibility(View.VISIBLE);
 +                mVieweron = false;
++                mLogsSys.setText("");
++                mLogsSys.append("--------------------\nConnectivity\n--------------------\n");
++                mLogsSys.append(fetch_connectivity());
++                mLogsSys.append("--------------------\nCPU Info\n--------------------\n");
++                mLogsSys.append(fetch_cpu_info());
++                mLogsSys.append("--------------------\nMemory Info\n--------------------\n");
++                mLogsSys.append(fetch_memory_info());
 +                break;
          }
          mViewermode = no;
      }
-@@ -2568,31 +2604,91 @@ public class TrycorderFragment extends Fragment
+@@ -2604,7 +2652,10 @@ public class TrycorderFragment extends Fragment
  
      private void snapphoto() {
          if (mVieweron) {
--            say("Picture Taken !");
++            buttonsound();
              mCamera.takePicture(null, null, this);
++        } else {
++            buttonbad();
          }
      }
  
-     // photo saving of picture taken callback
-     public void onPictureTaken(byte[] data, Camera camera) {
--        Uri imageFileUri = getActivity().getContentResolver().insert(
--                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
-+        // Uri imageFileUri = getActivity().getContentResolver().insert(
-+        //         MediaStore.Images.Media.EXTERNAL_CONTENT_URI, new ContentValues());
-+        File file = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-+        Uri imageFileUri = Uri.fromFile(file);
-         try {
--            OutputStream imageFileOS = getActivity().getContentResolver().openOutputStream(
--                    imageFileUri);
-+            OutputStream imageFileOS = getActivity().getContentResolver().openOutputStream(imageFileUri);
-             imageFileOS.write(data);
-             imageFileOS.flush();
-             imageFileOS.close();
--            // inform the media manager that we have a new photo in the gallery
--            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
--            intent.setData(imageFileUri);
--            getActivity().sendBroadcast(intent);
-+            say("Picture taken and saved!");
-+            // Toast.makeText(getActivity(), "Saved " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
-         } catch (Exception e) {
--            Toast t = Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT);
--            t.show();
-+            Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
+@@ -2864,7 +2915,7 @@ public class TrycorderFragment extends Fragment
+         ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+         if (dutexte != null && dutexte.size() > 0) {
+             for (int i = 0; i < dutexte.size(); ++i) {
+-                mSentence = dutexte.get(i);
++                String mSentence = dutexte.get(i);
+                 if (matchvoice(mSentence)) {
+                     mTextstatus_top.setText(mSentence);
+                     say("Said: " + mSentence);
+@@ -2877,7 +2928,6 @@ public class TrycorderFragment extends Fragment
          }
--        camera.startPreview();
--        say("Picture taken !");
-+        // inform the media manager that we have a new photo in the gallery
-+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-+        intent.setData(imageFileUri);
-+        getActivity().sendBroadcast(intent);
-+        // transfer the photo in the imageview
-+        switchviewer(5);
-+        mViewerPhoto.setImageURI(imageFileUri);
-+        Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
-+        if(image!=null) processbitmap(image);
-+        // do not restart camera if we switch the viewer page before
-+        // camera.startPreview();
-+    }
+     }
+ 
+-
+     @Override
+     public void onRmsChanged(float rmsdB) {
+     }
+@@ -2886,6 +2936,25 @@ public class TrycorderFragment extends Fragment
+     // functions to control the speech process
+ 
+     private void listen() {
++        if(mSpeechRecognizer==null) {
++            // ============== initialize the audio listener and talker ==============
 +
-+    private void processbitmap(Bitmap image) {
-+        int width = image.getWidth();
-+        int height = image.getHeight();
++            //AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
 +
-+        //For Exception handling , odd width throws exception .
-+        if (width % 2 != 0)
-+            width = width - 1;
++            mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
++            mSpeechRecognizer.setRecognitionListener(this);
++            mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
++            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
++            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
++            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
++            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
++            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
++            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
 +
-+        FaceDetector detector = new FaceDetector(width, height, 5);
-+        FaceDetector.Face[] faces = new FaceDetector.Face[5];
-+
-+        Bitmap bitmap565 = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-+
-+        Paint ditherPaint = new Paint();
-+        ditherPaint.setDither(true);
-+
-+        Paint headPaint = new Paint();
-+        headPaint.setColor(Color.RED);
-+        headPaint.setStyle(Paint.Style.STROKE);
-+        headPaint.setStrokeWidth(3);
-+
-+        Paint eyePaint = new Paint();
-+        eyePaint.setColor(Color.BLUE);
-+        eyePaint.setStyle(Paint.Style.STROKE);
-+        eyePaint.setStrokeWidth(1);
-+
-+        Canvas canvas = new Canvas();
-+        canvas.setBitmap(bitmap565);
-+        canvas.drawBitmap(image, 0, 0, ditherPaint);
-+
-+        int facesFound = detector.findFaces(bitmap565, faces);
-+        PointF midPoint = new PointF();
-+        float eyeDistance = 0.0f;
-+        float confidence = 0.0f;
-+
-+        Toast.makeText(getActivity(), "Faces Found " + facesFound, Toast.LENGTH_LONG).show();
-+
-+        if (facesFound > 0) {
-+            for (int index = 0; index < facesFound; ++index) {
-+                // get values from the faces
-+                faces[index].getMidPoint(midPoint);
-+                eyeDistance = faces[index].eyesDistance();
-+                confidence = faces[index].confidence();
-+                // draw circles around features
-+                canvas.drawCircle(midPoint.x, midPoint.y, (float) 1.5 * eyeDistance, headPaint);
-+                canvas.drawCircle((float) (midPoint.x - eyeDistance / 2), (float) (midPoint.y - eyeDistance / 8), (float) eyeDistance / (float) 2.5, eyePaint);
-+                canvas.drawCircle(midPoint.x + eyeDistance / 2, midPoint.y - eyeDistance / 8, (float) eyeDistance / (float) 2.5, eyePaint);
-+
-+            }
++            // produce a FC on android 4.0.3
++            //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
 +        }
 +
-+        mViewerPhoto.setImageBitmap(bitmap565);
+         if (listenLanguage.equals("FR")) {
+             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
+         } else if (listenLanguage.equals("EN")) {
+@@ -2899,6 +2968,16 @@ public class TrycorderFragment extends Fragment
      }
  
-     // ===================================================================================
-@@ -2654,6 +2750,7 @@ public class TrycorderFragment extends Fragment
+     private void speak(String texte) {
++        if(tts==null) {
++            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
++                @Override
++                public void onInit(int status) {
++                    if (status != TextToSpeech.ERROR) {
++                        tts.setLanguage(Locale.US);
++                    }
++                }
++            });
++        }
+         if (speakLanguage.equals("FR")) {
+             tts.setLanguage(Locale.FRENCH);
+         } else if (speakLanguage.equals("EN")) {
+@@ -3267,6 +3346,44 @@ public class TrycorderFragment extends Fragment
+         return false;
+     }
  
-     private void takephoto() {
-         say("Open Photo application");
-+        switchviewer(5);
-         // create Intent to take a picture and return control to the calling application
-         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-         fileUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);  // create a file to save the picture
-@@ -2683,6 +2780,13 @@ public class TrycorderFragment extends Fragment
-                 Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                 intent.setData(fileUri);
-                 getActivity().sendBroadcast(intent);
-+                // process the bitmap from the photo application (thumbnail data)
-+                //Bitmap cameraBitmap = (Bitmap) data.getExtras().get("data");
-+                //switchviewer(5);
-+                //mViewerPhoto.setImageBitmap(cameraBitmap);
-+                // Process the file, and view it
-+                switchviewer(5);
-+                mViewerPhoto.setImageURI(fileUri);
-             } else if (resultCode == getActivity().RESULT_CANCELED) {
-                 // User cancelled the image capture
-                 say("Cancelled Photo");
-diff --git a/app/src/main/res/drawable/trekbutton_indigo_center.xml b/app/src/main/res/drawable/trekbutton_indigo_center.xml
-index a8b409b..a6e1a11 100644
---- a/app/src/main/res/drawable/trekbutton_indigo_center.xml
-+++ b/app/src/main/res/drawable/trekbutton_indigo_center.xml
-@@ -1,4 +1,21 @@
- <?xml version="1.0" encoding="utf-8"?>
- <selector xmlns:android="http://schemas.android.com/apk/res/android">
--
--</selector>
-\ No newline at end of file
-+    <item android:state_pressed="true">
-+        <shape android:shape="rectangle">
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
-+        </shape>
-+    </item>
-+    <item android:state_focused="true">
-+        <shape android:shape="rectangle">
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <solid android:color="#58857e" />
-+        </shape>
-+    </item>
-+    <item>
-+        <shape android:shape="rectangle">
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#3d5afe" android:startColor="#8c9eff" />
-+        </shape>
-+    </item>
-+</selector>
-diff --git a/app/src/main/res/drawable/trekbutton_indigo_left.xml b/app/src/main/res/drawable/trekbutton_indigo_left.xml
-index a8b409b..272f53d 100644
---- a/app/src/main/res/drawable/trekbutton_indigo_left.xml
-+++ b/app/src/main/res/drawable/trekbutton_indigo_left.xml
-@@ -1,4 +1,24 @@
- <?xml version="1.0" encoding="utf-8"?>
- <selector xmlns:android="http://schemas.android.com/apk/res/android">
--
--</selector>
-\ No newline at end of file
-+    <item android:state_pressed="true">
-+        <shape android:shape="rectangle">
-+            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
-+        </shape>
-+    </item>
-+    <item android:state_focused="true">
-+        <shape android:shape="rectangle">
-+            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <solid android:color="#58857e" />
-+        </shape>
-+    </item>
-+    <item>
-+        <shape android:shape="rectangle">
-+            <corners android:bottomLeftRadius="20dp" android:topLeftRadius="20dp"/>
-+            <stroke android:width="1dip" android:color="#5e7974" />
-+            <gradient android:angle="-90" android:endColor="#3d5afe" android:startColor="#8c9eff" />
-+        </shape>
-+    </item>
-+</selector>
+-}
++    // ================= fetch cpu info ===================
++
++    public String fetch_cpu_info() {
++        String result = "";
++        try {
++            String[] args = {"/system/bin/cat", "/proc/cpuinfo"};
++            result = run(args, "/system/bin/");
++        } catch (IOException ex) {
++            say("fetch_cpu_info ex=" + ex.toString());
++        }
++        return result;
++    }
++
++    // ================= fetch memory info ===================
+ 
++    public String fetch_memory_info() {
++        Context context = getContext();
++        StringBuffer memoryInfo = new StringBuffer();
++        final ActivityManager activityManager = (ActivityManager) context
++                .getSystemService(Context.ACTIVITY_SERVICE);
++
++        ActivityManager.MemoryInfo outInfo = new ActivityManager.MemoryInfo();
++        activityManager.getMemoryInfo(outInfo);
++        memoryInfo.append("\nTotal Available Memory :")
++                .append(outInfo.availMem >> 10).append("k");
++        memoryInfo.append("\nTotal Available Memory :")
++                .append(outInfo.availMem >> 20).append("M");
++        memoryInfo.append("\nIn low memory situation:").append(
++                outInfo.lowMemory);
++
++        String result = null;
++        try {
++            String[] args = { "/system/bin/cat", "/proc/meminfo" };
++            result = run(args, "/system/bin/");
++        } catch (IOException ex) {
++            Log.i("fetch_memory_info", "ex=" + ex.toString());
++        }
+ 
++        return memoryInfo.toString() + "\n\n" + result;
++    }
++}
 diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
-index b2a2d1e..7aeb6b0 100644
+index 7aeb6b0..fe7dd48 100644
 --- a/app/src/main/res/layout/trycorder_fragment.xml
 +++ b/app/src/main/res/layout/trycorder_fragment.xml
-@@ -667,7 +667,7 @@
+@@ -42,44 +42,43 @@
+                 android:weightSum="6">
+ 
+                 <Button
+-                    android:id="@+id/start_button"
++                    android:id="@+id/sound_button"
+                     android:layout_width="0dp"
+                     android:layout_height="32dp"
+                     android:layout_marginEnd="@dimen/button_margin"
+                     android:layout_marginStart="@dimen/button_margin"
++                    android:layout_gravity="center"
+                     android:layout_weight="1.5"
+-                    android:background="@drawable/trekbutton_green_center"
++                    android:background="@drawable/trekbutton_gray_center"
+                     android:maxLines="1"
+-                    android:text="Start"
+-                    android:textSize="18sp"
+-                    android:textStyle="bold" />
++                    android:text="Sound"
++                    android:textSize="18sp" />
+ 
+                 <Button
+-                    android:id="@+id/stop_button"
++                    android:id="@+id/start_button"
+                     android:layout_width="0dp"
+                     android:layout_height="32dp"
+                     android:layout_marginEnd="@dimen/button_margin"
+                     android:layout_marginStart="@dimen/button_margin"
+                     android:layout_weight="1.5"
+-                    android:background="@drawable/trekbutton_red_center"
++                    android:background="@drawable/trekbutton_green_center"
+                     android:maxLines="1"
+-                    android:text="Stop"
++                    android:text="Start"
+                     android:textSize="18sp"
+                     android:textStyle="bold" />
+ 
+                 <Button
+-                    android:id="@+id/sound_button"
++                    android:id="@+id/stop_button"
+                     android:layout_width="0dp"
+                     android:layout_height="32dp"
+                     android:layout_marginEnd="@dimen/button_margin"
+                     android:layout_marginStart="@dimen/button_margin"
+-                    android:layout_gravity="center"
+                     android:layout_weight="1.5"
+-                    android:background="@drawable/trekbutton_gray_center"
++                    android:background="@drawable/trekbutton_red_center"
+                     android:maxLines="1"
+-                    android:text="Sound"
+-                    android:textSize="18sp" />
+-
++                    android:text="Stop"
++                    android:textSize="18sp"
++                    android:textStyle="bold" />
+ 
+                 <Button
+                     android:id="@+id/settings_button"
+@@ -470,6 +469,7 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="20"
+                         android:background="@drawable/trekbutton_yellow_left"
++                        android:textSize="18sp"
+                         android:text="Magn" />
+ 
+                     <Button
+@@ -481,6 +481,7 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="20"
+                         android:background="@drawable/trekbutton_yellow_center"
++                        android:textSize="18sp"
+                         android:text="Orient" />
+ 
+                     <Button
+@@ -492,6 +493,7 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="20"
+                         android:background="@drawable/trekbutton_yellow_center"
++                        android:textSize="18sp"
+                         android:text="Grav" />
+ 
+                     <Button
+@@ -503,6 +505,7 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="20"
+                         android:background="@drawable/trekbutton_yellow_center"
++                        android:textSize="18sp"
+                         android:text="Temp" />
+ 
+                     <Button
+@@ -514,6 +517,7 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="20"
+                         android:background="@drawable/trekbutton_yellow_right"
++                        android:textSize="18sp"
+                         android:text="OFF" />
+ 
+ 
+@@ -713,7 +717,7 @@
                      android:background="@android:color/black"
                      android:gravity="center"
                      android:orientation="horizontal"
@@ -608,34 +717,39 @@ index b2a2d1e..7aeb6b0 100644
                      android:weightSum="100">
  
                      <Button
-@@ -678,7 +678,7 @@
-                         android:layout_marginLeft="2dp"
+@@ -725,6 +729,7 @@
                          android:layout_marginRight="2dp"
-                         android:layout_weight="33"
--                        android:background="@drawable/trekbutton_indigo"
-+                        android:background="@drawable/trekbutton_indigo_left"
-                         android:text="TRACTOR PUSH" />
+                         android:layout_weight="25"
+                         android:background="@drawable/trekbutton_mauve_left"
++                        android:textSize="18sp"
+                         android:text="Main Viewer" />
  
                      <Button
-@@ -689,7 +689,7 @@
-                         android:layout_marginLeft="2dp"
+@@ -736,6 +741,7 @@
                          android:layout_marginRight="2dp"
-                         android:layout_weight="34"
--                        android:background="@drawable/trekbutton_indigo"
-+                        android:background="@drawable/trekbutton_indigo_center"
-                         android:text="TRACTOR OFF" />
+                         android:layout_weight="25"
+                         android:background="@drawable/trekbutton_mauve_center"
++                        android:textSize="18sp"
+                         android:text="Local Viewer" />
  
                      <Button
-@@ -700,7 +700,7 @@
-                         android:layout_marginLeft="2dp"
+@@ -747,6 +753,7 @@
                          android:layout_marginRight="2dp"
-                         android:layout_weight="33"
--                        android:background="@drawable/trekbutton_indigo"
-+                        android:background="@drawable/trekbutton_indigo_right"
-                         android:text="TRACTOR PULL" />
+                         android:layout_weight="25"
+                         android:background="@drawable/trekbutton_mauve_right"
++                        android:textSize="18sp"
+                         android:text="Viewer Off" />
+ 
+                     <Button
+@@ -758,6 +765,7 @@
+                         android:layout_marginRight="2dp"
+                         android:layout_weight="25"
+                         android:background="@drawable/trekbutton_mauve"
++                        android:textSize="18sp"
+                         android:text="Viewer Photo" />
  
                  </LinearLayout>
-@@ -713,7 +713,7 @@
+@@ -770,10 +778,9 @@
                      android:background="@android:color/black"
                      android:gravity="center"
                      android:orientation="horizontal"
@@ -643,689 +757,193 @@ index b2a2d1e..7aeb6b0 100644
 +                    android:visibility="visible"
                      android:weightSum="100">
  
+-
                      <Button
-@@ -723,7 +723,7 @@
+                         android:id="@+id/logsconsole_button"
+                         android:layout_width="0dp"
+@@ -781,8 +788,9 @@
                          android:layout_gravity="center"
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
 -                        android:layout_weight="33"
+-                        android:background="@drawable/trekbutton_blue"
 +                        android:layout_weight="25"
-                         android:background="@drawable/trekbutton_mauve_left"
-                         android:text="Main Viewer" />
++                        android:background="@drawable/trekbutton_blue_left"
++                        android:textSize="18sp"
+                         android:text="Console log" />
  
-@@ -734,7 +734,7 @@
-                         android:layout_gravity="center"
-                         android:layout_marginLeft="2dp"
-                         android:layout_marginRight="2dp"
--                        android:layout_weight="34"
-+                        android:layout_weight="25"
-                         android:background="@drawable/trekbutton_mauve_center"
-                         android:text="Local Viewer" />
- 
-@@ -745,10 +745,21 @@
+                     <Button
+@@ -792,8 +800,9 @@
                          android:layout_gravity="center"
                          android:layout_marginLeft="2dp"
                          android:layout_marginRight="2dp"
 -                        android:layout_weight="33"
+-                        android:background="@drawable/trekbutton_blue"
 +                        android:layout_weight="25"
-                         android:background="@drawable/trekbutton_mauve_right"
-                         android:text="Viewer Off" />
++                        android:background="@drawable/trekbutton_blue_center"
++                        android:textSize="18sp"
+                         android:text="Info log" />
+ 
+                     <Button
+@@ -803,10 +812,23 @@
+                         android:layout_gravity="center"
+                         android:layout_marginLeft="2dp"
+                         android:layout_marginRight="2dp"
+-                        android:layout_weight="33"
+-                        android:background="@drawable/trekbutton_blue"
++                        android:layout_weight="25"
++                        android:background="@drawable/trekbutton_blue_center"
++                        android:textSize="18sp"
+                         android:text="Plans" />
  
 +                    <Button
-+                        android:id="@+id/viewerphoto_button"
++                        android:id="@+id/logssys_button"
 +                        android:layout_width="0dp"
 +                        android:layout_height="48dp"
 +                        android:layout_gravity="center"
 +                        android:layout_marginLeft="2dp"
 +                        android:layout_marginRight="2dp"
 +                        android:layout_weight="25"
-+                        android:background="@drawable/trekbutton_mauve"
-+                        android:text="Viewer Photo" />
++                        android:background="@drawable/trekbutton_blue_right"
++                        android:textSize="18sp"
++                        android:text="System" />
 +
                  </LinearLayout>
  
-                 <!-- ========== button layout for logs ============== -->
-@@ -854,7 +865,7 @@
-                         android:layout_width="match_parent"
-                         android:layout_height="match_parent"
-                         android:src="@drawable/federation_logo"
--                        android:visibility="visible" />
-+                        android:visibility="gone" />
- 
-                     <TextureView
-                         android:id="@+id/viewer_window"
-@@ -946,6 +957,13 @@
+             </LinearLayout>
+@@ -898,7 +920,7 @@
+                             android:id="@+id/logs_info"
+                             android:layout_width="match_parent"
+                             android:layout_height="wrap_content"
+-                            android:text="Information log\n------------------"
++                            android:text="Information log\n------------------\n"
+                             android:textColor="@android:color/white"
+                             android:textSize="14sp"
+                             android:textStyle="bold"
+@@ -906,63 +928,37 @@
  
                      </ScrollView>
  
+-                    <ScrollView
 +                    <ImageView
-+                        android:id="@+id/photo_view"
-+                        android:layout_width="match_parent"
+                         android:id="@+id/starship_plans"
+                         android:layout_width="match_parent"
+-                        android:layout_height="wrap_content"
+-                        android:visibility="gone"
+-                        android:scrollbars="vertical"
+-                        android:scrollbarSize="2dp"
+-                        android:scrollIndicators="right">
+-
+-                        <LinearLayout
+-                            android:layout_width="wrap_content"
+-                            android:layout_height="wrap_content"
+-                            android:weightSum="6"
+-                            android:orientation="vertical">
+-
+-                            <ImageView
+-                                android:layout_width="wrap_content"
+-                                android:layout_height="0dp"
+-                                android:layout_gravity="top"
+-                                android:layout_weight="1"
+-                                android:src="@drawable/starship_view" />
+-
+-                            <ImageView
+-                                android:layout_width="wrap_content"
+-                                android:layout_height="0dp"
+-                                android:layout_weight="1"
+-                                android:src="@drawable/starship_plan" />
+-
+-                            <ImageView
+-                                android:layout_width="wrap_content"
+-                                android:layout_height="0dp"
+-                                android:layout_weight="1"
+-                                android:src="@drawable/starship_topview" />
+-
+-                            <ImageView
+-                                android:layout_width="wrap_content"
+-                                android:layout_height="0dp"
+-                                android:layout_weight="1"
+-                                android:src="@drawable/starship_sideview" />
+-
+-                            <ImageView
+-                                android:layout_width="wrap_content"
+-                                android:layout_height="0dp"
+-                                android:src="@drawable/starship_build"
+-                                android:layout_weight="2"
+-                                android:visibility="visible"/>
+-
+-                        </LinearLayout>
+-
+-                    </ScrollView>
 +                        android:layout_height="match_parent"
-+                        android:src="@drawable/martin"
-+                        android:visibility="visible" />
++                        android:visibility="visible"
++                        android:src="@drawable/starship_view"
++                        android:clickable="true" />
+ 
+                     <ImageView
+                         android:id="@+id/photo_view"
+                         android:layout_width="match_parent"
+                         android:layout_height="match_parent"
+                         android:src="@drawable/martin"
+-                        android:visibility="visible" />
++                        android:visibility="gone" />
 +
++                    <ScrollView
++                        android:layout_width="match_parent"
++                        android:layout_height="wrap_content"
++                        android:scrollIndicators="right">
++
++                        <TextView
++                            android:id="@+id/logs_sys"
++                            android:layout_width="match_parent"
++                            android:layout_height="wrap_content"
++                            android:text="System log\n------------------\n"
++                            android:textColor="@android:color/white"
++                            android:textSize="14sp"
++                            android:textStyle="bold"
++                            android:visibility="gone" />
++
++                    </ScrollView>
+ 
                  </LinearLayout>
  
-                 <LinearLayout
-diff --git a/gitdiff.txt b/gitdiff.txt
-index 3a07dbc..05648db 100644
---- a/gitdiff.txt
-+++ b/gitdiff.txt
-@@ -1,616 +0,0 @@
--diff --git a/app/app-release.apk b/app/app-release.apk
--deleted file mode 100644
--index 4a3f70c..0000000
--Binary files a/app/app-release.apk and /dev/null differ
--diff --git a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--index 3d1cc8b..fd3d6ed 100644
----- a/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--+++ b/app/src/main/java/net/ddns/mlsoftlaberge/trycorder/TrycorderFragment.java
--@@ -16,6 +16,7 @@ import android.hardware.Sensor;
-- import android.hardware.SensorEvent;
-- import android.hardware.SensorEventListener;
-- import android.hardware.SensorManager;
--+import android.location.Criteria;
-- import android.location.Location;
-- import android.location.LocationListener;
-- import android.location.LocationManager;
--@@ -123,11 +124,14 @@ public class TrycorderFragment extends Fragment
--     private ShiSensorView mShiSensorView;
-- 
--     // the new scope class
---    private AniSensorView mAniSensorView;
--+    private FirSensorView mFirSensorView;
-- 
--     // the new scope class
--     private TraSensorView mTraSensorView;
-- 
--+    // the new scope class
--+    private TrbSensorView mTrbSensorView;
--+
--     // the Star-Trek Logo on sensor screen
--     private ImageView mStartrekLogo;
-- 
--@@ -558,7 +562,7 @@ public class TrycorderFragment extends Fragment
--         mTractorPushButton.setOnClickListener(new View.OnClickListener() {
--             @Override
--             public void onClick(View view) {
---                tractorbeam();
--+                tractorpush();
--             }
--         });
-- 
--@@ -567,7 +571,7 @@ public class TrycorderFragment extends Fragment
--         mTractorOffButton.setOnClickListener(new View.OnClickListener() {
--             @Override
--             public void onClick(View view) {
---                buttonsound();
--+                tractoroff();
--             }
--         });
-- 
--@@ -576,7 +580,7 @@ public class TrycorderFragment extends Fragment
--         mTractorPullButton.setOnClickListener(new View.OnClickListener() {
--             @Override
--             public void onClick(View view) {
---                tractorbeam();
--+                tractorpull();
--             }
--         });
-- 
--@@ -735,15 +739,20 @@ public class TrycorderFragment extends Fragment
--         mSensorLayout.addView(mShiSensorView, tlayoutParams);
-- 
--         // my sensorview that display the sensors data
---        mAniSensorView = new AniSensorView(getContext());
--+        mFirSensorView = new FirSensorView(getContext());
--         // add my sensorview to the layout 1
---        mSensorLayout.addView(mAniSensorView, tlayoutParams);
--+        mSensorLayout.addView(mFirSensorView, tlayoutParams);
-- 
--         // my sensorview that display the sensors data
--         mTraSensorView = new TraSensorView(getContext());
--         // add my sensorview to the layout 1
--         mSensorLayout.addView(mTraSensorView, tlayoutParams);
-- 
--+        // my sensorview that display the sensors data
--+        mTrbSensorView = new TrbSensorView(getContext());
--+        // add my sensorview to the layout 1
--+        mSensorLayout.addView(mTrbSensorView, tlayoutParams);
--+
--         // position 0 of layout 1
--         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
-- 
--@@ -760,9 +769,9 @@ public class TrycorderFragment extends Fragment
--         // Define the criteria how to select the locatioin provider -> use
--         // default
--         Location location = null;
---        //Criteria criteria = new Criteria();
---        //locationProvider = locationManager.getBestProvider(criteria, false);
---        locationProvider = "gps";
--+        Criteria criteria = new Criteria();
--+        locationProvider = locationManager.getBestProvider(criteria, false);
--+        //locationProvider = "gps";
--         try {
--             location = locationManager.getLastKnownLocation(locationProvider);
--         } catch (SecurityException e) {
--@@ -848,20 +857,20 @@ public class TrycorderFragment extends Fragment
--         mPhaserButton.setTypeface(face3);
--         mTorpedoButton.setTypeface(face3);
-- 
---        mTransportOutButton.setTypeface(face);
---        mTransportInButton.setTypeface(face);
--+        mTransportOutButton.setTypeface(face3);
--+        mTransportInButton.setTypeface(face3);
-- 
---        mTractorPushButton.setTypeface(face);
---        mTractorOffButton.setTypeface(face);
---        mTractorPullButton.setTypeface(face);
--+        mTractorPushButton.setTypeface(face3);
--+        mTractorOffButton.setTypeface(face3);
--+        mTractorPullButton.setTypeface(face3);
-- 
---        mViewerOnButton.setTypeface(face);
---        mViewerFrontButton.setTypeface(face);
---        mViewerOffButton.setTypeface(face);
--+        mViewerOnButton.setTypeface(face3);
--+        mViewerFrontButton.setTypeface(face3);
--+        mViewerOffButton.setTypeface(face3);
-- 
---        mLogsConsoleButton.setTypeface(face);
---        mLogsInfoButton.setTypeface(face);
---        mLogsPlansButton.setTypeface(face);
--+        mLogsConsoleButton.setTypeface(face3);
--+        mLogsInfoButton.setTypeface(face3);
--+        mLogsPlansButton.setTypeface(face3);
--     }
-- 
--     @Override
--@@ -923,7 +932,7 @@ public class TrycorderFragment extends Fragment
--                 break;
--             case 7:
--                 say("Sensors Fire Animation");
---                startanisensors();
--+                startfirsensors();
--                 break;
--             case 8:
--                 say("Sensors Transport Animation");
--@@ -931,7 +940,7 @@ public class TrycorderFragment extends Fragment
--                 break;
--             case 9:
--                 say("Sensors Tractor Animation");
---                //starttrbsensors();
--+                starttrbsensors();
--                 break;
--             default:
--                 say("Sensors OFF");
--@@ -948,9 +957,9 @@ public class TrycorderFragment extends Fragment
--         stoptemsensors();
--         stopaudsensors();
--         stopshisensors();
---        stopanisensors();
--+        stopfirsensors();
--         stoptrasensors();
---        //stoptrbsensors();
--+        stoptrbsensors();
--     }
-- 
--     // =====================================================================================
--@@ -970,9 +979,9 @@ public class TrycorderFragment extends Fragment
--         mTemSensorView.setVisibility(View.GONE);
--         mAudSensorView.setVisibility(View.GONE);
--         mShiSensorView.setVisibility(View.GONE);
---        mAniSensorView.setVisibility(View.GONE);
--+        mFirSensorView.setVisibility(View.GONE);
--         mTraSensorView.setVisibility(View.GONE);
---        //mTrbSensorView.setVisibility(View.GONE);
--+        mTrbSensorView.setVisibility(View.GONE);
--         mStartrekLogo.setVisibility(View.GONE);
--         switch (no) {
--             case 0:
--@@ -997,13 +1006,13 @@ public class TrycorderFragment extends Fragment
--                 mShiSensorView.setVisibility(View.VISIBLE);
--                 break;
--             case 7:
---                mAniSensorView.setVisibility(View.VISIBLE);
--+                mFirSensorView.setVisibility(View.VISIBLE);
--                 break;
--             case 8:
--                 mTraSensorView.setVisibility(View.VISIBLE);
--                 break;
--             case 9:
---                //mTrbSensorView.setVisibility(View.VISIBLE);
--+                mTrbSensorView.setVisibility(View.VISIBLE);
--                 break;
--         }
--         if(no<=4) mSensorpage = no;
--@@ -1123,10 +1132,31 @@ public class TrycorderFragment extends Fragment
--         startsensors(6);
--     }
-- 
---    private void tractorbeam() {
--+    private void tractorpush() {
--         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_tractor_clean);
--         mediaPlayer.start(); // no need to call prepare(); create() does that for you
---        say("Engage Tractor Beam");
--+        say("Engage Tractor Beam Push");
--+        switchsensorlayout(9);
--+        mTrbSensorView.setmode(1);
--+        startsensors(9);
--+    }
--+
--+    private void tractoroff() {
--+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
--+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
--+        say("Tractor Beam Off");
--+        switchsensorlayout(9);
--+        mTrbSensorView.setmode(0);
--+        stopsensors();
--+    }
--+
--+    private void tractorpull() {
--+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_tractor_clean);
--+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
--+        say("Engage Tractor Beam Pull");
--+        switchsensorlayout(9);
--+        mTrbSensorView.setmode(2);
--+        startsensors(9);
--     }
-- 
--     private void firephaser() {
--@@ -1134,7 +1164,7 @@ public class TrycorderFragment extends Fragment
--         mediaPlayer.start(); // no need to call prepare(); create() does that for you
--         say("Fire Phaser");
--         switchsensorlayout(7);
---        mAniSensorView.setmode(2);
--+        mFirSensorView.setmode(2);
--         startsensors(7);
--     }
-- 
--@@ -1143,7 +1173,7 @@ public class TrycorderFragment extends Fragment
--         mediaPlayer.start(); // no need to call prepare(); create() does that for you
--         say("Fire Torpedo");
--         switchsensorlayout(7);
---        mAniSensorView.setmode(1);
--+        mFirSensorView.setmode(1);
--         startsensors(7);
--     }
-- 
--@@ -1163,7 +1193,7 @@ public class TrycorderFragment extends Fragment
--                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
--                     break;
--                 case 3:
---                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.tng_tractor_clean);
--+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.scan_low);
--                     mMediaPlayer.setLooping(true);
--                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
--                     break;
--@@ -1172,6 +1202,11 @@ public class TrycorderFragment extends Fragment
--                     mMediaPlayer.setLooping(true);
--                     mMediaPlayer.start(); // no need to call prepare(); create() does that for you
--                     break;
--+                case 9:
--+                    mMediaPlayer = MediaPlayer.create(getActivity().getApplicationContext(), R.raw.tng_tractor_clean);
--+                    mMediaPlayer.setLooping(true);
--+                    mMediaPlayer.start(); // no need to call prepare(); create() does that for you
--+                    break;
--             }
--         }
--         if (mSensormode != 0)
--@@ -1199,7 +1234,126 @@ public class TrycorderFragment extends Fragment
--     }
-- 
--     // ==============================================================================
---    // transporter sensor, display person disappearing
--+    // shield sensor, display person disappearing
--+
--+    private void stoptrbsensors() {
--+        stopmusic();
--+        mTrbSensorView.stop();
--+    }
--+
--+    private void starttrbsensors() {
--+        mTrbSensorView.start();
--+        if (mSoundStatus) startmusic();
--+    }
--+
--+    // ============================================================================
--+    // class defining the sensor display widget
--+    private class TrbSensorView extends TextView {
--+        private Bitmap mBitmap;
--+        private Paint mPaint = new Paint();
--+        private Paint mPaint2 = new Paint();
--+        private Canvas mCanvas = new Canvas();
--+
--+        private int mWidth;
--+        private int mHeight;
--+
--+        private int mode;   // 1=in 2=out
--+
--+        private int position=0;
--+
--+        // initialize the 3 colors, and setup painter
--+        public TrbSensorView(Context context) {
--+            super(context);
--+            // text paint
--+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
--+            mPaint.setStrokeWidth(2);
--+            mPaint.setTextSize(24);
--+            mPaint.setStyle(Paint.Style.STROKE);
--+            mPaint.setColor(Color.WHITE);
--+            // line paint
--+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
--+            mPaint2.setStrokeWidth(2);
--+            mPaint2.setStyle(Paint.Style.STROKE);
--+            mPaint2.setColor(Color.MAGENTA);
--+        }
--+
--+        public void setmode(int no) {
--+            mode=no;
--+            if(mode==0) stop();
--+        }
--+
--+        // ======= timer section =======
--+        private Timer timer=null;
--+        private MyTimer myTimer;
--+
--+        public void stop() {
--+            if(timer!=null) {
--+                timer.cancel();
--+                timer=null;
--+            }
--+            position=0;
--+            invalidate();
--+        }
--+
--+        public void start() {
--+            // start the timer to eat this stuff and display it
--+            position=1;
--+            timer = new Timer("tractor");
--+            myTimer = new MyTimer();
--+            timer.schedule(myTimer, 10L, 10L);
--+        }
--+
--+        private class MyTimer extends TimerTask {
--+            public void run() {
--+                position+=3;
--+                postInvalidate();
--+                if(position>=100) {
--+                    position=1;
--+                    postInvalidate();
--+                }
--+            }
--+        }
--+
--+        // =========== textview callbacks =================
--+        // initialize the bitmap to the size of the view, fill it white
--+        // init the view state variables to initial values
--+        @Override
--+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
--+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
--+            mCanvas.setBitmap(mBitmap);
--+            mCanvas.drawColor(Color.BLACK);
--+            mWidth = w;
--+            mHeight = h;
--+            super.onSizeChanged(w, h, oldw, oldh);
--+        }
--+
--+        // draw
--+        @Override
--+        public void onDraw(Canvas viewcanvas) {
--+            synchronized (this) {
--+                if (mBitmap != null) {
--+                    // clear the surface
--+                    mCanvas.drawColor(Color.BLACK);
--+                    // draw the shield effect
--+                    if(position!=0) {
--+                        // compute positions
--+                        float px=mWidth/2;
--+                        float dx=position;
--+                        mCanvas.drawLine(px,mHeight,px-dx,0,mPaint2);
--+                        mCanvas.drawLine(px,mHeight,px,0,mPaint2);
--+                        mCanvas.drawLine(px,mHeight,px+dx,0,mPaint2);
--+                    }
--+                    // transfer the bitmap to the view
--+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
--+                }
--+            }
--+            super.onDraw(viewcanvas);
--+        }
--+
--+    }
--+
--+    // ==============================================================================
--+    // shield sensor, display shields effects
-- 
--     private void stopshisensors() {
--         mShiSensorView.stop();
--@@ -1330,12 +1484,13 @@ public class TrycorderFragment extends Fragment
--         private Bitmap mBitmap;
--         private Paint mPaint = new Paint();
--         private Paint mPaint2 = new Paint();
--+        private Paint mPaint3 = new Paint();
--         private Canvas mCanvas = new Canvas();
-- 
--         private int mWidth;
--         private int mHeight;
-- 
---        private int mode;   // 1=in 2=out
--+        private int mode=1;   // 1=in 2=out
-- 
--         private int position=0;
-- 
--@@ -1348,11 +1503,16 @@ public class TrycorderFragment extends Fragment
--             mPaint.setTextSize(24);
--             mPaint.setStyle(Paint.Style.STROKE);
--             mPaint.setColor(Color.WHITE);
---            // line paint
--+            // circle paint
--             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
--             mPaint2.setStrokeWidth(2);
--             mPaint2.setStyle(Paint.Style.STROKE);
--             mPaint2.setColor(Color.BLUE);
--+            // line paint
--+            mPaint3.setFlags(Paint.ANTI_ALIAS_FLAG);
--+            mPaint3.setStrokeWidth(2);
--+            mPaint3.setStyle(Paint.Style.STROKE);
--+            mPaint3.setColor(Color.LTGRAY);
--         }
-- 
--         public void setmode(int no) {
--@@ -1371,6 +1531,7 @@ public class TrycorderFragment extends Fragment
--         }
-- 
--         public void start() {
--+            position=1;
--             // start the timer to eat this stuff and display it
--             timer = new Timer("transporter");
--             myTimer = new MyTimer();
--@@ -1409,9 +1570,30 @@ public class TrycorderFragment extends Fragment
--                 if (mBitmap != null) {
--                     // clear the surface
--                     mCanvas.drawColor(Color.BLACK);
---                    // draw the vertical line
---                    mCanvas.drawLine(mWidth/2,0,mWidth/2,mHeight,mPaint);
---                    // draw the transport man
--+                    // ajust alpha level of person
--+                    if(position==0) {
--+                        if(mode==1) {
--+                            mPaint3.setAlpha(255);
--+                        } else {
--+                            mPaint3.setAlpha(0);
--+                        }
--+                    } else {
--+                        if(mode==1) {
--+                            mPaint3.setAlpha(position);
--+                        } else {
--+                            mPaint3.setAlpha(255-position);
--+                        }
--+                    }
--+                    // draw the vertical person
--+                    int px=mWidth/2;
--+                    int py=mHeight/2;
--+                    int len=mHeight/5;
--+                    mCanvas.drawLine(px,py-len,px,py+len,mPaint3);
--+                    mCanvas.drawLine(px-len/2,py,px+len/2,py,mPaint3);
--+                    mCanvas.drawLine(px,py+len,px-len/2,py+len*2,mPaint3);
--+                    mCanvas.drawLine(px,py+len,px+len/2,py+len*2,mPaint3);
--+                    mCanvas.drawCircle(px,py-len-len/2,len/2,mPaint3);
--+                    // draw the transport circle effect
--                     if(position!=0) {
--                         if (mode == 1) {
--                             mCanvas.drawCircle(mWidth / 2, mHeight / 2, position, mPaint2);
--@@ -1567,20 +1749,20 @@ public class TrycorderFragment extends Fragment
--     }
-- 
--     // ==============================================================================
---    // animation sensor, (ex: firing missiles)
--+    // firmation sensor, (ex: firing missiles)
-- 
---    private void stopanisensors() {
--+    private void stopfirsensors() {
--         stopmusic();
--     }
-- 
---    private void startanisensors() {
---        mAniSensorView.resetcount();
--+    private void startfirsensors() {
--+        mFirSensorView.resetcount();
--         if (mSoundStatus) startmusic();
--     }
-- 
--     // ============================================================================
--     // class defining the sensor display widget
---    private class AniSensorView extends TextView {
--+    private class FirSensorView extends TextView {
--         private Bitmap mBitmap;
--         private Paint mPaint = new Paint();
--         private Paint mPaint2 = new Paint();
--@@ -1590,13 +1772,13 @@ public class TrycorderFragment extends Fragment
--         private int mHeight;
-- 
--         private float position = 0.0f;
---        private int aniMode = 0;
--+        private int firMode = 0;
-- 
--         private Timer timer;
--         private MyTimer myTimer;
-- 
--         // initialize the 3 colors, and setup painter
---        public AniSensorView(Context context) {
--+        public FirSensorView(Context context) {
--             super(context);
--             // text paint
--             mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
--@@ -1613,19 +1795,19 @@ public class TrycorderFragment extends Fragment
--         }
-- 
--         public void setmode(int no) {
---            aniMode = no;
--+            firMode = no;
--         }
-- 
--         public void resetcount() {
--             position = 0.0f;
---            timer = new Timer("animation");
--+            timer = new Timer("fire");
--             myTimer = new MyTimer();
--             timer.schedule(myTimer, 10L, 10L);
--         }
-- 
--         private class MyTimer extends TimerTask {
--             public void run() {
---                if(aniMode==1) position += 10;
--+                if(firMode==1) position += 10;
--                 else position += 5;
--                 postInvalidate();
--                 if (position > mHeight) {
--@@ -1662,7 +1844,7 @@ public class TrycorderFragment extends Fragment
--                     mCanvas.drawLine(0,mHeight/3.0f*2.0f,mWidth,mHeight/3.0f*2.0f,mPaint);
--                     // draw the shooting line
--                     if (position != 0.0f) {
---                        switch (aniMode) {
--+                        switch (firMode) {
--                             case 1:
--                                 mCanvas.drawLine(mWidth / 2.0f, mHeight - position + 32, mWidth / 2.0f, mHeight - position, mPaint2);
--                                 break;
--@@ -2719,7 +2901,7 @@ public class TrycorderFragment extends Fragment
--             switchviewer(2);
--             return (true);
--         }
---        if (texte.contains("fuck")) {
--+        if (texte.contains("fuck") || texte.contains("shit")) {
--             speak("This is not very polite.");
--             switchviewer(0);
--             switchsensorlayout(0);
--diff --git a/app/src/main/res/drawable/trekbutton_indigo_right.xml b/app/src/main/res/drawable/trekbutton_indigo_right.xml
--index a8b409b..6846fc1 100644
----- a/app/src/main/res/drawable/trekbutton_indigo_right.xml
--+++ b/app/src/main/res/drawable/trekbutton_indigo_right.xml
--@@ -1,4 +1,24 @@
-- <?xml version="1.0" encoding="utf-8"?>
-- <selector xmlns:android="http://schemas.android.com/apk/res/android">
---
---</selector>
--\ No newline at end of file
--+    <item android:state_pressed="true">
--+        <shape android:shape="rectangle">
--+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
--+            <stroke android:width="1dip" android:color="#5e7974" />
--+            <gradient android:angle="-90" android:endColor="#689a92" android:startColor="#345953" />
--+        </shape>
--+    </item>
--+    <item android:state_focused="true">
--+        <shape android:shape="rectangle">
--+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
--+            <stroke android:width="1dip" android:color="#5e7974" />
--+            <solid android:color="#58857e" />
--+        </shape>
--+    </item>
--+    <item>
--+        <shape android:shape="rectangle">
--+            <corners android:bottomRightRadius="20dp" android:topRightRadius="20dp"/>
--+            <stroke android:width="1dip" android:color="#5e7974" />
--+            <gradient android:angle="-90" android:endColor="#3d5afe" android:startColor="#8c9eff" />
--+        </shape>
--+    </item>
--+</selector>
--diff --git a/app/src/main/res/layout/trycorder_fragment.xml b/app/src/main/res/layout/trycorder_fragment.xml
--index fd0e643..b2a2d1e 100644
----- a/app/src/main/res/layout/trycorder_fragment.xml
--+++ b/app/src/main/res/layout/trycorder_fragment.xml
--@@ -255,7 +255,7 @@
--                 android:layout_marginStart="@dimen/button_margin"
--                 android:layout_marginTop="@dimen/button_margin"
--                 android:layout_weight="1"
---                android:background="@drawable/trekbutton_pink_right"
--+                android:background="@drawable/trekbutton_indigo_right"
--                 android:maxLines="1"
--                 android:text="TRACTOR"
--                 android:textSize="18sp"
--@@ -678,7 +678,7 @@
--                         android:layout_marginLeft="2dp"
--                         android:layout_marginRight="2dp"
--                         android:layout_weight="33"
---                        android:background="@drawable/trekbutton_pink_left"
--+                        android:background="@drawable/trekbutton_indigo"
--                         android:text="TRACTOR PUSH" />
-- 
--                     <Button
--@@ -689,7 +689,7 @@
--                         android:layout_marginLeft="2dp"
--                         android:layout_marginRight="2dp"
--                         android:layout_weight="34"
---                        android:background="@drawable/trekbutton_pink_center"
--+                        android:background="@drawable/trekbutton_indigo"
--                         android:text="TRACTOR OFF" />
-- 
--                     <Button
--@@ -700,7 +700,7 @@
--                         android:layout_marginLeft="2dp"
--                         android:layout_marginRight="2dp"
--                         android:layout_weight="33"
---                        android:background="@drawable/trekbutton_pink_right"
--+                        android:background="@drawable/trekbutton_indigo"
--                         android:text="TRACTOR PULL" />
-- 
--                 </LinearLayout>
+@@ -1057,7 +1053,21 @@
+                 android:layout_weight="1"
+                 android:background="@android:color/black"
+                 android:orientation="horizontal"
+-                android:weightSum="6">
++                android:weightSum="8">
++
++                <Button
++                    android:id="@+id/snap_button"
++                    android:layout_width="0dp"
++                    android:layout_height="32dp"
++                    android:layout_gravity="bottom"
++                    android:layout_marginEnd="@dimen/button_margin"
++                    android:layout_marginStart="@dimen/button_margin"
++                    android:layout_weight="2"
++                    android:background="@drawable/trekbutton_gray_center"
++                    android:maxLines="1"
++                    android:text="Snap"
++                    android:textSize="18sp"
++                    android:textStyle="bold" />
+ 
+                 <Button
+                     android:id="@+id/photo_button"
+diff --git a/app/src/main/res/raw/denycommand.wav b/app/src/main/res/raw/denycommand.wav
+deleted file mode 100644
+index 1121528..0000000
+Binary files a/app/src/main/res/raw/denycommand.wav and /dev/null differ
+diff --git a/build.gradle b/build.gradle
+index 03bced9..aff4f41 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -5,7 +5,7 @@ buildscript {
+         jcenter()
+     }
+     dependencies {
+-        classpath 'com.android.tools.build:gradle:2.1.0'
++        classpath 'com.android.tools.build:gradle:2.1.2'
+ 
+         // NOTE: Do not place your application dependencies here; they belong
+         // in the individual module build.gradle files
