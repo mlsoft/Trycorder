@@ -1,8 +1,6 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
-import android.Manifest;
 import android.app.ActivityManager;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -25,7 +23,6 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.FaceDetector;
 import android.media.MediaPlayer;
@@ -43,7 +40,6 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -56,14 +52,13 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
+
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -228,18 +223,18 @@ public class TrycorderFragment extends Fragment
     // the layout to put sensorview in
     private LinearLayout mSensorLayout;
 
-    private LinearLayout mSensor2Layout;
-    private LinearLayout mSensor2sensorLayout;
-    private LinearLayout mSensor2commLayout;
-    private LinearLayout mSensor2shieldLayout;
-    private LinearLayout mSensor2fireLayout;
-    private LinearLayout mSensor2transporterLayout;
-    private LinearLayout mSensor2tractorLayout;
-    private LinearLayout mSensor2viewerLayout;
-    private LinearLayout mSensor2logsLayout;
-    private int mSensor2mode = 0;
+    private LinearLayout mButtonsLayout;
+    private LinearLayout mButtonssensorLayout;
+    private LinearLayout mButtonscommLayout;
+    private LinearLayout mButtonsshieldLayout;
+    private LinearLayout mButtonsfireLayout;
+    private LinearLayout mButtonstransporterLayout;
+    private LinearLayout mButtonstractorLayout;
+    private LinearLayout mButtonsviewerLayout;
+    private LinearLayout mButtonslogsLayout;
+    private int mButtonsmode = 0;
 
-    private LinearLayout mSensor3Layout;
+    private LinearLayout mViewerLayout;
     private ImageView mFederationlogo;
     private ImageView mStarshipPlans;
     private ImageView mViewerPhoto;
@@ -713,20 +708,27 @@ public class TrycorderFragment extends Fragment
         // the sensor layout, to contain my sensorview
         mSensorLayout = (LinearLayout) view.findViewById(R.id.sensor_layout);
 
-        // the sensor layout, to contain my buttons groups
-        mSensor2Layout = (LinearLayout) view.findViewById(R.id.sensor2_layout);
-        mSensor2sensorLayout = (LinearLayout) view.findViewById(R.id.sensor2_sensor_layout);
-        mSensor2commLayout = (LinearLayout) view.findViewById(R.id.sensor2_comm_layout);
-        mSensor2shieldLayout = (LinearLayout) view.findViewById(R.id.sensor2_shield_layout);
-        mSensor2fireLayout = (LinearLayout) view.findViewById(R.id.sensor2_fire_layout);
-        mSensor2transporterLayout = (LinearLayout) view.findViewById(R.id.sensor2_transporter_layout);
-        mSensor2tractorLayout = (LinearLayout) view.findViewById(R.id.sensor2_tractor_layout);
-        mSensor2viewerLayout = (LinearLayout) view.findViewById(R.id.sensor2_viewer_layout);
-        mSensor2logsLayout = (LinearLayout) view.findViewById(R.id.sensor2_logs_layout);
+        // the buttons layout, to contain my buttons groups
+        mButtonsLayout = (LinearLayout) view.findViewById(R.id.buttons_layout);
+        mButtonssensorLayout = (LinearLayout) view.findViewById(R.id.buttons_sensor_layout);
+        mButtonscommLayout = (LinearLayout) view.findViewById(R.id.buttons_comm_layout);
+        mButtonsshieldLayout = (LinearLayout) view.findViewById(R.id.buttons_shield_layout);
+        mButtonsfireLayout = (LinearLayout) view.findViewById(R.id.buttons_fire_layout);
+        mButtonstransporterLayout = (LinearLayout) view.findViewById(R.id.buttons_transporter_layout);
+        mButtonstractorLayout = (LinearLayout) view.findViewById(R.id.buttons_tractor_layout);
+        mButtonsviewerLayout = (LinearLayout) view.findViewById(R.id.buttons_viewer_layout);
+        mButtonslogsLayout = (LinearLayout) view.findViewById(R.id.buttons_logs_layout);
 
-        // the sensor layout, to contain my surfaceview
-        mSensor3Layout = (LinearLayout) view.findViewById(R.id.sensor3_layout);
+        // the viewer layout, to contain my surfaceview and some logs and infos
+        mViewerLayout = (LinearLayout) view.findViewById(R.id.viewer_layout);
         mFederationlogo = (ImageView) view.findViewById(R.id.federation_logo);
+        mFederationlogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                accesscrew();
+            }
+        });
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
         mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
         mStarshipPlans = (ImageView) view.findViewById(R.id.starship_plans);
@@ -770,6 +772,14 @@ public class TrycorderFragment extends Fragment
 
         // my sensorview that display the sensors data
         mOriSensorView = new OriSensorView(getContext());
+        mOriSensorView.setClickable(true);
+        mOriSensorView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                googlemapactivity();
+                buttonsound();
+            }
+        });
         // add my sensorview to the layout 1
         mSensorLayout.addView(mOriSensorView, tlayoutParams);
 
@@ -882,11 +892,11 @@ public class TrycorderFragment extends Fragment
         super.onResume();
         mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
         mSensorpage = sharedPref.getInt("pref_key_sensor_page", 0);
-        mSensor2mode = sharedPref.getInt("pref_key_sensor2_mode", 0);
+        mButtonsmode = sharedPref.getInt("pref_key_buttons_mode", 0);
         mViewermode = sharedPref.getInt("pref_key_viewer_mode", 0);
         mSoundStatus = sharedPref.getBoolean("pref_key_audio_mode", false);
         mViewerfront = sharedPref.getBoolean("pref_key_viewer_front", false);
-        switchbuttonlayout(mSensor2mode);
+        switchbuttonlayout(mButtonsmode);
         switchsensorlayout(mSensormode);
         switchviewer(mViewermode);
         if(mSensormode<=4) startsensors(mSensormode);
@@ -897,7 +907,7 @@ public class TrycorderFragment extends Fragment
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt("pref_key_sensor_mode", mSensormode);
         editor.putInt("pref_key_sensor_page", mSensorpage);
-        editor.putInt("pref_key_sensor2_mode", mSensor2mode);
+        editor.putInt("pref_key_buttons_mode", mButtonsmode);
         editor.putInt("pref_key_viewer_mode", mViewermode);
         editor.putBoolean("pref_key_audio_mode", mSoundStatus);
         editor.putBoolean("pref_key_viewer_front", mViewerfront);
@@ -999,6 +1009,57 @@ public class TrycorderFragment extends Fragment
         startActivity(i);
     }
 
+    // settings activity incorporation in the display
+    public void accesscrew() {
+        say("Access Starship Crew");
+        Intent i = new Intent(getActivity(), ContactsListActivity.class);
+        startActivity(i);
+    }
+
+    // =========================================================================================
+    // map activity to see where we are on the map of this planet
+    private float longitude=0.0f;
+    private float latitude=0.0f;
+
+    public void googlemapactivity() {
+        //final Intent viewIntent = new Intent(Intent.ACTION_VIEW, constructGeoUri(view.getContentDescription().toString()));
+        String geopath = "geo:"+String.valueOf(latitude)+","+String.valueOf(longitude);
+        Uri geouri = Uri.parse(geopath);
+        say("Open planetary mapping");
+        say(geopath);
+        final Intent viewIntent = new Intent(Intent.ACTION_VIEW, geouri);
+        // A PackageManager instance is needed to verify that there's a default app
+        // that handles ACTION_VIEW and a geo Uri.
+        final PackageManager packageManager = getActivity().getPackageManager();
+        // Checks for an activity that can handle this intent. Preferred in this
+        // case over Intent.createChooser() as it will still let the user choose
+        // a default (or use a previously set default) for geo Uris.
+        if (packageManager.resolveActivity(
+                viewIntent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
+            // Toast.makeText(getActivity(),
+            //        R.string.yes_intent_found, Toast.LENGTH_SHORT).show();
+            startActivity(viewIntent);
+        } else {
+            // If no default is found, displays a message that no activity can handle
+            // the view button.
+            Toast.makeText(getActivity(), "No application for mapping.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Constructs a geo scheme Uri from a postal address.
+     *
+     * @param postalAddress A postal address.
+     * @return the geo:// Uri for the postal address.
+     */
+    private static final String GEO_URI_SCHEME_PREFIX = "geo:0,0?q=";
+
+    private Uri constructGeoUri(String postalAddress) {
+        // Concatenates the geo:// prefix to the postal address. The postal address must be
+        // converted to Uri format and encoded for special characters.
+        return Uri.parse(GEO_URI_SCHEME_PREFIX + Uri.encode(postalAddress));
+    }
+
     // =====================================================================================
 
     private void switchsensorlayout(int no) {
@@ -1051,49 +1112,49 @@ public class TrycorderFragment extends Fragment
     // =====================================================================================
 
     private void switchbuttonlayout(int no) {
-        mSensor2sensorLayout.setVisibility(View.GONE);
-        mSensor2commLayout.setVisibility(View.GONE);
-        mSensor2shieldLayout.setVisibility(View.GONE);
-        mSensor2fireLayout.setVisibility(View.GONE);
-        mSensor2transporterLayout.setVisibility(View.GONE);
-        mSensor2tractorLayout.setVisibility(View.GONE);
-        mSensor2viewerLayout.setVisibility(View.GONE);
-        mSensor2logsLayout.setVisibility(View.GONE);
+        mButtonssensorLayout.setVisibility(View.GONE);
+        mButtonscommLayout.setVisibility(View.GONE);
+        mButtonsshieldLayout.setVisibility(View.GONE);
+        mButtonsfireLayout.setVisibility(View.GONE);
+        mButtonstransporterLayout.setVisibility(View.GONE);
+        mButtonstractorLayout.setVisibility(View.GONE);
+        mButtonsviewerLayout.setVisibility(View.GONE);
+        mButtonslogsLayout.setVisibility(View.GONE);
         switch (no) {
             case 1:
                 say("Sensors Mode");
-                mSensor2sensorLayout.setVisibility(View.VISIBLE);
+                mButtonssensorLayout.setVisibility(View.VISIBLE);
                 break;
             case 2:
                 say("Communication Mode");
-                mSensor2commLayout.setVisibility(View.VISIBLE);
+                mButtonscommLayout.setVisibility(View.VISIBLE);
                 break;
             case 3:
                 say("Shield Mode");
-                mSensor2shieldLayout.setVisibility(View.VISIBLE);
+                mButtonsshieldLayout.setVisibility(View.VISIBLE);
                 break;
             case 4:
                 say("Fire Mode");
-                mSensor2fireLayout.setVisibility(View.VISIBLE);
+                mButtonsfireLayout.setVisibility(View.VISIBLE);
                 break;
             case 5:
                 say("Transporter Mode");
-                mSensor2transporterLayout.setVisibility(View.VISIBLE);
+                mButtonstransporterLayout.setVisibility(View.VISIBLE);
                 break;
             case 6:
                 say("Tractor Mode");
-                mSensor2tractorLayout.setVisibility(View.VISIBLE);
+                mButtonstractorLayout.setVisibility(View.VISIBLE);
                 break;
             case 7:
                 say("Viewer Mode");
-                mSensor2viewerLayout.setVisibility(View.VISIBLE);
+                mButtonsviewerLayout.setVisibility(View.VISIBLE);
                 break;
             case 8:
                 say("Logs Mode");
-                mSensor2logsLayout.setVisibility(View.VISIBLE);
+                mButtonslogsLayout.setVisibility(View.VISIBLE);
                 break;
         }
-        mSensor2mode = no;
+        mButtonsmode = no;
     }
 
     // =====================================================================================
@@ -2185,6 +2246,8 @@ public class TrycorderFragment extends Fragment
             if (location != null) {
                 float lat = (float) (location.getLatitude());
                 float lng = (float) (location.getLongitude());
+                latitude=lat;
+                longitude=lng;
                 canvas.drawText("LAT: " + String.valueOf(lat), xPoint * 2.0f, 32.0f, paint);
                 canvas.drawText("LON: " + String.valueOf(lng), xPoint * 2.0f, 64.0f, paint);
             } else {
@@ -2637,6 +2700,8 @@ public class TrycorderFragment extends Fragment
                 mLogsSys.setText("");
                 mLogsSys.append("--------------------\nConnectivity\n--------------------\n");
                 mLogsSys.append(fetch_connectivity());
+                mLogsSys.append("--------------------\nSensors List\n--------------------\n");
+                mLogsSys.append(fetch_sensors_list());
                 mLogsSys.append("--------------------\nCPU Info\n--------------------\n");
                 mLogsSys.append(fetch_cpu_info());
                 mLogsSys.append("--------------------\nMemory Info\n--------------------\n");
@@ -3386,4 +3451,14 @@ public class TrycorderFragment extends Fragment
 
         return memoryInfo.toString() + "\n\n" + result;
     }
+
+    private String fetch_sensors_list() {
+        StringBuffer buffer=new StringBuffer("");
+        List<Sensor> mList= mSensorManager.getSensorList(Sensor.TYPE_ALL);
+        for (int i = 1; i < mList.size(); i++) {
+            buffer.append(mList.get(i).getName() + " - " + mList.get(i).getVendor() + " - " + mList.get(i).getType() + "\n");
+        }
+        return buffer.toString();
+    }
+
 }

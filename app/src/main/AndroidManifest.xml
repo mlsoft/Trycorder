@@ -17,6 +17,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
 
     <application
         android:allowBackup="true"
@@ -37,6 +39,15 @@
 
         <activity
             android:name=".SettingsActivity"
+            android:label="Settings"
+            android:parentActivityName=".TrycorderActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".TrycorderActivity" />
+        </activity>
+
+        <activity
+            android:name=".contacts.ContactsListActivity"
             android:label="Settings"
             android:parentActivityName=".TrycorderActivity">
             <meta-data

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  Copyright (C) 2013 The Android Open Source Project
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    android:weightSum="100"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="5"
+        android:orientation="horizontal"
+        android:weightSum="100">
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_weight="10"
+            android:scaleType="fitXY"
+            android:src="@drawable/trek_topleft" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:layout_weight="80"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/trek_horizontalline" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_weight="10"
+            android:scaleType="fitXY"
+            android:src="@drawable/trek_topright" />
+
+    </LinearLayout>
+
+    <!-- Use standard android.R class list id instead of app specific id. This is just useful for
+         consistency. -->
+    <ListView
+        android:id="@id/android:list"
+        style="@style/ContactListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="90"
+        android:background="@android:color/black"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="5"
+        android:orientation="horizontal"
+        android:weightSum="100">
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_weight="10"
+            android:layout_gravity="bottom"
+            android:scaleType="fitXY"
+            android:src="@drawable/trek_bottomleft" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:layout_gravity="bottom"
+            android:layout_weight="80"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/trek_horizontalline" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="8dp"
+            android:layout_weight="10"
+            android:layout_gravity="bottom"
+            android:scaleType="fitXY"
+            android:src="@drawable/trek_bottomright" />
+
+    </LinearLayout>
+
+
+</LinearLayout>

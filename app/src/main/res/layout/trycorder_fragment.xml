@@ -442,7 +442,7 @@
             <!-- ================== layout no 2 ============== -->
 
             <LinearLayout
-                android:id="@+id/sensor2_layout"
+                android:id="@+id/buttons_layout"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="17"
@@ -451,7 +451,7 @@
 
                 <!-- ========== button layout for sensors ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_sensor_layout"
+                    android:id="@+id/buttons_sensor_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -525,7 +525,7 @@
 
                 <!-- ========== button layout for comm ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_comm_layout"
+                    android:id="@+id/buttons_comm_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -560,7 +560,7 @@
 
                 <!-- ========== button layout for shield ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_shield_layout"
+                    android:id="@+id/buttons_shield_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -595,7 +595,7 @@
 
                 <!-- ========== button layout for fire ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_fire_layout"
+                    android:id="@+id/buttons_fire_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -630,7 +630,7 @@
 
                 <!-- ========== button layout for transporter ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_transporter_layout"
+                    android:id="@+id/buttons_transporter_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -665,7 +665,7 @@
 
                 <!-- ========== button layout for tractor beam ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_tractor_layout"
+                    android:id="@+id/buttons_tractor_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -711,7 +711,7 @@
 
                 <!-- ========== button layout for viewer ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_viewer_layout"
+                    android:id="@+id/buttons_viewer_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -772,7 +772,7 @@
 
                 <!-- ========== button layout for logs ============== -->
                 <LinearLayout
-                    android:id="@+id/sensor2_logs_layout"
+                    android:id="@+id/buttons_logs_layout"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@android:color/black"
@@ -874,7 +874,7 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/sensor3_layout"
+                    android:id="@+id/viewer_layout"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_marginLeft="16dp"

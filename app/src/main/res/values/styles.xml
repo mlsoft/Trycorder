@@ -8,4 +8,25 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+
+    <style name="ContactListView">
+        <item name="android:verticalScrollbarPosition">right</item>
+        <item name="android:fastScrollAlwaysVisible">true</item>
+        <item name="android:scrollbarStyle">outsideInset</item>
+    </style>
+
+    <style name="listViewActivatedStyle">
+        <item name="android:background">?android:attr/activatedBackgroundIndicator</item>
+    </style>
+
+    <style name="quickContactBadgeStyle">
+        <item name="android:background">@drawable/ic_contact_picture</item>
+    </style>
+
+    <style name="searchTextHiglight">
+        <item name="android:textColor">@android:color/holo_blue_light</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+
 </resources>
