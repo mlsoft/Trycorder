@@ -1,3 +1,3 @@
-git diff | tee gitdiff.txt
+git diff
 git add .
 git commit
