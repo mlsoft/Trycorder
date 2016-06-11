@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -50,6 +51,8 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AlphabetIndexer;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.QuickContactBadge;
 import android.widget.SearchView;
 import android.widget.SectionIndexer;
@@ -89,23 +92,14 @@ public class ContactsListFragment extends ListFragment implements
 
     // Bundle key for saving previously selected search result item
     private static final String STATE_PREVIOUSLY_SELECTED_KEY =
-            "net.ddns.mlsoftlaberge.contactslist.ui.SELECTED_ITEM";
+            "net.ddns.mlsoftlaberge.trycorder.contacts.SELECTED_ITEM";
 
     private ContactsAdapter mAdapter; // The main query adapter
     private ImageLoader mImageLoader; // Handles loading the contact image in a background thread
-    private String mSearchTerm; // Stores the current search query term
 
     // Contact selected listener that allows the activity holding this fragment to be notified of
     // a contact being selected
     private OnContactsInteractionListener mOnContactSelectedListener;
-
-    // Stores the previously selected search item so that on a configuration change the same item
-    // can be reselected again
-    private int mPreviouslySelectedSearchItem = 0;
-
-    // Whether or not this is a search result view of this fragment, only used on pre-honeycomb
-    // OS versions as search results are shown in-line via Action Bar search from honeycomb onward
-    private boolean mIsSearchResultView = false;
 
     // keep the flag if we want starred filter or not
     private int starredfind=1;
@@ -118,44 +112,12 @@ public class ContactsListFragment extends ListFragment implements
     public ContactsListFragment() {
     }
 
-    /**
-     * In platform versions prior to Android 3.0, the ActionBar and SearchView are not supported,
-     * and the UI gets the search string from an EditText. However, the fragment doesn't allow
-     * another search when search results are already showing. This would confuse the user, because
-     * the resulting search would re-query the Contacts Provider instead of searching the listed
-     * results. This method sets the search query and also a boolean that tracks if this Fragment
-     * should be displayed as a search result view or not.
-     *
-     * @param query The contacts search query.
-     */
-    public void setSearchQuery(String query) {
-        if (TextUtils.isEmpty(query)) {
-            mIsSearchResultView = false;
-        } else {
-            mSearchTerm = query;
-            mIsSearchResultView = true;
-        }
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-        // Let this fragment contribute menu items
-        setHasOptionsMenu(true);
-
         // Create the main contacts adapter
         mAdapter = new ContactsAdapter(getActivity());
-
-        if (savedInstanceState != null) {
-            // If we're restoring state after this fragment was recreated then
-            // retrieve previous search term and previously selected search
-            // result.
-            mSearchTerm = savedInstanceState.getString(SearchManager.QUERY);
-            mPreviouslySelectedSearchItem =
-                    savedInstanceState.getInt(STATE_PREVIOUSLY_SELECTED_KEY, 0);
-        }
 
         /*
          * An ImageLoader object loads and resizes an image in the background and binds it to the
@@ -184,19 +146,102 @@ public class ContactsListFragment extends ListFragment implements
         mImageLoader.addImageCache(getActivity().getSupportFragmentManager(), 0.1f);
     }
 
+    private ImageButton mBacktopButton;
+    private Button mBackButton;
+    private Button mAddButton;
+    private Button mBudgetButton;
+    private Button mStarredButton;
+
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the list fragment layout
         View view = inflater.inflate(R.layout.contact_list_fragment, container, false);
+        // the main content screen
         mContainer=view.findViewById(R.id.main_content);
+        // the search button
+        mBacktopButton = (ImageButton) view.findViewById(R.id.backtop_button);
+        mBacktopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                buttonback();
+            }
+        });
+        // the search button
+        mBackButton = (Button) view.findViewById(R.id.back_button);
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                buttonback();
+            }
+        });
+        // the search button
+        mAddButton = (Button) view.findViewById(R.id.add_button);
+        mAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                buttonadd();
+            }
+        });
+        // the search button
+        mBudgetButton = (Button) view.findViewById(R.id.budget_button);
+        mBudgetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                buttonbudget();
+            }
+        });
+        // the search button
+        mStarredButton = (Button) view.findViewById(R.id.starred_button);
+        mStarredButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                buttonstarred();
+            }
+        });
+        // return the filled view
         return view;
+    }
+
+    private void buttonsound() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+    }
+
+    private void buttonback() {
+        getActivity().finish();
+    }
+
+    private void buttonadd() {
+        final Intent intent = new Intent(Intent.ACTION_INSERT, Contacts.CONTENT_URI);
+        startActivity(intent);
+    }
+
+    private void buttonbudget() {
+        Intent intentbudget = new Intent(getActivity(), ContactsBudgetActivity.class);
+        startActivity(intentbudget);
+    }
+
+    private void buttonstarred() {
+        // switch the starred flag on/off
+        if(starredfind==0) {
+            starredfind=1;
+        }
+        else {
+            starredfind=0;
+        }
+        // reread the list with new flag
+        getLoaderManager().restartLoader(ContactsQuery.QUERY_ID, null, ContactsListFragment.this);
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
         // Set up ListView, assign adapter and set some listeners. The adapter was previously
         // created in onCreate().
         setListAdapter(mAdapter);
@@ -211,25 +256,17 @@ public class ContactsListFragment extends ListFragment implements
                     mImageLoader.setPauseWork(false);
                 }
             }
-
             @Override
             public void onScroll(AbsListView absListView, int i, int i1, int i2) {
             }
         });
-
-        // If there's a previously selected search item from a saved state then don't bother
-        // initializing the loader as it will be restarted later when the query is populated into
-        // the action bar search view (see onQueryTextChange() in onCreateOptionsMenu()).
-        if (mPreviouslySelectedSearchItem == 0) {
-            // Initialize the loader, and create a loader identified by ContactsQuery.QUERY_ID
-            getLoaderManager().initLoader(ContactsQuery.QUERY_ID, null, this);
-        }
+        // reread the list with new flag
+        getLoaderManager().restartLoader(ContactsQuery.QUERY_ID, null, ContactsListFragment.this);
     }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-
         try {
             // Assign callback listener which the holding activity must implement. This is used
             // so that when a contact item is interacted with (selected by the user) the holding
@@ -246,7 +283,6 @@ public class ContactsListFragment extends ListFragment implements
     @Override
     public void onPause() {
         super.onPause();
-
         // In the case onPause() is called during a fling the image loader is
         // un-paused to let any remaining background work complete.
         mImageLoader.setPauseWork(false);
@@ -254,25 +290,20 @@ public class ContactsListFragment extends ListFragment implements
 
     @Override
     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+        buttonsound();
         // Gets the Cursor object currently bound to the ListView
         final Cursor cursor = mAdapter.getCursor();
-
         // Moves to the Cursor row corresponding to the ListView item that was clicked
         cursor.moveToPosition(position);
-
         // Creates a contact lookup Uri from contact ID and lookup_key
         final Uri uri = Contacts.getLookupUri(
                 cursor.getLong(ContactsQuery.ID),
                 cursor.getString(ContactsQuery.LOOKUP_KEY));
-
         // Notifies the parent activity that the user selected a contact. In a two-pane layout, the
         // parent activity loads a ContactAdminFragment that displays the details for the selected
         // contact. In a single-pane layout, the parent activity starts a new activity that
         // displays contact details in its own Fragment.
         mOnContactSelectedListener.onContactSelected(uri);
-
-        // If two-pane layout sets the selected item to checked so it remains highlighted. In a
-        // single-pane layout a new activity is started so this is not needed.
     }
 
     /**
@@ -283,196 +314,25 @@ public class ContactsListFragment extends ListFragment implements
     private void onSelectionCleared() {
         // Uses callback to notify activity this contains this fragment
         mOnContactSelectedListener.onSelectionCleared();
-
         // Clears currently checked item
         getListView().clearChoices();
-    }
-
-    // This method uses APIs from newer OS versions than the minimum that this app supports. This
-    // annotation tells Android lint that they are properly guarded so they won't run on older OS
-    // versions and can be ignored by lint.
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-
-        // Inflate the menu items
-        inflater.inflate(R.menu.contact_list_menu, menu);
-        // Locate the search item
-        MenuItem searchItem = menu.findItem(R.id.menu_search);
-
-        // In versions prior to Android 3.0, hides the search item to prevent additional
-        // searches. In Android 3.0 and later, searching is done via a SearchView in the ActionBar.
-        // Since the search doesn't create a new Activity to do the searching, the menu item
-        // doesn't need to be turned off.
-        if (mIsSearchResultView) {
-            searchItem.setVisible(false);
-        }
-
-        // In version 3.0 and later, sets up and configures the ActionBar SearchView
-        if (Utils.hasHoneycomb()) {
-
-            // Retrieves the system search manager service
-            final SearchManager searchManager =
-                    (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
-
-            // Retrieves the SearchView from the search menu item
-            final SearchView searchView = (SearchView) searchItem.getActionView();
-
-            // Assign searchable info to SearchView
-            searchView.setSearchableInfo(
-                    searchManager.getSearchableInfo(getActivity().getComponentName()));
-
-            // Set listeners for SearchView
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                @Override
-                public boolean onQueryTextSubmit(String queryText) {
-                    // Nothing needs to happen when the user submits the search string
-                    return true;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    // Called when the action bar search text has changed.  Updates
-                    // the search filter, and restarts the loader to do a new query
-                    // using the new search string.
-                    String newFilter = !TextUtils.isEmpty(newText) ? newText : null;
-
-                    // Don't do anything if the filter is empty
-                    if (mSearchTerm == null && newFilter == null) {
-                        return true;
-                    }
-
-                    // Don't do anything if the new filter is the same as the current filter
-                    if (mSearchTerm != null && mSearchTerm.equals(newFilter)) {
-                        return true;
-                    }
-
-                    // Updates current filter to new filter
-                    mSearchTerm = newFilter;
-
-                    // Restarts the loader. This triggers onCreateLoader(), which builds the
-                    // necessary content Uri from mSearchTerm.
-                    getLoaderManager().restartLoader(ContactsQuery.QUERY_ID, null, ContactsListFragment.this);
-                    return true;
-                }
-            });
-
-            if (Utils.hasICS()) {
-                // This listener added in ICS
-                searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
-                    @Override
-                    public boolean onMenuItemActionExpand(MenuItem menuItem) {
-                        // Nothing to do when the action item is expanded
-                        return true;
-                    }
-
-                    @Override
-                    public boolean onMenuItemActionCollapse(MenuItem menuItem) {
-                        // When the user collapses the SearchView the current search string is
-                        // cleared and the loader restarted.
-                        if (!TextUtils.isEmpty(mSearchTerm)) {
-                            onSelectionCleared();
-                        }
-                        mSearchTerm = null;
-                        getLoaderManager().restartLoader(ContactsQuery.QUERY_ID, null, ContactsListFragment.this);
-                        return true;
-                    }
-                });
-            }
-
-            if (mSearchTerm != null) {
-                // If search term is already set here then this fragment is
-                // being restored from a saved state and the search menu item
-                // needs to be expanded and populated again.
-
-                // Stores the search term (as it will be wiped out by
-                // onQueryTextChange() when the menu item is expanded).
-                final String savedSearchTerm = mSearchTerm;
-
-                // Expands the search menu item
-                if (Utils.hasICS()) {
-                    searchItem.expandActionView();
-                }
-
-                // Sets the SearchView to the previous search string
-                searchView.setQuery(savedSearchTerm, false);
-            }
-        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (!TextUtils.isEmpty(mSearchTerm)) {
-            // Saves the current search string
-            outState.putString(SearchManager.QUERY, mSearchTerm);
-
-            // Saves the currently selected contact
-            outState.putInt(STATE_PREVIOUSLY_SELECTED_KEY, getListView().getCheckedItemPosition());
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            // Sends a request to the People app to display the create contact screen
-            case R.id.menu_add_contact:
-                final Intent intent = new Intent(Intent.ACTION_INSERT, Contacts.CONTENT_URI);
-                startActivity(intent);
-                break;
-            // For platforms earlier than Android 3.0, triggers the search activity
-            case R.id.menu_search:
-                if (!Utils.hasHoneycomb()) {
-                    getActivity().onSearchRequested();
-                }
-                break;
-            // Sends a request to the People app to display the create contact screen
-            case R.id.menu_starred:
-                // switch the starred flag on/off
-                if(starredfind==0) {
-                    starredfind=1;
-                    item.setIcon(R.drawable.btn_star_big_on);
-                }
-                else {
-                    starredfind=0;
-                    item.setIcon(R.drawable.btn_star_big_off);
-                }
-                // reread the list with new flag
-                getLoaderManager().restartLoader(ContactsQuery.QUERY_ID, null, ContactsListFragment.this);
-                break;
-            case R.id.menu_budget:
-                // instantiate an activity
-                //Intent intentbudget = new Intent(getActivity(), ContactsBudgetActivity.class);
-                //startActivity(intentbudget);
-
-                break;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
         // If this is the loader for finding contacts in the Contacts Provider
         // (the only one supported)
         if (id == ContactsQuery.QUERY_ID) {
             Uri contentUri;
-
             // There are two types of searches, one which displays all contacts and
             // one which filters contacts by a search query. If mSearchTerm is set
             // then a search query has been entered and the latter should be used.
-
-            if (mSearchTerm == null) {
-                // Since there's no search string, use the content URI that searches the entire
-                // Contacts table
-                contentUri = ContactsQuery.CONTENT_URI;
-            } else {
-                // Since there's a search string, use the special content Uri that searches the
-                // Contacts table. The URI consists of a base Uri and the search string.
-                contentUri =
-                        Uri.withAppendedPath(ContactsQuery.FILTER_URI, Uri.encode(mSearchTerm));
-            }
-
+            contentUri = ContactsQuery.CONTENT_URI;
             // Returns a new CursorLoader for querying the Contacts table. No arguments are used
             // for the selection clause. The search string is either encoded onto the content URI,
             // or no contacts search string is used. The other search criteria are constants. See
@@ -493,7 +353,6 @@ public class ContactsListFragment extends ListFragment implements
                         ContactsQuery.SORT_ORDER);
             }
         }
-
         Log.e(TAG, "onCreateLoader - incorrect ID provided (" + id + ")");
         return null;
     }
@@ -627,7 +486,6 @@ public class ContactsListFragment extends ListFragment implements
     private class ContactsAdapter extends CursorAdapter implements SectionIndexer {
         private LayoutInflater mInflater; // Stores the layout inflater
         private AlphabetIndexer mAlphabetIndexer; // Stores the AlphabetIndexer instance
-        private TextAppearanceSpan highlightTextSpan; // Stores the highlight text appearance style
 
         /**
          * Instantiates a new Contacts Adapter.
@@ -651,27 +509,6 @@ public class ContactsListFragment extends ListFragment implements
             // The cursor is left null, because it has not yet been retrieved.
             mAlphabetIndexer = new AlphabetIndexer(null, ContactsQuery.SORT_KEY, alphabet);
 
-            // Defines a span for highlighting the part of a display name that matches the search
-            // string
-            highlightTextSpan = new TextAppearanceSpan(getActivity(), R.style.searchTextHiglight);
-        }
-
-        /**
-         * Identifies the start of the search string in the display name column of a Cursor row.
-         * E.g. If displayName was "Adam" and search query (mSearchTerm) was "da" this would
-         * return 1.
-         *
-         * @param displayName The contact display name.
-         * @return The starting position of the search string in the display name, 0-based. The
-         * method returns -1 if the string is not found in the display name, or if the search
-         * string is empty or null.
-         */
-        private int indexOfSearchQuery(String displayName) {
-            if (!TextUtils.isEmpty(mSearchTerm)) {
-                return displayName.toLowerCase(Locale.getDefault()).indexOf(
-                        mSearchTerm.toLowerCase(Locale.getDefault()));
-            }
-            return -1;
         }
 
         /**
@@ -714,39 +551,12 @@ public class ContactsListFragment extends ListFragment implements
 
             final String displayName = cursor.getString(ContactsQuery.DISPLAY_NAME);
 
-            final int startIndex = indexOfSearchQuery(displayName);
+            // If the user didn't do a search, or the search string didn't match a display
+            // name, show the display name without highlighting
+            holder.text1.setText(displayName);
 
-            if (startIndex == -1) {
-                // If the user didn't do a search, or the search string didn't match a display
-                // name, show the display name without highlighting
-                holder.text1.setText(displayName);
-
-                if (TextUtils.isEmpty(mSearchTerm)) {
-                    // If the search search is empty, hide the second line of text
-                    holder.text2.setVisibility(View.GONE);
-                } else {
-                    // Shows a second line of text that indicates the search string matched
-                    // something other than the display name
-                    holder.text2.setVisibility(View.VISIBLE);
-                }
-            } else {
-                // If the search string matched the display name, applies a SpannableString to
-                // highlight the search string with the displayed display name
-
-                // Wraps the display name in the SpannableString
-                final SpannableString highlightedName = new SpannableString(displayName);
-
-                // Sets the span to start at the starting point of the match and end at "length"
-                // characters beyond the starting point
-                highlightedName.setSpan(highlightTextSpan, startIndex,
-                        startIndex + mSearchTerm.length(), 0);
-
-                // Binds the SpannableString to the display name View object
-                holder.text1.setText(highlightedName);
-
-                // Since the search string matched the name, this hides the secondary message
-                holder.text2.setVisibility(View.GONE);
-            }
+            // If the search search is empty, hide the second line of text
+            holder.text2.setVisibility(View.GONE);
 
             // Processes the QuickContactBadge. A QuickContactBadge first appears as a contact's
             // thumbnail image with styling that indicates it can be touched for additional

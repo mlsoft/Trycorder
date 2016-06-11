@@ -47,34 +47,9 @@ public class ContactsListActivity extends FragmentActivity implements
             Utils.enableStrictMode();
         }
         super.onCreate(savedInstanceState);
-
         // Set main content view. On smaller screen devices this is a single pane view with one
         // fragment. One larger screen devices this is a two pane view with two fragments.
         setContentView(R.layout.contact_list_main);
-
-        // Check if this activity instance has been triggered as a result of a search query. This
-        // will only happen on pre-HC OS versions as from HC onward search is carried out using
-        // an ActionBar SearchView which carries out the search in-line without loading a new
-        // Activity.
-        if (Intent.ACTION_SEARCH.equals(getIntent().getAction())) {
-
-            // Fetch query from intent and notify the fragment that it should display search
-            // results instead of all contacts.
-            String searchQuery = getIntent().getStringExtra(SearchManager.QUERY);
-            ContactsListFragment mContactsListFragment = (ContactsListFragment)
-                    getSupportFragmentManager().findFragmentById(R.id.contact_list);
-
-            // This flag notes that the Activity is doing a search, and so the result will be
-            // search results rather than all contacts. This prevents the Activity and Fragment
-            // from trying to a search on search results.
-            isSearchResultView = true;
-            mContactsListFragment.setSearchQuery(searchQuery);
-
-            // Set special title for search results
-            String title = "Search Results";
-            setTitle(title);
-        }
-
     }
 
     // permits this activity to hide status and action bars, and proceed full screen
@@ -84,12 +59,13 @@ public class ContactsListActivity extends FragmentActivity implements
         if (hasFocus) {
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
     }
-
 
     /**
      * This interface callback lets the main contacts list fragment notify
@@ -102,9 +78,9 @@ public class ContactsListActivity extends FragmentActivity implements
         // start a new ContactAdminActivity with
         // the contact Uri
         // commented out for future use
-        //Intent intent = new Intent(this, ContactAdminActivity.class);
-        //intent.setData(contactUri);
-        //startActivity(intent);
+        Intent intent = new Intent(this, ContactAdminActivity.class);
+        intent.setData(contactUri);
+        startActivity(intent);
     }
 
     /**
@@ -122,6 +98,5 @@ public class ContactsListActivity extends FragmentActivity implements
         // search results. Only used pre-HC.
         return !isSearchResultView && super.onSearchRequested();
     }
-
 
 }

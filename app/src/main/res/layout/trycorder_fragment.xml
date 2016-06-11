@@ -788,10 +788,10 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_blue_left"
                         android:textSize="18sp"
-                        android:text="Console log" />
+                        android:text="Logs" />
 
                     <Button
                         android:id="@+id/logsinfo_button"
@@ -800,10 +800,10 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_blue_center"
                         android:textSize="18sp"
-                        android:text="Info log" />
+                        android:text="Info" />
 
                     <Button
                         android:id="@+id/logsplans_button"
@@ -812,7 +812,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_blue_center"
                         android:textSize="18sp"
                         android:text="Plans" />
@@ -824,10 +824,22 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
+                        android:background="@drawable/trekbutton_blue_center"
+                        android:textSize="18sp"
+                        android:text="Sys" />
+
+                    <Button
+                        android:id="@+id/logscrew_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_blue_right"
                         android:textSize="18sp"
-                        android:text="System" />
+                        android:text="Crew" />
 
                 </LinearLayout>
 

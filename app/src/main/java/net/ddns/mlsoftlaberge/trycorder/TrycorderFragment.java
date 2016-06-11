@@ -215,6 +215,7 @@ public class TrycorderFragment extends Fragment
     private Button mLogsInfoButton;
     private Button mLogsPlansButton;
     private Button mLogsSysButton;
+    private Button mLogsCrewButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -704,6 +705,15 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        mLogsCrewButton = (Button) view.findViewById(R.id.logscrew_button);
+        mLogsCrewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                accesscrew();
+            }
+        });
+
         // ================== get handles on the 3 layout containers ===================
         // the sensor layout, to contain my sensorview
         mSensorLayout = (LinearLayout) view.findViewById(R.id.sensor_layout);
@@ -726,7 +736,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                accesscrew();
+                //accesscrew();
             }
         });
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
@@ -885,6 +895,7 @@ public class TrycorderFragment extends Fragment
         mLogsInfoButton.setTypeface(face2);
         mLogsPlansButton.setTypeface(face2);
         mLogsSysButton.setTypeface(face2);
+        mLogsCrewButton.setTypeface(face2);
     }
 
     @Override

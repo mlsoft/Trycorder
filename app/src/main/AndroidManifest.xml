@@ -55,6 +55,35 @@
                 android:value=".TrycorderActivity" />
         </activity>
 
+        <activity
+            android:name=".contacts.ContactsBudgetActivity"
+            android:label="@string/activity_contact_budget"
+            android:parentActivityName=".contacts.ContactsListActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".contacts.ContactsListActivity" />
+        </activity>
+        <activity
+            android:name=".contacts.ContactAdminActivity"
+            android:label="@string/activity_contact_admin"
+            android:parentActivityName=".contacts.ContactsListActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".contacts.ContactsListActivity" />
+        </activity>
+        <activity
+            android:name=".contacts.ContactEditMemoActivity"
+            android:label="@string/activity_contact_editmemo"
+            android:parentActivityName=".contacts.ContactAdminActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".contacts.ContactAdminActivity" />
+        </activity>
+        <activity
+            android:name=".contacts.ContactEditTransActivity"
+            android:label="@string/activity_contact_edittrans"
+            android:parentActivityName=".contacts.ContactAdminActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".contacts.ContactAdminActivity" />
+        </activity>
+
     </application>
 
 </manifest>

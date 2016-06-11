@@ -17,40 +17,126 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/black"
-    android:weightSum="100"
     android:orientation="vertical">
+
+    <!-- top of the list screen -->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="5"
+        android:layout_weight="10"
+        android:background="@android:color/black"
         android:orientation="horizontal"
-        android:weightSum="100">
+        android:weightSum="10">
 
-        <ImageView
+        <ImageButton
+            android:id="@+id/backtop_button"
             android:layout_width="0dp"
-            android:layout_height="8dp"
-            android:layout_weight="10"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/button_margin"
+            android:layout_marginBottom="@dimen/button_margin"
+            android:layout_weight="4"
+            android:background="@android:color/black"
             android:scaleType="fitXY"
-            android:src="@drawable/trek_topleft" />
+            android:src="@drawable/trek_topleft"
+            android:text="TALK" />
 
-        <ImageView
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="4dp"
-            android:layout_weight="80"
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
-            android:scaleType="fitXY"
-            android:src="@drawable/trek_horizontalline" />
+            android:layout_height="match_parent"
+            android:layout_weight="6"
+            android:background="@android:color/black"
+            android:orientation="vertical"
+            android:weightSum="2">
 
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="8dp"
-            android:layout_weight="10"
-            android:scaleType="fitXY"
-            android:src="@drawable/trek_topright" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@android:color/black"
+                android:orientation="horizontal"
+                android:weightSum="6">
+
+                <Button
+                    android:id="@+id/back_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_gravity="center"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_gray_center"
+                    android:maxLines="1"
+                    android:text="BACK"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/add_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_gravity="center"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_green_center"
+                    android:maxLines="1"
+                    android:text="ADD"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/budget_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_gravity="center"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_indigo_center"
+                    android:maxLines="1"
+                    android:text="Budget"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/starred_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_gravity="center"
+                    android:layout_weight="1.5"
+                    android:background="@drawable/trekbutton_blue_right"
+                    android:maxLines="1"
+                    android:text="STAR"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@android:color/black"
+                android:orientation="horizontal"
+                android:weightSum="6">
+
+                <TextView
+                    android:id="@+id/textsearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Starship Crew"
+                    android:textColor="@android:color/holo_green_light"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
+
 
     <!-- Use standard android.R class list id instead of app specific id. This is just useful for
          consistency. -->
@@ -59,8 +145,10 @@
         style="@style/ContactListView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="90"
+        android:layout_weight="85"
         android:background="@android:color/black"/>
+
+    <!-- bottom of the list screen -->
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -81,7 +169,7 @@
             android:layout_width="0dp"
             android:layout_height="4dp"
             android:layout_gravity="bottom"
-            android:layout_weight="80"
+            android:layout_weight="85"
             android:paddingLeft="4dp"
             android:paddingRight="4dp"
             android:scaleType="fitXY"
@@ -90,7 +178,7 @@
         <ImageView
             android:layout_width="0dp"
             android:layout_height="8dp"
-            android:layout_weight="10"
+            android:layout_weight="5"
             android:layout_gravity="bottom"
             android:scaleType="fitXY"
             android:src="@drawable/trek_bottomright" />
