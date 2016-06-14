@@ -1,7 +1,9 @@
-package net.ddns.mlsoftlaberge.trycorder;
+package net.ddns.mlsoftlaberge.trycorder.settings;
 
 import android.os.Bundle;
 import android.preference.PreferenceFragment;
+
+import net.ddns.mlsoftlaberge.trycorder.R;
 
 
 /**

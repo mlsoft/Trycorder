@@ -295,6 +295,7 @@ public class ContactAdminFragment extends Fragment implements
             // Defines what to do when users click the address button
             @Override
             public void onClick(View view) {
+                buttonsound();
                 // Displays a message that describe the action to take
                 Toast.makeText(getActivity(), "Edit Notes", Toast.LENGTH_SHORT).show();
                 editmemo();
@@ -306,6 +307,7 @@ public class ContactAdminFragment extends Fragment implements
         mAddAdminButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                buttonsound();
                 // Displays a message that no activity can handle the view button.
                 Toast.makeText(getActivity(), "Add Admin", Toast.LENGTH_SHORT).show();
                 addtransaction();
@@ -321,6 +323,7 @@ public class ContactAdminFragment extends Fragment implements
             // Defines what to do when users click the address button
             @Override
             public void onClick(View view) {
+                buttonsound();
                 // Displays a message that no activity can handle the view button.
                 Toast.makeText(getActivity(), "Save Transaction", Toast.LENGTH_SHORT).show();
                 // try to update the note field in database
@@ -734,6 +737,7 @@ public class ContactAdminFragment extends Fragment implements
                 // Defines what to do when users click the address button
                 @Override
                 public void onClick(View view) {
+                    buttonsound();
                     // Displays a message that no activity can handle the view button.
                     Toast.makeText(getActivity(), "Edit Transaction " + view.getId(), Toast.LENGTH_SHORT).show();
                     edittransaction(view.getId());
@@ -1090,6 +1094,7 @@ public class ContactAdminFragment extends Fragment implements
                 // Defines what to do when users click the address button
                 @Override
                 public void onClick(View view) {
+                    buttonsound();
                     // Displays a message that no activity can handle the view button.
                     Toast.makeText(getActivity(), "Call Phone", Toast.LENGTH_SHORT).show();
                     phonecontact(view.getContentDescription().toString());
@@ -1151,6 +1156,7 @@ public class ContactAdminFragment extends Fragment implements
                 // Defines what to do when users click the address button
                 @Override
                 public void onClick(View view) {
+                    buttonsound();
                     // Displays a message that no activity can handle the view button.
                     Toast.makeText(getActivity(), "Send Email", Toast.LENGTH_SHORT).show();
                     emailcontact(view.getContentDescription().toString());
@@ -1213,6 +1219,7 @@ public class ContactAdminFragment extends Fragment implements
                 // Defines what to do when users click the address button
                 @Override
                 public void onClick(View view) {
+                    buttonsound();
 
                     final Intent viewIntent =
                             new Intent(Intent.ACTION_VIEW,

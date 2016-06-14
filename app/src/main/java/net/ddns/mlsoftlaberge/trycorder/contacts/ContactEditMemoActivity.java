@@ -10,6 +10,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.NavUtils;
 
 import android.view.MenuItem;
+import android.view.View;
 
 import net.ddns.mlsoftlaberge.trycorder.BuildConfig;
 import net.ddns.mlsoftlaberge.trycorder.R;
@@ -58,6 +59,21 @@ public class ContactEditMemoActivity extends FragmentActivity {
             finish();
         }
     }
+
+    // permits this activity to hide status and action bars, and proceed full screen
+    //@Override
+    //public void onWindowFocusChanged(boolean hasFocus) {
+    //    super.onWindowFocusChanged(hasFocus);
+    //    if (hasFocus) {
+    //        getWindow().getDecorView().setSystemUiVisibility(
+    //                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+    //                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+    //                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+    //                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+    //                        | View.SYSTEM_UI_FLAG_FULLSCREEN
+    //                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    //    }
+    //}
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

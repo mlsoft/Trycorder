@@ -57,6 +57,8 @@ import android.widget.Toast;
 
 
 import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
+import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
+import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -216,6 +218,7 @@ public class TrycorderFragment extends Fragment
     private Button mLogsPlansButton;
     private Button mLogsSysButton;
     private Button mLogsCrewButton;
+    private Button mLogsInvButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -714,6 +717,15 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        mLogsInvButton = (Button) view.findViewById(R.id.logsinv_button);
+        mLogsInvButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                accessinventory();
+            }
+        });
+
         // ================== get handles on the 3 layout containers ===================
         // the sensor layout, to contain my sensorview
         mSensorLayout = (LinearLayout) view.findViewById(R.id.sensor_layout);
@@ -828,7 +840,7 @@ public class TrycorderFragment extends Fragment
         // add my sensorview to the layout 1
         mSensorLayout.addView(mTrbSensorView, tlayoutParams);
 
-        // position 0 of layout 1
+        // position 0 of sensor layout
         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
 
         return view;
@@ -896,6 +908,7 @@ public class TrycorderFragment extends Fragment
         mLogsPlansButton.setTypeface(face2);
         mLogsSysButton.setTypeface(face2);
         mLogsCrewButton.setTypeface(face2);
+        mLogsInvButton.setTypeface(face2);
     }
 
     @Override
@@ -1024,6 +1037,13 @@ public class TrycorderFragment extends Fragment
     public void accesscrew() {
         say("Access Starship Crew");
         Intent i = new Intent(getActivity(), ContactsListActivity.class);
+        startActivity(i);
+    }
+
+    // settings activity incorporation in the display
+    public void accessinventory() {
+        say("Access Starship Inventory");
+        Intent i = new Intent(getActivity(), ProductsListActivity.class);
         startActivity(i);
     }
 

@@ -2,6 +2,7 @@ package net.ddns.mlsoftlaberge.trycorder.contacts;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -40,9 +41,14 @@ public class ContactEditMemoFragment extends Fragment {
 
     private EditText mEditMemo;     // display and edit the memo field
 
-    private ImageButton mEditMemoButton; // save the data and return to previous avtivity
+    private Button mEditMemoButton; // save the data and return to previous avtivity
 
-    private ImageButton mDeleteMemoButton; // save the data and return to previous avtivity
+    private Button mDeleteMemoButton; // save the data and return to previous avtivity
+
+    private Button mBackButton;
+
+    private ImageButton mBacktopButton;
+
 
     /**
      * Factory method to generate a new instance of the fragment given a contact Uri. A factory
@@ -132,23 +138,25 @@ public class ContactEditMemoFragment extends Fragment {
         mEditMemo.setVisibility(View.VISIBLE);
 
         // Defines an onClickListener object for the add-admin button
-        mEditMemoButton = (ImageButton) adminView.findViewById(R.id.button_save_editmemo);
+        mEditMemoButton = (Button) adminView.findViewById(R.id.button_save_editmemo);
         mEditMemoButton.setOnClickListener(new View.OnClickListener() {
             // Defines what to do when users click the address button
             @Override
             public void onClick(View view) {
                 // Displays a message that no activity can handle the view button.
+                buttonsound();
                 Toast.makeText(getActivity(), "Save EditMemo", Toast.LENGTH_SHORT).show();
                 returnresult(true);
             }
         });
 
         // Defines an onClickListener object for the add-admin button
-        mDeleteMemoButton = (ImageButton) adminView.findViewById(R.id.button_delete_editmemo);
+        mDeleteMemoButton = (Button) adminView.findViewById(R.id.button_delete_editmemo);
         mDeleteMemoButton.setOnClickListener(new View.OnClickListener() {
             // Defines what to do when users click the address button
             @Override
             public void onClick(View view) {
+                buttonsound();
                 // Displays a message that no activity can handle the view button.
                 Toast.makeText(getActivity(), "Delete EditMemo", Toast.LENGTH_SHORT).show();
                 // create a popup menu to confirm deletion
@@ -172,6 +180,27 @@ public class ContactEditMemoFragment extends Fragment {
             }
         });
 
+        // Defines an onClickListener object for the add-admin button
+        mBackButton = (Button) adminView.findViewById(R.id.back_button);
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            // Defines what to do when users click the address button
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                getActivity().finish();
+            }
+        });
+
+        // Defines an onClickListener object for the add-admin button
+        mBacktopButton = (ImageButton) adminView.findViewById(R.id.backtop_button);
+        mBacktopButton.setOnClickListener(new View.OnClickListener() {
+            // Defines what to do when users click the address button
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                getActivity().finish();
+            }
+        });
 
         return adminView;
     }
@@ -213,6 +242,11 @@ public class ContactEditMemoFragment extends Fragment {
         }
         getActivity().setResult(Activity.RESULT_OK, data);
         getActivity().finish();
+    }
+
+    private void buttonsound() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
     }
 
 }

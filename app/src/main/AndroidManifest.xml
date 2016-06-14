@@ -38,7 +38,7 @@
         </activity>
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".settings.SettingsActivity"
             android:label="Settings"
             android:parentActivityName=".TrycorderActivity">
             <meta-data
@@ -83,6 +83,26 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value=".contacts.ContactAdminActivity" />
         </activity>
+
+        <activity
+            android:name=".products.ProductsListActivity"
+            android:label="Products List"
+            android:parentActivityName=".TrycorderActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".TrycorderActivity" />
+        </activity>
+        <activity
+            android:name=".products.ProductDetailActivity"
+            android:label="Product Detail"
+            android:parentActivityName=".products.ProductsListActivity">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value=".products.ProductsListActivity" />
+        </activity>
+        <provider
+            android:name=".products.MyProductContentProvider"
+            android:authorities="net.ddns.mlsoftlaberge.trycorder.products">
+        </provider>
+
 
     </application>
 

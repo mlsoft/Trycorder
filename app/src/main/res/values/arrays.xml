@@ -63,4 +63,9 @@
         <item>3</item>
     </string-array>
 
+    <string-array name="prodtype">
+        <item>Product</item>
+        <item>Service</item>
+    </string-array>
+
 </resources>

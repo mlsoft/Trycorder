@@ -2,6 +2,7 @@ package net.ddns.mlsoftlaberge.trycorder.contacts;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -45,10 +46,12 @@ public class ContactEditTransFragment extends Fragment {
     private EditText mEditAmount;     // display and edit the memo field
     private EditText mEditDate;     // display and edit the memo field
 
-    private ImageButton mEditTransButton; // save the data and return to previous avtivity
+    private Button mEditTransButton; // save the data and return to previous avtivity
 
-    private ImageButton mDeleteTransButton; // save the data and return to previous avtivity
+    private Button mDeleteTransButton; // save the data and return to previous avtivity
 
+    private Button mBackButton;
+    private ImageButton mBacktopButton;
     /**
      * Factory method to generate a new instance of the fragment given a contact Uri. A factory
      * method is preferable to simply using the constructor as it handles creating the bundle and
@@ -151,11 +154,12 @@ public class ContactEditTransFragment extends Fragment {
         mEditDate.setVisibility(View.VISIBLE);
 
         // Defines an onClickListener object for the add-admin button
-        mEditTransButton = (ImageButton) adminView.findViewById(R.id.button_save_edittrans);
+        mEditTransButton = (Button) adminView.findViewById(R.id.button_save_edittrans);
         mEditTransButton.setOnClickListener(new View.OnClickListener() {
             // Defines what to do when users click the address button
             @Override
             public void onClick(View view) {
+                buttonsound();
                 // Displays a message that no activity can handle the view button.
                 Toast.makeText(getActivity(), "Save EditTrans", Toast.LENGTH_SHORT).show();
                 returnresult(true);
@@ -163,11 +167,12 @@ public class ContactEditTransFragment extends Fragment {
         });
 
         // Defines an onClickListener object for the add-admin button
-        mDeleteTransButton = (ImageButton) adminView.findViewById(R.id.button_delete_edittrans);
+        mDeleteTransButton = (Button) adminView.findViewById(R.id.button_delete_edittrans);
         mDeleteTransButton.setOnClickListener(new View.OnClickListener() {
             // Defines what to do when users click the address button
             @Override
             public void onClick(View view) {
+                buttonsound();
                 // Displays a message that no activity can handle the view button.
                 Toast.makeText(getActivity(), "Delete EditTrans", Toast.LENGTH_SHORT).show();
                 // create a popup menu to confirm deletion
@@ -188,6 +193,28 @@ public class ContactEditTransFragment extends Fragment {
                 });
                 // start the popup
                 popup.show();
+            }
+        });
+
+        // Defines an onClickListener object for the add-admin button
+        mBackButton = (Button) adminView.findViewById(R.id.back_button);
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            // Defines what to do when users click the address button
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                getActivity().finish();
+            }
+        });
+
+        // Defines an onClickListener object for the add-admin button
+        mBacktopButton = (ImageButton) adminView.findViewById(R.id.backtop_button);
+        mBacktopButton.setOnClickListener(new View.OnClickListener() {
+            // Defines what to do when users click the address button
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                getActivity().finish();
             }
         });
 
@@ -237,5 +264,9 @@ public class ContactEditTransFragment extends Fragment {
         getActivity().finish();
     }
 
+    private void buttonsound() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+    }
 
 }

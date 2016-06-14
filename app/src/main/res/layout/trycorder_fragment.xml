@@ -45,9 +45,9 @@
                     android:id="@+id/sound_button"
                     android:layout_width="0dp"
                     android:layout_height="32dp"
+                    android:layout_gravity="center"
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
-                    android:layout_gravity="center"
                     android:layout_weight="1.5"
                     android:background="@drawable/trekbutton_gray_center"
                     android:maxLines="1"
@@ -122,8 +122,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="80"
-        android:baselineAligned="false"
         android:background="@android:color/black"
+        android:baselineAligned="false"
         android:orientation="horizontal"
         android:weightSum="10">
 
@@ -383,7 +383,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="94"
-                        android:orientation="horizontal" >
+                        android:orientation="horizontal">
 
                         <ImageView
                             android:id="@+id/startrek_logo"
@@ -469,8 +469,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_left"
-                        android:textSize="18sp"
-                        android:text="Magn" />
+                        android:text="Magn"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/orientation_button"
@@ -481,8 +481,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_center"
-                        android:textSize="18sp"
-                        android:text="Orient" />
+                        android:text="Orient"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/gravity_button"
@@ -493,8 +493,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_center"
-                        android:textSize="18sp"
-                        android:text="Grav" />
+                        android:text="Grav"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/temperature_button"
@@ -505,8 +505,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_center"
-                        android:textSize="18sp"
-                        android:text="Temp" />
+                        android:text="Temp"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/sensoroff_button"
@@ -517,8 +517,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="20"
                         android:background="@drawable/trekbutton_yellow_right"
-                        android:textSize="18sp"
-                        android:text="OFF" />
+                        android:text="OFF"
+                        android:textSize="18sp" />
 
 
                 </LinearLayout>
@@ -729,8 +729,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_left"
-                        android:textSize="18sp"
-                        android:text="Main Viewer" />
+                        android:text="Main Viewer"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/viewerfront_button"
@@ -741,8 +741,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_center"
-                        android:textSize="18sp"
-                        android:text="Local Viewer" />
+                        android:text="Local Viewer"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/vieweroff_button"
@@ -753,8 +753,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve_right"
-                        android:textSize="18sp"
-                        android:text="Viewer Off" />
+                        android:text="Viewer Off"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/viewerphoto_button"
@@ -765,8 +765,8 @@
                         android:layout_marginRight="2dp"
                         android:layout_weight="25"
                         android:background="@drawable/trekbutton_mauve"
-                        android:textSize="18sp"
-                        android:text="Viewer Photo" />
+                        android:text="Viewer Photo"
+                        android:textSize="18sp" />
 
                 </LinearLayout>
 
@@ -788,10 +788,10 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="20"
+                        android:layout_weight="17"
                         android:background="@drawable/trekbutton_blue_left"
-                        android:textSize="18sp"
-                        android:text="Logs" />
+                        android:text="Logs"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/logsinfo_button"
@@ -800,10 +800,10 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="20"
+                        android:layout_weight="17"
                         android:background="@drawable/trekbutton_blue_center"
-                        android:textSize="18sp"
-                        android:text="Info" />
+                        android:text="Info"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/logsplans_button"
@@ -812,10 +812,10 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="20"
+                        android:layout_weight="17"
                         android:background="@drawable/trekbutton_blue_center"
-                        android:textSize="18sp"
-                        android:text="Plans" />
+                        android:text="Plan"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/logssys_button"
@@ -824,10 +824,10 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="20"
+                        android:layout_weight="17"
                         android:background="@drawable/trekbutton_blue_center"
-                        android:textSize="18sp"
-                        android:text="Sys" />
+                        android:text="Sys"
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/logscrew_button"
@@ -836,10 +836,23 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="20"
+                        android:layout_weight="16"
+                        android:background="@drawable/trekbutton_blue_center"
+                        android:text="Crew"
+                        android:textSize="18sp" />
+
+                    <Button
+                        android:id="@+id/logsinv_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="16"
                         android:background="@drawable/trekbutton_blue_right"
-                        android:textSize="18sp"
-                        android:text="Crew" />
+                        android:text="Inv"
+                        android:textSize="18sp" />
+
 
                 </LinearLayout>
 
@@ -944,9 +957,9 @@
                         android:id="@+id/starship_plans"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:visibility="visible"
+                        android:clickable="true"
                         android:src="@drawable/starship_view"
-                        android:clickable="true" />
+                        android:visibility="visible" />
 
                     <ImageView
                         android:id="@+id/photo_view"
