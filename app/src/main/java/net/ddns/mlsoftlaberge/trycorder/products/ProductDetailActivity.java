@@ -21,10 +21,10 @@ import net.ddns.mlsoftlaberge.trycorder.R;
  * or to change an existing
  */
 public class ProductDetailActivity extends Activity {
-	private Spinner mCategory;
+	private EditText mQtyText;
 	private EditText mUpcText;
-	private EditText mTitleText;
-	private EditText mBodyText;
+	private EditText mNameText;
+	private EditText mDescText;
 
 	private Uri productUri;
 
@@ -39,10 +39,10 @@ public class ProductDetailActivity extends Activity {
 		super.onCreate(bundle);
 		setContentView(R.layout.product_edit);
 
-		mCategory = (Spinner) findViewById(R.id.category);
+		mQtyText = (EditText) findViewById(R.id.product_edit_quantity);
 		mUpcText = (EditText) findViewById(R.id.product_edit_upc);
-		mTitleText = (EditText) findViewById(R.id.product_edit_name);
-		mBodyText = (EditText) findViewById(R.id.product_edit_description);
+		mNameText = (EditText) findViewById(R.id.product_edit_name);
+		mDescText = (EditText) findViewById(R.id.product_edit_description);
 
         // the search button
         mBacktopButton = (ImageButton) findViewById(R.id.backtop_button);
@@ -84,7 +84,9 @@ public class ProductDetailActivity extends Activity {
 		}
 		if (productUri!=null) {
 			fillData(productUri);
-		}
+		} else {
+            cleardata();
+        }
 
     }
 
@@ -98,7 +100,7 @@ public class ProductDetailActivity extends Activity {
     }
 
     private void buttonsave() {
-        if (TextUtils.isEmpty(mTitleText.getText().toString())) {
+        if (TextUtils.isEmpty(mNameText.getText().toString())) {
             makeToast();
         } else {
             setResult(RESULT_OK);
@@ -123,33 +125,32 @@ public class ProductDetailActivity extends Activity {
 
 	private void fillData(Uri uri) {
 		String[] projection = { ProductTable.COLUMN_NAME,ProductTable.COLUMN_UPC,
-				ProductTable.COLUMN_DESCRIPTION, ProductTable.COLUMN_CATEGORY };
+				ProductTable.COLUMN_DESCRIPTION, ProductTable.COLUMN_QUANTITY };
 		Cursor cursor = getContentResolver().query(uri, projection, null, null,
 				null);
 		if (cursor != null) {
 			cursor.moveToFirst();
-			String category = cursor.getString(cursor
-					.getColumnIndexOrThrow(ProductTable.COLUMN_CATEGORY));
-
-			for (int i = 0; i < mCategory.getCount(); i++) {
-
-				String s = (String) mCategory.getItemAtPosition(i);
-				if (s.equalsIgnoreCase(category)) {
-					mCategory.setSelection(i);
-				}
-			}
-
+			mQtyText.setText(cursor.getString(cursor
+					.getColumnIndexOrThrow(ProductTable.COLUMN_QUANTITY)));
 			mUpcText.setText(cursor.getString(cursor
 					.getColumnIndexOrThrow(ProductTable.COLUMN_UPC)));
-			mTitleText.setText(cursor.getString(cursor
+			mNameText.setText(cursor.getString(cursor
 					.getColumnIndexOrThrow(ProductTable.COLUMN_NAME)));
-			mBodyText.setText(cursor.getString(cursor
+			mDescText.setText(cursor.getString(cursor
 					.getColumnIndexOrThrow(ProductTable.COLUMN_DESCRIPTION)));
-
 			// Always close the cursor
 			cursor.close();
-		}
+		} else {
+            cleardata();
+        }
 	}
+
+    private void cleardata() {
+        mQtyText.setText("1");
+        mUpcText.setText("0-99999-11111-0");
+        mNameText.setText("");
+        mDescText.setText("");
+    }
 
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
@@ -164,10 +165,10 @@ public class ProductDetailActivity extends Activity {
 	}
 
 	private void saveState() {
-		String category = (String) mCategory.getSelectedItem();
+		String quantity = mQtyText.getText().toString();
 		String upc = mUpcText.getText().toString();
-		String name = mTitleText.getText().toString();
-		String description = mBodyText.getText().toString();
+		String name = mNameText.getText().toString();
+		String description = mDescText.getText().toString();
 
 		// Only save if either name or description
 		// is available
@@ -177,7 +178,7 @@ public class ProductDetailActivity extends Activity {
 		}
 
 		ContentValues values = new ContentValues();
-		values.put(ProductTable.COLUMN_CATEGORY, category);
+		values.put(ProductTable.COLUMN_QUANTITY, quantity);
 		values.put(ProductTable.COLUMN_UPC, upc);
 		values.put(ProductTable.COLUMN_NAME, name);
 		values.put(ProductTable.COLUMN_DESCRIPTION, description);

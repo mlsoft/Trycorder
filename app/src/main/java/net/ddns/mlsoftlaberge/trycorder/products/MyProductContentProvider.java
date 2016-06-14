@@ -161,7 +161,7 @@ public class MyProductContentProvider extends ContentProvider {
 	}
 
 	private void checkColumns(String[] projection) {
-		String[] available = { ProductTable.COLUMN_CATEGORY,ProductTable.COLUMN_UPC,
+		String[] available = { ProductTable.COLUMN_QUANTITY,ProductTable.COLUMN_UPC,
 				ProductTable.COLUMN_NAME, ProductTable.COLUMN_DESCRIPTION,
 				ProductTable.COLUMN_ID };
 		if (projection != null) {

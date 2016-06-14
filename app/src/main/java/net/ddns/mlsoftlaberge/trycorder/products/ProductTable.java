@@ -8,7 +8,7 @@ public class ProductTable {
 	// Database table
 	public static final String TABLE_PRODUCT = "product";
 	public static final String COLUMN_ID = "_id";
-	public static final String COLUMN_CATEGORY = "category";
+	public static final String COLUMN_QUANTITY = "quantity";
 	public static final String COLUMN_UPC = "upc";
 	public static final String COLUMN_NAME = "name";
 	public static final String COLUMN_DESCRIPTION = "description";
@@ -17,7 +17,7 @@ public class ProductTable {
 	private static final String DATABASE_CREATE = "create table " 
 			+ TABLE_PRODUCT
 			+ "(" + COLUMN_ID + " integer primary key autoincrement, "
-			+ COLUMN_CATEGORY + " text not null, "
+			+ COLUMN_QUANTITY + " text not null, "
 			+ COLUMN_UPC + " text not null, "
 			+ COLUMN_NAME + " text not null,"
 			+ COLUMN_DESCRIPTION + " text not null"

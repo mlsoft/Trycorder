@@ -2,6 +2,7 @@ package net.ddns.mlsoftlaberge.trycorder.products;
 
 import android.app.ListActivity;
 import android.app.LoaderManager;
+import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
@@ -43,6 +44,7 @@ public class ProductsListActivity extends ListActivity implements
 
     private ImageButton mBacktopButton;
     private Button mBackButton;
+    private Button mFillButton;
     private Button mAddButton;
 
 	/** Called when the activity is first created. */
@@ -70,6 +72,15 @@ public class ProductsListActivity extends ListActivity implements
             public void onClick(View view) {
                 buttonsound();
                 buttonback();
+            }
+        });
+        // the search button
+        mFillButton = (Button) findViewById(R.id.fill_button);
+        mFillButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                filltable();
             }
         });
         // the search button
@@ -145,6 +156,7 @@ public class ProductsListActivity extends ListActivity implements
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
+        buttonsound();
         Uri productUri = Uri.parse(MyProductContentProvider.CONTENT_URI + "/" + id);
         editProduct(productUri);
     }
@@ -159,13 +171,12 @@ public class ProductsListActivity extends ListActivity implements
 
 		// Fields from the database (projection)
 		// Must include the _id column for the adapter to work
-		String[] from = new String[] { ProductTable.COLUMN_NAME };
+		String[] from = new String[] { ProductTable.COLUMN_NAME , ProductTable.COLUMN_QUANTITY};
 		// Fields on the UI to which we map
-		int[] to = new int[] { R.id.label };
+		int[] to = new int[] { R.id.label , R.id.quantity};
 
 		getLoaderManager().initLoader(0, null, this);
-		adapter = new SimpleCursorAdapter(this, R.layout.product_row, null, from,
-				to, 0);
+		adapter = new SimpleCursorAdapter(this, R.layout.product_row, null, from, to, 0);
 
 		setListAdapter(adapter);
 	}
@@ -173,7 +184,7 @@ public class ProductsListActivity extends ListActivity implements
 	// Creates a new loader after the initLoader () call
 	@Override
 	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-		String[] projection = { ProductTable.COLUMN_ID, ProductTable.COLUMN_NAME };
+		String[] projection = { ProductTable.COLUMN_ID, ProductTable.COLUMN_NAME ,ProductTable.COLUMN_QUANTITY};
 		CursorLoader cursorLoader = new CursorLoader(this,
 				MyProductContentProvider.CONTENT_URI, projection, null, null, null);
 		return cursorLoader;
@@ -189,5 +200,45 @@ public class ProductsListActivity extends ListActivity implements
 		// data is not available anymore, delete reference
 		adapter.swapCursor(null);
 	}
+
+    // ======================================================================================
+
+    private void filltable() {
+        insfile("500","Torpedo","0-99999-11111-0","Photon Torpedo to fire at ennemys");
+        insfile("10","Dilithium","0-99999-11111-0","Dilithium cristals to run the ship");
+        insfile("4","Shuttle","0-99999-11111-0","Space shuttle");
+        insfile("1024","Crew","0-99999-11111-0","Active Crew on ship");
+        insfile("8","Officers","0-99999-11111-0","Senior officer who can drive the ship");
+        insfile("243","DaysOfFood","0-99999-11111-0","Days of food reserve for ship complement");
+        insfile("1500","SpaceSuits","0-99999-11111-0","Space proof suit");
+        insfile("47534","ToiletPaper","0-99999-11111-0","Space proof simple toilet paper rolls");
+        insfile("12","Doctors","0-99999-11111-0","Doctors who can practice medecine");
+        insfile("3","Consultant","0-99999-11111-0","Shrink");
+        insfile("10","Bob9","0-99999-11111-0","Bob");
+        insfile("10","Bob10","0-99999-11111-0","Bob");
+        insfile("10","Bob11","0-99999-11111-0","Bob");
+        insfile("10","Bob12","0-99999-11111-0","Bob");
+        insfile("10","Bob13","0-99999-11111-0","Bob");
+        insfile("10","Bob14","0-99999-11111-0","Bob");
+        insfile("10","Bob15","0-99999-11111-0","Bob");
+        insfile("10","Bob16","0-99999-11111-0","Bob");
+        insfile("10","Bob17","0-99999-11111-0","Bob");
+        insfile("10","Bob18","0-99999-11111-0","Bob");
+        insfile("10","Bob19","0-99999-11111-0","Bob");
+        insfile("10","Bob20","0-99999-11111-0","Bob");
+        insfile("10","Bob21","0-99999-11111-0","Bob");
+        insfile("10","Bob22","0-99999-11111-0","Bob");
+        insfile("10","Bob23","0-99999-11111-0","Bob");
+    }
+
+    private void insfile(String qty,String name, String upc, String desc) {
+        ContentValues values = new ContentValues();
+        values.put(ProductTable.COLUMN_QUANTITY, qty);
+        values.put(ProductTable.COLUMN_NAME, name);
+        values.put(ProductTable.COLUMN_UPC, upc);
+        values.put(ProductTable.COLUMN_DESCRIPTION, desc);
+        Uri uri = getContentResolver().insert(MyProductContentProvider.CONTENT_URI, values);
+    }
+
 
 }

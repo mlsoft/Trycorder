@@ -21,7 +21,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginBottom="@dimen/button_margin"
-            android:layout_marginEnd="@dimen/button_margin"
+            android:layout_marginRight="@dimen/button_margin"
             android:layout_weight="5"
             android:background="@android:color/black"
             android:scaleType="fitXY"
@@ -130,68 +130,133 @@
 
     </LinearLayout>
 
-
-    <Spinner
-        android:id="@+id/category"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/black"
-        android:entries="@array/prodtype"
-        android:textColor="@android:color/white"
-        android:textSize="20sp"/>
+        android:orientation="horizontal">
 
-    <LinearLayout
-        android:id="@+id/LinearLayout01"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="2"
+            android:text="Qty"
+            android:textColor="@android:color/holo_blue_light"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <EditText
-            android:id="@+id/product_edit_name"
-            android:layout_width="match_parent"
+            android:id="@+id/product_edit_quantity"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="8"
             android:layout_marginBottom="4dp"
+            android:layout_marginLeft="4dp"
             android:layout_marginTop="4dp"
             android:background="@android:color/black"
-            android:hint="Name"
-            android:imeOptions="actionNext"
+            android:hint="0"
             android:lines="1"
             android:maxLines="1"
             android:textColor="@android:color/white"
-            android:textSize="20sp"/>
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="2"
+            android:text="Name"
+            android:textColor="@android:color/holo_blue_light"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/product_edit_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="8"
+            android:layout_marginBottom="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginTop="4dp"
+            android:background="@android:color/black"
+            android:hint="Name"
+            android:lines="1"
+            android:maxLines="1"
+            android:textColor="@android:color/white"
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="2"
+            android:text="UPC"
+            android:textColor="@android:color/holo_blue_light"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/product_edit_upc"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="8"
             android:layout_marginBottom="4dp"
+            android:layout_marginLeft="4dp"
             android:layout_marginTop="4dp"
             android:background="@android:color/black"
             android:gravity="top"
             android:hint="UPC"
-            android:imeOptions="actionNext"
             android:lines="1"
             android:maxLines="1"
             android:textColor="@android:color/white"
-            android:textSize="20sp"/>
+            android:textSize="20sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="2"
+            android:text="Desc"
+            android:textColor="@android:color/holo_blue_light"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/product_edit_description"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="8"
             android:layout_marginBottom="4dp"
+            android:layout_marginLeft="4dp"
             android:layout_marginTop="4dp"
             android:background="@android:color/black"
             android:gravity="top"
             android:hint="Description"
-            android:imeOptions="actionNext"
-            android:lines="1"
-            android:maxLines="1"
             android:textColor="@android:color/white"
-            android:textSize="20sp"/>
+            android:textSize="20sp" />
 
     </LinearLayout>
-
     <!-- bottom encloser of memo screen -->
 
     <LinearLayout

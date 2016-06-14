@@ -51,10 +51,24 @@
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
                     android:layout_gravity="center"
-                    android:layout_weight="3"
+                    android:layout_weight="2"
                     android:background="@drawable/trekbutton_indigo_center"
                     android:maxLines="1"
                     android:text="BACK"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/fill_button"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="@dimen/button_margin"
+                    android:layout_marginStart="@dimen/button_margin"
+                    android:layout_gravity="center"
+                    android:layout_weight="2"
+                    android:background="@drawable/trekbutton_yellow_center"
+                    android:maxLines="1"
+                    android:text="FILL"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -65,7 +79,7 @@
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
                     android:layout_gravity="center"
-                    android:layout_weight="3"
+                    android:layout_weight="2"
                     android:background="@drawable/trekbutton_blue_right"
                     android:maxLines="1"
                     android:text="ADD"
@@ -86,7 +100,7 @@
                     android:id="@+id/starred_text"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="Product List"
+                    android:text="Inventory List"
                     android:textColor="@android:color/holo_green_light"
                     android:textSize="20sp"
                     android:textStyle="bold" />
