@@ -57,6 +57,7 @@ import android.widget.Toast;
 
 
 import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
+import net.ddns.mlsoftlaberge.trycorder.gallery.GalleryActivity;
 import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
 
@@ -1044,6 +1045,12 @@ public class TrycorderFragment extends Fragment
     public void accessinventory() {
         say("Access Starship Inventory");
         Intent i = new Intent(getActivity(), ProductsListActivity.class);
+        startActivity(i);
+    }
+
+    private void opengallery() {
+        say("Open Gallery Class");
+        Intent i = new Intent(getActivity(), GalleryActivity.class);
         startActivity(i);
     }
 
@@ -2960,15 +2967,6 @@ public class TrycorderFragment extends Fragment
                 say("Failed Saving Video");
             }
         }
-    }
-
-    private void opengallery() {
-        say("Open Gallery application");
-        Intent intent = new Intent();
-        intent.setAction(android.content.Intent.ACTION_VIEW);
-        intent.setType("image/*");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
     }
 
     // ========================================================================================
