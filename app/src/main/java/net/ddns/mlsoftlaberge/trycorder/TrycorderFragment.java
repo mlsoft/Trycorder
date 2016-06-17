@@ -49,6 +49,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -132,6 +133,9 @@ public class TrycorderFragment extends Fragment
     // the new scope class
     private TrbSensorView mTrbSensorView;
 
+    // the new scope class
+    private MotSensorView mMotSensorView;
+
     // the Star-Trek Logo on sensor screen
     private ImageView mStartrekLogo;
 
@@ -203,6 +207,12 @@ public class TrycorderFragment extends Fragment
     private Button mTractorOffButton;
     private Button mTractorPushButton;
 
+    // the button to fire at ennemys
+    private Button mMotorButton;
+    private Button mMotorImpulseButton;
+    private Button mMotorOffButton;
+    private Button mMotorWarpButton;
+
     // the button to control the viewer
     private Button mViewerButton;
     private Button mViewerOnButton;
@@ -235,23 +245,33 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mButtonsfireLayout;
     private LinearLayout mButtonstransporterLayout;
     private LinearLayout mButtonstractorLayout;
+    private LinearLayout mButtonsmotorLayout;
     private LinearLayout mButtonsviewerLayout;
     private LinearLayout mButtonslogsLayout;
     private int mButtonsmode = 0;
 
+    // the bottom right layout for viewing media
     private LinearLayout mViewerLayout;
+
+    // the 3 modes from the viewer buttons layout
     private ImageView mFederationlogo;
     private ImageView mStarshipPlans;
     private ImageView mViewerPhoto;
+
+    // the 3 modes from the logs buttons layout
     private TextView mLogsConsole;
     private TextView mLogsInfo;
     private TextView mLogsSys;
+
+    // the mode animation for motor layout
+    private FrameLayout mViewerAnimate;
 
     // the player for sound background
     private MediaPlayer mMediaPlayer = null;
 
     // the preferences values
     private boolean autoListen;
+    private boolean isChatty;
     private String speakLanguage;
     private String listenLanguage;
     private String displayLanguage;
@@ -269,6 +289,7 @@ public class TrycorderFragment extends Fragment
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         autoListen = sharedPref.getBoolean("pref_key_auto_listen", false);
+        isChatty = sharedPref.getBoolean("pref_key_ischatty", false);
         speakLanguage = sharedPref.getString("pref_key_speak_language", "");
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
@@ -605,6 +626,46 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        // ===================== transporter buttons group ============================
+        // the tractor button
+        mMotorButton = (Button) view.findViewById(R.id.motor_button);
+        mMotorButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchbuttonlayout(7);
+                switchsensorlayout(10);
+                switchviewer(7);
+            }
+        });
+
+        // the tractor push button
+        mMotorImpulseButton = (Button) view.findViewById(R.id.motor_impulse_button);
+        mMotorImpulseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                motorimpulse();
+            }
+        });
+
+        // the tractor off button
+        mMotorOffButton = (Button) view.findViewById(R.id.motor_off_button);
+        mMotorOffButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                motoroff();
+            }
+        });
+
+        // the tractor pull button
+        mMotorWarpButton = (Button) view.findViewById(R.id.motor_warp_button);
+        mMotorWarpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                motorwarp();
+            }
+        });
+
         // ===================== viewer buttons group ============================
         // the viewer button
         mViewerButton = (Button) view.findViewById(R.id.viewer_button);
@@ -612,7 +673,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchbuttonlayout(7);
+                switchbuttonlayout(8);
             }
         });
 
@@ -665,7 +726,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchbuttonlayout(8);
+                switchbuttonlayout(9);
             }
         });
 
@@ -739,6 +800,7 @@ public class TrycorderFragment extends Fragment
         mButtonsfireLayout = (LinearLayout) view.findViewById(R.id.buttons_fire_layout);
         mButtonstransporterLayout = (LinearLayout) view.findViewById(R.id.buttons_transporter_layout);
         mButtonstractorLayout = (LinearLayout) view.findViewById(R.id.buttons_tractor_layout);
+        mButtonsmotorLayout = (LinearLayout) view.findViewById(R.id.buttons_motor_layout);
         mButtonsviewerLayout = (LinearLayout) view.findViewById(R.id.buttons_viewer_layout);
         mButtonslogsLayout = (LinearLayout) view.findViewById(R.id.buttons_logs_layout);
 
@@ -764,6 +826,7 @@ public class TrycorderFragment extends Fragment
         });
         mViewerPhoto =  (ImageView) view.findViewById(R.id.photo_view);
         mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
+        mViewerAnimate = (FrameLayout) view.findViewById(R.id.viewer_animate);
 
         // create and activate a textureview to contain camera display
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
@@ -776,6 +839,7 @@ public class TrycorderFragment extends Fragment
         mStarshipPlans.setVisibility(View.GONE);
         mViewerPhoto.setVisibility(View.GONE);
         mLogsSys.setVisibility(View.GONE);
+        mViewerAnimate.setVisibility(View.GONE);
         mVieweron = false;
 
         // ==============================================================================
@@ -841,6 +905,11 @@ public class TrycorderFragment extends Fragment
         // add my sensorview to the layout 1
         mSensorLayout.addView(mTrbSensorView, tlayoutParams);
 
+        // my sensorview that display the sensors data
+        mMotSensorView = new MotSensorView(getContext());
+        // add my sensorview to the layout 1
+        mSensorLayout.addView(mMotSensorView, tlayoutParams);
+
         // position 0 of sensor layout
         mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
 
@@ -873,6 +942,7 @@ public class TrycorderFragment extends Fragment
         mFireButton.setTypeface(face2);
         mTransporterButton.setTypeface(face2);
         mTractorButton.setTypeface(face2);
+        mMotorButton.setTypeface(face2);
         mViewerButton.setTypeface(face2);
         mLogsButton.setTypeface(face2);
 
@@ -899,6 +969,10 @@ public class TrycorderFragment extends Fragment
         mTractorOffButton.setTypeface(face3);
         mTractorPullButton.setTypeface(face3);
 
+        mMotorImpulseButton.setTypeface(face3);
+        mMotorOffButton.setTypeface(face3);
+        mMotorWarpButton.setTypeface(face3);
+
         mViewerOnButton.setTypeface(face2);
         mViewerFrontButton.setTypeface(face2);
         mViewerOffButton.setTypeface(face2);
@@ -915,12 +989,20 @@ public class TrycorderFragment extends Fragment
     @Override
     public void onResume() {
         super.onResume();
+        // settings part of the preferences
+        autoListen = sharedPref.getBoolean("pref_key_auto_listen", false);
+        isChatty = sharedPref.getBoolean("pref_key_ischatty", false);
+        speakLanguage = sharedPref.getString("pref_key_speak_language", "");
+        listenLanguage = sharedPref.getString("pref_key_listen_language", "");
+        displayLanguage = sharedPref.getString("pref_key_display_language", "");
+        // dynamic status part
         mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
         mSensorpage = sharedPref.getInt("pref_key_sensor_page", 0);
         mButtonsmode = sharedPref.getInt("pref_key_buttons_mode", 0);
         mViewermode = sharedPref.getInt("pref_key_viewer_mode", 0);
         mSoundStatus = sharedPref.getBoolean("pref_key_audio_mode", false);
         mViewerfront = sharedPref.getBoolean("pref_key_viewer_front", false);
+        // resurect the application to last settings
         switchbuttonlayout(mButtonsmode);
         switchsensorlayout(mSensormode);
         switchviewer(mViewermode);
@@ -929,6 +1011,7 @@ public class TrycorderFragment extends Fragment
 
     @Override
     public void onPause() {
+        // save the current status
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt("pref_key_sensor_mode", mSensormode);
         editor.putInt("pref_key_sensor_page", mSensorpage);
@@ -946,7 +1029,7 @@ public class TrycorderFragment extends Fragment
 
     private void switchplans() {
         planno++;
-        if (planno>=5) planno=0;
+        if (planno>=6) planno=0;
         switch(planno) {
             case 0:
                 mStarshipPlans.setImageResource(R.drawable.starship_view);
@@ -962,6 +1045,9 @@ public class TrycorderFragment extends Fragment
                 break;
             case 4:
                 mStarshipPlans.setImageResource(R.drawable.starship_topview);
+                break;
+            case 5:
+                mStarshipPlans.setImageResource(R.drawable.earth_spinning);
                 break;
 
         }
@@ -1006,6 +1092,10 @@ public class TrycorderFragment extends Fragment
                 say("Sensors Tractor Animation");
                 starttrbsensors();
                 break;
+            case 10:
+                say("Sensors Motor Animation");
+                startmotsensors();
+                break;
             default:
                 say("Sensors OFF");
                 break;
@@ -1024,12 +1114,14 @@ public class TrycorderFragment extends Fragment
         stopfirsensors();
         stoptrasensors();
         stoptrbsensors();
+        stopmotsensors();
     }
 
     // =====================================================================================
     // settings activity incorporation in the display
     public void settingsactivity() {
         say("Settings");
+        if(isChatty) speak("Settings");
         Intent i = new Intent(getActivity(), SettingsActivity.class);
         startActivity(i);
     }
@@ -1037,6 +1129,7 @@ public class TrycorderFragment extends Fragment
     // settings activity incorporation in the display
     public void accesscrew() {
         say("Access Starship Crew");
+        if(isChatty) speak("Crew information and evaluation");
         Intent i = new Intent(getActivity(), ContactsListActivity.class);
         startActivity(i);
     }
@@ -1044,12 +1137,14 @@ public class TrycorderFragment extends Fragment
     // settings activity incorporation in the display
     public void accessinventory() {
         say("Access Starship Inventory");
+        if(isChatty) speak("Inventory");
         Intent i = new Intent(getActivity(), ProductsListActivity.class);
         startActivity(i);
     }
 
     private void opengallery() {
         say("Open Gallery Class");
+        if(isChatty) speak("Gallery");
         Intent i = new Intent(getActivity(), GalleryActivity.class);
         startActivity(i);
     }
@@ -1110,6 +1205,7 @@ public class TrycorderFragment extends Fragment
         mFirSensorView.setVisibility(View.GONE);
         mTraSensorView.setVisibility(View.GONE);
         mTrbSensorView.setVisibility(View.GONE);
+        mMotSensorView.setVisibility(View.GONE);
         mStartrekLogo.setVisibility(View.GONE);
         switch (no) {
             case 0:
@@ -1142,6 +1238,9 @@ public class TrycorderFragment extends Fragment
             case 9:
                 mTrbSensorView.setVisibility(View.VISIBLE);
                 break;
+            case 10:
+                mMotSensorView.setVisibility(View.VISIBLE);
+                break;
         }
         if(no<=4) mSensorpage = no;
         mSensormode = no;
@@ -1156,6 +1255,7 @@ public class TrycorderFragment extends Fragment
         mButtonsfireLayout.setVisibility(View.GONE);
         mButtonstransporterLayout.setVisibility(View.GONE);
         mButtonstractorLayout.setVisibility(View.GONE);
+        mButtonsmotorLayout.setVisibility(View.GONE);
         mButtonsviewerLayout.setVisibility(View.GONE);
         mButtonslogsLayout.setVisibility(View.GONE);
         switch (no) {
@@ -1184,10 +1284,14 @@ public class TrycorderFragment extends Fragment
                 mButtonstractorLayout.setVisibility(View.VISIBLE);
                 break;
             case 7:
+                say("Motor Mode");
+                mButtonsmotorLayout.setVisibility(View.VISIBLE);
+                break;
+            case 8:
                 say("Viewer Mode");
                 mButtonsviewerLayout.setVisibility(View.VISIBLE);
                 break;
-            case 8:
+            case 9:
                 say("Logs Mode");
                 mButtonslogsLayout.setVisibility(View.VISIBLE);
                 break;
@@ -1208,16 +1312,22 @@ public class TrycorderFragment extends Fragment
     }
 
     private void opencomm() {
-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
-        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        if(isChatty) speak("Hailing frequency opened");
+        else {
+            MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
+            mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        }
         switchsensorlayout(5);
         startsensors(5);
         say("Hailing frequency open.");
     }
 
     private void closecomm() {
-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
-        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        if(isChatty) speak("Hailing frequency closed");
+        else {
+            MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
+            mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        }
         switchsensorlayout(5);
         stopsensors();
         say("Hailing frequency closed.");
@@ -1230,6 +1340,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(8);
         mTraSensorView.setmode(2);
         startsensors(8);
+        if(isChatty) speak("Transport In Progress. . . Transport Complete");
     }
 
     private void transporterin() {
@@ -1239,6 +1350,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(8);
         mTraSensorView.setmode(1);
         startsensors(8);
+        if(isChatty) speak("Transport In Progress. . . Transport Complete");
     }
 
     private void raiseshields() {
@@ -1248,6 +1360,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(6);
         mShiSensorView.setmode(1);
         startsensors(6);
+        if(isChatty) speak("Shields Up");
     }
 
     private void lowershields() {
@@ -1257,6 +1370,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(6);
         mShiSensorView.setmode(2);
         startsensors(6);
+        if(isChatty) speak("Shields Down");
     }
 
     private void tractorpush() {
@@ -1266,6 +1380,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(9);
         mTrbSensorView.setmode(1);
         startsensors(9);
+        if(isChatty) speak("Repulser Beam Engaged");
     }
 
     private void tractoroff() {
@@ -1275,6 +1390,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(9);
         mTrbSensorView.setmode(0);
         stopsensors();
+        if(isChatty) speak("Beam Off");
     }
 
     private void tractorpull() {
@@ -1284,6 +1400,40 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(9);
         mTrbSensorView.setmode(2);
         startsensors(9);
+        if(isChatty) speak("Tractor Beam Engaged");
+    }
+
+    private void motorimpulse() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.power_up1_clean);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Engage Impulse Engine");
+        switchsensorlayout(10);
+        mMotSensorView.setmode(1);
+        startsensors(10);
+        switchviewer(7);
+        if(isChatty) speak("Impulse Engine Engaged");
+    }
+
+    private void motoroff() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.motor_down);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Motor Off");
+        switchsensorlayout(10);
+        mMotSensorView.setmode(0);
+        stopsensors();
+        switchviewer(7);
+        if(isChatty) speak("All engines down");
+    }
+
+    private void motorwarp() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.motor_start);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        say("Engage Warp Drive");
+        switchsensorlayout(10);
+        mMotSensorView.setmode(2);
+        startsensors(10);
+        switchviewer(7);
+        if(isChatty) speak("Warp Drive Engaged");
     }
 
     private void firephaser() {
@@ -1293,6 +1443,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(7);
         mFirSensorView.setmode(2);
         startsensors(7);
+        if(isChatty) speak("The target is disabled");
     }
 
     private void firemissiles() {
@@ -1302,6 +1453,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(7);
         mFirSensorView.setmode(1);
         startsensors(7);
+        if(isChatty) speak("The ship is destroyed");
     }
 
     // ==========================================================================================
@@ -1358,6 +1510,127 @@ public class TrycorderFragment extends Fragment
             mSoundStatus = true;
             if (mRunStatus) startmusic();
         }
+    }
+
+    // ==============================================================================
+    // shield sensor, display person disappearing
+
+    private void stopmotsensors() {
+        stopmusic();
+        mMotSensorView.stop();
+    }
+
+    private void startmotsensors() {
+        mMotSensorView.start();
+        if (mSoundStatus) startmusic();
+    }
+
+    // ============================================================================
+    // class defining the sensor display widget
+    private class MotSensorView extends TextView {
+        private Bitmap mBitmap;
+        private Paint mPaint = new Paint();
+        private Paint mPaint2 = new Paint();
+        private Canvas mCanvas = new Canvas();
+
+        private int mWidth;
+        private int mHeight;
+
+        private int mode;   // 1=in 2=out
+
+        private int position=0;
+
+        // initialize the 3 colors, and setup painter
+        public MotSensorView(Context context) {
+            super(context);
+            // text paint
+            mPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint.setStrokeWidth(2);
+            mPaint.setTextSize(24);
+            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setColor(Color.WHITE);
+            // line paint
+            mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
+            mPaint2.setStrokeWidth(2);
+            mPaint2.setStyle(Paint.Style.STROKE);
+            mPaint2.setColor(Color.MAGENTA);
+        }
+
+        public void setmode(int no) {
+            mode=no;
+            if(mode==0) stop();
+        }
+
+        // ======= timer section =======
+        private Timer timer=null;
+        private MyTimer myTimer;
+
+        public void stop() {
+            if(timer!=null) {
+                timer.cancel();
+                timer=null;
+            }
+            position=0;
+            invalidate();
+        }
+
+        public void start() {
+            // start the timer to eat this stuff and display it
+            position=1;
+            timer = new Timer("motor");
+            myTimer = new MyTimer();
+            timer.schedule(myTimer, 10L, 10L);
+        }
+
+        private class MyTimer extends TimerTask {
+            public void run() {
+                position+=3;
+                postInvalidate();
+                if(position>=100) {
+                    position=1;
+                    postInvalidate();
+                }
+            }
+        }
+
+        // =========== textview callbacks =================
+        // initialize the bitmap to the size of the view, fill it white
+        // init the view state variables to initial values
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
+            mCanvas.setBitmap(mBitmap);
+            mCanvas.drawColor(Color.BLACK);
+            mWidth = w;
+            mHeight = h;
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        // draw
+        @Override
+        public void onDraw(Canvas viewcanvas) {
+            synchronized (this) {
+                if (mBitmap != null) {
+                    // clear the surface
+                    mCanvas.drawColor(Color.BLACK);
+                    // draw the shield effect
+                    if(mode==1) mPaint2.setColor(Color.RED);
+                    else mPaint2.setColor(Color.YELLOW);
+                    if(position!=0) {
+                        // compute positions
+                        float px=mWidth/2;
+                        float dx=position;
+                        mCanvas.drawLine(px,mHeight,px-dx,0,mPaint2);
+                        mCanvas.drawLine(px,mHeight,px,0,mPaint2);
+                        mCanvas.drawLine(px,mHeight,px+dx,0,mPaint2);
+                    }
+                    // transfer the bitmap to the view
+                    viewcanvas.drawBitmap(mBitmap, 0, 0, null);
+                }
+            }
+            super.onDraw(viewcanvas);
+        }
+
     }
 
     // ==============================================================================
@@ -2685,6 +2958,7 @@ public class TrycorderFragment extends Fragment
         mStarshipPlans.setVisibility(View.GONE);
         mViewerPhoto.setVisibility(View.GONE);
         mLogsSys.setVisibility(View.GONE);
+        mViewerAnimate.setVisibility(View.GONE);
         switch (no) {
             case 0:
                 say("Viewer OFF");
@@ -2744,6 +3018,11 @@ public class TrycorderFragment extends Fragment
                 mLogsSys.append(fetch_cpu_info());
                 mLogsSys.append("--------------------\nMemory Info\n--------------------\n");
                 mLogsSys.append(fetch_memory_info());
+                break;
+            case 7:
+                say("Animate Viewer");
+                mViewerAnimate.setVisibility(View.VISIBLE);
+                mVieweron = false;
                 break;
         }
         mViewermode = no;
@@ -3174,7 +3453,7 @@ public class TrycorderFragment extends Fragment
             return (true);
         }
         if (texte.contains("logs")) {
-            switchbuttonlayout(7);
+            switchbuttonlayout(9);
             switchviewer(2);
             return (true);
         }

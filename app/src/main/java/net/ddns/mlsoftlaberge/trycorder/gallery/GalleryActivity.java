@@ -173,7 +173,11 @@ public class GalleryActivity extends Activity implements
     public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
         currenturi=position;
         if(mImageUris!=null) {
-            mImageSwitcher.setImageURI(mImageUris.get(position));
+            //mImageSwitcher.setImageURI(mImageUris.get(position));
+            File f = new File(mImageUris.get(position).getPath());
+            Bitmap b = decodeFile(f,800);
+            BitmapDrawable pic = new BitmapDrawable(b);
+            mImageSwitcher.setImageDrawable(pic);
         }
     }
 
@@ -219,7 +223,7 @@ public class GalleryActivity extends Activity implements
             ImageView i = new ImageView(mContext);
             if(mImageUris!=null) {
                 File f = new File(mImageUris.get(position).getPath());
-                Bitmap b = decodeFile(f);
+                Bitmap b = decodeFile(f,100);
                 BitmapDrawable pic = new BitmapDrawable(b);
                 i.setImageDrawable(pic);
             }
@@ -235,22 +239,19 @@ public class GalleryActivity extends Activity implements
     // ==================================================================================
     //decodes image and scales it to reduce memory consumption in gallery
 
-    private Bitmap decodeFile(File f){
+    private Bitmap decodeFile(File f, int size){
         try {
             //Decode image size
             BitmapFactory.Options o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(new FileInputStream(f),null,o);
 
-            //The new size we want to scale to
-            final int REQUIRED_SIZE=100;
-
             //Find the correct scale value. It should be the power of 2.
             int width_tmp=o.outWidth, height_tmp=o.outHeight;
             int scale=1;
 
             while(true){
-                if(width_tmp/2<REQUIRED_SIZE || height_tmp/2<REQUIRED_SIZE)
+                if(width_tmp/2<size || height_tmp/2<size)
                     break;
                 width_tmp/=2;
                 height_tmp/=2;

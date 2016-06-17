@@ -9,6 +9,11 @@
             android:summary="Determine if the listen function is looping"
             android:title="Automatic loop"
             android:defaultValue="false" />
+        <CheckBoxPreference
+            android:key="pref_key_ischatty"
+            android:summary="Determine if the speak function is chatty"
+            android:title="Speak more often"
+            android:defaultValue="false" />
         <ListPreference
             android:key="pref_key_display_language"
             android:entries="@array/language_array_entries"

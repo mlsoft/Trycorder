@@ -156,7 +156,7 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:gravity="center_vertical"
-        android:spacing="16dp" />
+        android:spacing="8dp" />
 
     <!-- bottom encloser of gallery screen -->
 

@@ -163,7 +163,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/comm_button"
@@ -183,7 +183,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/shield_button"
@@ -203,7 +203,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/fire_button"
@@ -223,7 +223,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/transporter_button"
@@ -243,7 +243,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/tractor_button"
@@ -257,6 +257,26 @@
                 android:background="@drawable/trekbutton_indigo_right"
                 android:maxLines="1"
                 android:text="TRACTOR"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.5" />
+
+            <Button
+                android:id="@+id/motor_button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginBottom="@dimen/button_margin"
+                android:layout_marginEnd="@dimen/button_margin"
+                android:layout_marginStart="@dimen/button_margin"
+                android:layout_marginTop="@dimen/button_margin"
+                android:layout_weight="1"
+                android:background="@drawable/trekbutton_vert_right"
+                android:maxLines="1"
+                android:text="MOTOR"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -283,7 +303,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/logs_button"
@@ -389,7 +409,7 @@
                             android:id="@+id/startrek_logo"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:src="@drawable/startrek_logo"
+                            android:src="@drawable/earth_still"
                             android:visibility="visible" />
 
                     </LinearLayout>
@@ -709,6 +729,52 @@
 
                 </LinearLayout>
 
+                <!-- ========== button layout for motors ============== -->
+                <LinearLayout
+                    android:id="@+id/buttons_motor_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="100">
+
+                    <Button
+                        android:id="@+id/motor_impulse_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_vert_left"
+                        android:text="MOTOR IMPULSE" />
+
+                    <Button
+                        android:id="@+id/motor_off_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="34"
+                        android:background="@drawable/trekbutton_vert_center"
+                        android:text="MOTOR OFF" />
+
+                    <Button
+                        android:id="@+id/motor_warp_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_vert_right"
+                        android:text="MOTOR WARP" />
+
+                </LinearLayout>
+
                 <!-- ========== button layout for viewer ============== -->
                 <LinearLayout
                     android:id="@+id/buttons_viewer_layout"
@@ -778,7 +844,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
                     <Button
@@ -912,13 +978,19 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:src="@drawable/federation_logo"
-                        android:visibility="gone" />
+                        android:visibility="visible" />
 
                     <TextureView
                         android:id="@+id/viewer_window"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:visibility="gone" />
+
+                    <FrameLayout
+                        android:id="@+id/viewer_animate"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="gone"/>
 
                     <ScrollView
                         android:layout_width="match_parent"
@@ -959,7 +1031,7 @@
                         android:layout_height="match_parent"
                         android:clickable="true"
                         android:src="@drawable/starship_view"
-                        android:visibility="visible" />
+                        android:visibility="gone" />
 
                     <ImageView
                         android:id="@+id/photo_view"
