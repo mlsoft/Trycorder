@@ -7,22 +7,31 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
+import android.widget.Toast;
 
 /**
  * Created by mlsoft on 16-05-13.
  */
-public class TrycorderActivity extends FragmentActivity {
+public class TrycorderActivity extends FragmentActivity implements
+        TrycorderFragment.OnTrycorderInteractionListener,
+        TryviewerFragment.OnTryviewerInteractionListener {
 
     private static String TAG = "Trycorder";
+
+    private TrycorderFragment mTrycorderFragment;
+    private TryviewerFragment mTryviewerFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // ask the permissions
         askpermissions();
+        // create the 2 fragments
+        mTrycorderFragment=new TrycorderFragment();
+        mTryviewerFragment=new TryviewerFragment();
         // start the fragment full screen
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add(android.R.id.content, new TrycorderFragment(), TAG);
+        ft.add(android.R.id.content, mTrycorderFragment, TAG);
         ft.commit();
     }
 
@@ -39,6 +48,24 @@ public class TrycorderActivity extends FragmentActivity {
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         }
+    }
+
+    @Override
+    public void onTrycorderModeChange(int mode) {
+        Toast.makeText(this, "Trycorder mode changed : " + mode, Toast.LENGTH_LONG).show();
+        // start the fragment full screen
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(android.R.id.content, mTryviewerFragment, TAG);
+        ft.commit();
+    }
+
+    @Override
+    public void onTryviewerModeChange(int mode) {
+        Toast.makeText(this, "Tryviewer mode changed : " + mode, Toast.LENGTH_LONG).show();
+        // start the fragment full screen
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(android.R.id.content, mTrycorderFragment, TAG);
+        ft.commit();
     }
 
     // ==========================================================================

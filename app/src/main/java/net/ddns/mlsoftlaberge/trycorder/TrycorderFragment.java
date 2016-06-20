@@ -1,5 +1,6 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
@@ -55,6 +56,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 
 import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
@@ -89,6 +91,27 @@ public class TrycorderFragment extends Fragment
 
     public TrycorderFragment() {
     }
+
+    // ======================================================================================
+    public interface OnTrycorderInteractionListener {
+        public void onTrycorderModeChange(int mode);
+    }
+
+    private OnTrycorderInteractionListener mOnTrycorderInteractionListener;
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            // Assign callback listener which the holding activity must implement.
+            mOnTrycorderInteractionListener = (OnTrycorderInteractionListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement OnTrycorderInteractionListener");
+        }
+    }
+
+    // ======================================================================================
 
     // handles to camera and textureview
     private Camera mCamera = null;
@@ -136,8 +159,8 @@ public class TrycorderFragment extends Fragment
     // the new scope class
     private MotSensorView mMotSensorView;
 
-    // the Star-Trek Logo on sensor screen
-    private ImageView mStartrekLogo;
+    // the Earth-Still Logo on sensor screen
+    private ImageView mEarthStill;
 
     // the button to talk to computer
     private ImageButton mTalkButton;
@@ -231,6 +254,8 @@ public class TrycorderFragment extends Fragment
     private Button mLogsCrewButton;
     private Button mLogsInvButton;
 
+    private Button mModeButton;
+
     // the button to control sound-effects
     private Button mSoundButton;
     private boolean mSoundStatus = false;
@@ -265,6 +290,11 @@ public class TrycorderFragment extends Fragment
 
     // the mode animation for motor layout
     private FrameLayout mViewerAnimate;
+    private ImageView mImageEarthStill;  // image of warp core
+    //private GifDecoderView mGifDecoderView;
+    //private GifDecoderView mGifDecoderView1;
+    private GIFView mGIFView;
+    private GIFView mGIFView1;
 
     // the player for sound background
     private MediaPlayer mMediaPlayer = null;
@@ -788,6 +818,17 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        // ===================== switch mode button ============================
+        // the viewer button
+        mModeButton = (Button) view.findViewById(R.id.mode_button);
+        mModeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchtrycordermode(2);
+            }
+        });
+
         // ================== get handles on the 3 layout containers ===================
         // the sensor layout, to contain my sensorview
         mSensorLayout = (LinearLayout) view.findViewById(R.id.sensor_layout);
@@ -826,7 +867,33 @@ public class TrycorderFragment extends Fragment
         });
         mViewerPhoto =  (ImageView) view.findViewById(R.id.photo_view);
         mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
+
+        // frame for motor animations
         mViewerAnimate = (FrameLayout) view.findViewById(R.id.viewer_animate);
+        // image inside the vieweranimate layout
+        mImageEarthStill = (ImageView) view.findViewById(R.id.image_earthstill);
+
+        // warp effect animation gif
+        //InputStream is = getContext().getResources().openRawResource(R.raw.warp_animation);
+        //mGifDecoderView = new GifDecoderView(getContext(),is);
+        //mViewerAnimate.addView(mGifDecoderView);
+
+        // impulse effect animation gif
+        //InputStream is1 = getContext().getResources().openRawResource(R.raw.earth_turning);
+        //mGifDecoderView1 = new GifDecoderView(getContext(),is1);
+        //mViewerAnimate.addView(mGifDecoderView1);
+
+        mGIFView= new GIFView(getContext(),R.raw.warp_animation);
+        mViewerAnimate.addView(mGIFView);
+        mGIFView1= new GIFView(getContext(),R.raw.earth_rotating);
+        mViewerAnimate.addView(mGIFView1);
+
+        // set all visibilitys of Vieweranimate frame
+        mImageEarthStill.setVisibility(View.VISIBLE);
+        //mGifDecoderView.setVisibility(View.GONE);
+        //mGifDecoderView1.setVisibility(View.GONE);
+        mGIFView.setVisibility(View.GONE);
+        mGIFView1.setVisibility(View.GONE);
 
         // create and activate a textureview to contain camera display
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
@@ -911,7 +978,7 @@ public class TrycorderFragment extends Fragment
         mSensorLayout.addView(mMotSensorView, tlayoutParams);
 
         // position 0 of sensor layout
-        mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
+        mEarthStill = (ImageView) view.findViewById(R.id.earth_still);
 
         return view;
     }
@@ -945,6 +1012,7 @@ public class TrycorderFragment extends Fragment
         mMotorButton.setTypeface(face2);
         mViewerButton.setTypeface(face2);
         mLogsButton.setTypeface(face2);
+        mModeButton.setTypeface(face2);
 
         // center buttons
         mMagneticButton.setTypeface(face2);
@@ -1047,7 +1115,7 @@ public class TrycorderFragment extends Fragment
                 mStarshipPlans.setImageResource(R.drawable.starship_topview);
                 break;
             case 5:
-                mStarshipPlans.setImageResource(R.drawable.earth_spinning);
+                mStarshipPlans.setImageResource(R.drawable.earth_still);
                 break;
 
         }
@@ -1149,6 +1217,10 @@ public class TrycorderFragment extends Fragment
         startActivity(i);
     }
 
+    private void switchtrycordermode(int mode) {
+        mOnTrycorderInteractionListener.onTrycorderModeChange(mode);
+    }
+
     // =========================================================================================
     // map activity to see where we are on the map of this planet
     private float longitude=0.0f;
@@ -1206,10 +1278,10 @@ public class TrycorderFragment extends Fragment
         mTraSensorView.setVisibility(View.GONE);
         mTrbSensorView.setVisibility(View.GONE);
         mMotSensorView.setVisibility(View.GONE);
-        mStartrekLogo.setVisibility(View.GONE);
+        mEarthStill.setVisibility(View.GONE);
         switch (no) {
             case 0:
-                mStartrekLogo.setVisibility(View.VISIBLE);
+                mEarthStill.setVisibility(View.VISIBLE);
                 break;
             case 1:
                 mMagSensorView.setVisibility(View.VISIBLE);
@@ -1404,35 +1476,38 @@ public class TrycorderFragment extends Fragment
     }
 
     private void motorimpulse() {
-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.power_up1_clean);
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.voy_core_2);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Engage Impulse Engine");
         switchsensorlayout(10);
         mMotSensorView.setmode(1);
         startsensors(10);
         switchviewer(7);
+        switchanimate(1);
         if(isChatty) speak("Impulse Engine Engaged");
     }
 
     private void motoroff() {
-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.motor_down);
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_slowwarp_clean2);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Motor Off");
         switchsensorlayout(10);
         mMotSensorView.setmode(0);
         stopsensors();
         switchviewer(7);
+        switchanimate(0);
         if(isChatty) speak("All engines down");
     }
 
     private void motorwarp() {
-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.motor_start);
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.tng_warp5_clean);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
         say("Engage Warp Drive");
         switchsensorlayout(10);
         mMotSensorView.setmode(2);
         startsensors(10);
         switchviewer(7);
+        switchanimate(2);
         if(isChatty) speak("Warp Drive Engaged");
     }
 
@@ -1455,6 +1530,31 @@ public class TrycorderFragment extends Fragment
         startsensors(7);
         if(isChatty) speak("The ship is destroyed");
     }
+
+    private void switchanimate(int no) {
+        mImageEarthStill.setVisibility(View.GONE);
+        //mGifDecoderView1.setVisibility(View.GONE);
+        //mGifDecoderView.setVisibility(View.GONE);
+        mGIFView.setVisibility(View.GONE);
+        mGIFView1.setVisibility(View.GONE);
+        switch(no) {
+            case 0:
+                mImageEarthStill.setVisibility(View.VISIBLE);
+                break;
+            case 1:
+                mGIFView1.setVisibility(View.VISIBLE);
+                mGIFView1.start();
+                //mGifDecoderView1.setVisibility(View.VISIBLE);
+                break;
+            case 2:
+                mGIFView.setVisibility(View.VISIBLE);
+                mGIFView.start();
+                //mGifDecoderView.setVisibility(View.VISIBLE);
+                break;
+
+        }
+    }
+
 
     // ==========================================================================================
     // start sensor background sound
@@ -1532,7 +1632,7 @@ public class TrycorderFragment extends Fragment
         private Paint mPaint = new Paint();
         private Paint mPaint2 = new Paint();
         private Canvas mCanvas = new Canvas();
-
+        private Bitmap motorBitmap;
         private int mWidth;
         private int mHeight;
 
@@ -1551,7 +1651,7 @@ public class TrycorderFragment extends Fragment
             mPaint.setColor(Color.WHITE);
             // line paint
             mPaint2.setFlags(Paint.ANTI_ALIAS_FLAG);
-            mPaint2.setStrokeWidth(2);
+            mPaint2.setStrokeWidth(3);
             mPaint2.setStyle(Paint.Style.STROKE);
             mPaint2.setColor(Color.MAGENTA);
         }
@@ -1579,7 +1679,11 @@ public class TrycorderFragment extends Fragment
             position=1;
             timer = new Timer("motor");
             myTimer = new MyTimer();
-            timer.schedule(myTimer, 10L, 10L);
+            if(mode==1) {
+                timer.schedule(myTimer, 50L, 50L);
+            } else {
+                timer.schedule(myTimer, 10L, 10L);
+            }
         }
 
         private class MyTimer extends TimerTask {
@@ -1598,11 +1702,16 @@ public class TrycorderFragment extends Fragment
         // init the view state variables to initial values
         @Override
         protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            // create the canvas bitmap to draw the animation
             mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
             mCanvas.setBitmap(mBitmap);
             mCanvas.drawColor(Color.BLACK);
             mWidth = w;
             mHeight = h;
+            // create a motor background
+            Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.warpcore);
+            motorBitmap = Bitmap.createScaledBitmap(bm,w,h,true);
+            // call the super class
             super.onSizeChanged(w, h, oldw, oldh);
         }
 
@@ -1613,16 +1722,18 @@ public class TrycorderFragment extends Fragment
                 if (mBitmap != null) {
                     // clear the surface
                     mCanvas.drawColor(Color.BLACK);
+                    // draw the background motor bitmap
+                    mCanvas.drawBitmap(motorBitmap,18,0,null);
                     // draw the shield effect
-                    if(mode==1) mPaint2.setColor(Color.RED);
-                    else mPaint2.setColor(Color.YELLOW);
+                    if(mode==1) mPaint2.setColor(Color.MAGENTA);
+                    else mPaint2.setColor(Color.BLUE);
                     if(position!=0) {
                         // compute positions
                         float px=mWidth/2;
-                        float dx=position;
-                        mCanvas.drawLine(px,mHeight,px-dx,0,mPaint2);
-                        mCanvas.drawLine(px,mHeight,px,0,mPaint2);
-                        mCanvas.drawLine(px,mHeight,px+dx,0,mPaint2);
+                        float py=(mHeight/6)*4;
+                        float dy=(((float)mHeight)/180)*position;
+                        mCanvas.drawCircle(px,py-dy,16,mPaint2);
+                        mCanvas.drawCircle(px,py-dy,32,mPaint2);
                     }
                     // transfer the bitmap to the view
                     viewcanvas.drawBitmap(mBitmap, 0, 0, null);
@@ -3709,7 +3820,7 @@ public class TrycorderFragment extends Fragment
         return "INTERNET is Off\n";
     }
 
-    // check internet connectivity
+    // check internet connectivity (Hi! Elvis)
     public boolean checkInternet() {
         ConnectivityManager connect = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connect.getNetworkInfo(0).getState() == NetworkInfo.State.CONNECTED
@@ -3763,7 +3874,7 @@ public class TrycorderFragment extends Fragment
     private String fetch_sensors_list() {
         StringBuffer buffer=new StringBuffer("");
         List<Sensor> mList= mSensorManager.getSensorList(Sensor.TYPE_ALL);
-        for (int i = 1; i < mList.size(); i++) {
+        for (int i = 0; i < mList.size(); i++) {
             buffer.append(mList.get(i).getName() + " - " + mList.get(i).getVendor() + " - " + mList.get(i).getType() + "\n");
         }
         return buffer.toString();

@@ -142,7 +142,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.25"
+                android:layout_weight="0.15"
                 android:ellipsize="middle" />
 
             <Button
@@ -163,7 +163,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.25" />
+                android:layout_weight="0.15" />
 
             <Button
                 android:id="@+id/comm_button"
@@ -183,7 +183,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.25" />
+                android:layout_weight="0.15" />
 
             <Button
                 android:id="@+id/shield_button"
@@ -203,7 +203,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.25" />
+                android:layout_weight="0.15" />
 
             <Button
                 android:id="@+id/fire_button"
@@ -223,7 +223,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.25" />
+                android:layout_weight="0.15" />
 
             <Button
                 android:id="@+id/transporter_button"
@@ -243,7 +243,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.25" />
+                android:layout_weight="0.15" />
 
             <Button
                 android:id="@+id/tractor_button"
@@ -263,7 +263,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/motor_button"
@@ -283,7 +283,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.5" />
+                android:layout_weight="0.25" />
 
             <Button
                 android:id="@+id/viewer_button"
@@ -303,7 +303,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="0.25" />
+                android:layout_weight="0.15" />
 
             <Button
                 android:id="@+id/logs_button"
@@ -324,6 +324,27 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="0.25"
+                android:ellipsize="middle" />
+
+            <Button
+                android:id="@+id/mode_button"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginBottom="@dimen/button_margin"
+                android:layout_marginEnd="@dimen/button_margin"
+                android:layout_marginStart="@dimen/button_margin"
+                android:layout_marginTop="@dimen/button_margin"
+                android:layout_weight="1"
+                android:background="@drawable/trekbutton_gray_right"
+                android:maxLines="1"
+                android:text="MODE"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.10"
                 android:ellipsize="middle" />
 
 
@@ -406,7 +427,7 @@
                         android:orientation="horizontal">
 
                         <ImageView
-                            android:id="@+id/startrek_logo"
+                            android:id="@+id/earth_still"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:src="@drawable/earth_still"
@@ -990,7 +1011,16 @@
                         android:id="@+id/viewer_animate"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:visibility="gone"/>
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/image_earthstill"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/earth_still"
+                            android:visibility="gone"/>
+
+                    </FrameLayout>
 
                     <ScrollView
                         android:layout_width="match_parent"

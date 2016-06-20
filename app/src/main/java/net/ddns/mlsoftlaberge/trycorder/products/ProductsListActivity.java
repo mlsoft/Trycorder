@@ -214,21 +214,16 @@ public class ProductsListActivity extends ListActivity implements
         insfile("47534","ToiletPaper","0-99999-11111-0","Space proof simple toilet paper rolls");
         insfile("12","Doctors","0-99999-11111-0","Doctors who can practice medecine");
         insfile("3","Consultant","0-99999-11111-0","Shrink");
-        insfile("10","Bob9","0-99999-11111-0","Bob");
-        insfile("10","Bob10","0-99999-11111-0","Bob");
-        insfile("10","Bob11","0-99999-11111-0","Bob");
-        insfile("10","Bob12","0-99999-11111-0","Bob");
-        insfile("10","Bob13","0-99999-11111-0","Bob");
-        insfile("10","Bob14","0-99999-11111-0","Bob");
-        insfile("10","Bob15","0-99999-11111-0","Bob");
-        insfile("10","Bob16","0-99999-11111-0","Bob");
-        insfile("10","Bob17","0-99999-11111-0","Bob");
-        insfile("10","Bob18","0-99999-11111-0","Bob");
-        insfile("10","Bob19","0-99999-11111-0","Bob");
-        insfile("10","Bob20","0-99999-11111-0","Bob");
-        insfile("10","Bob21","0-99999-11111-0","Bob");
-        insfile("10","Bob22","0-99999-11111-0","Bob");
-        insfile("10","Bob23","0-99999-11111-0","Bob");
+        insfile("10","Antiproton Inhibitors","0-99999-11111-0","Transporter fuel containers");
+        insfile("256","Escape Pods","0-99999-11111-0","Whatatatow");
+        insfile("12","Vulcan Ale","0-99999-11111-0","OOps, Prohibited, but have a special allowance from Kirk.");
+        insfile("1","Cardassian Dildo","0-99999-11111-0","For Sick Bay purposes. (Which?)");
+        insfile("10","Federation flags","0-99999-11111-0","For ceremony purposes. (Like spock first death)");
+        insfile("10000","Crew Uniforms","0-99999-11111-0","To Stay clean-cut");
+        insfile("5","Worf's furnitures","0-99999-11111-0","To replace broken ones");
+        insfile("128","Bathrooms","0-99999-11111-0","To use when needed");
+        insfile("20","Pools","0-99999-11111-0","Recreation and Rescue");
+        insfile("2500","Trycorder","0-99999-11111-0","Ship operation and evaluation controllers");
     }
 
     private void insfile(String qty,String name, String upc, String desc) {
