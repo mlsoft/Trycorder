@@ -15,7 +15,7 @@
         android:weightSum="10">
 
         <ImageButton
-            android:id="@+id/talk_button"
+            android:id="@+id/backtop_button"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginEnd="@dimen/button_margin"
@@ -43,16 +43,16 @@
                 android:weightSum="6">
 
                 <Button
-                    android:id="@+id/sound_button"
+                    android:id="@+id/back_button"
                     android:layout_width="0dp"
                     android:layout_height="32dp"
                     android:layout_gravity="center"
                     android:layout_marginEnd="@dimen/button_margin"
                     android:layout_marginStart="@dimen/button_margin"
                     android:layout_weight="1.5"
-                    android:background="@drawable/trekbutton_gray_center"
+                    android:background="@drawable/trekbutton_indigo_center"
                     android:maxLines="1"
-                    android:text="Sound"
+                    android:text="Back"
                     android:textSize="18sp" />
 
                 <Button
@@ -82,7 +82,7 @@
                     android:textStyle="bold" />
 
                 <Button
-                    android:id="@+id/mode_button"
+                    android:id="@+id/reset_button"
                     android:layout_width="0dp"
                     android:layout_height="32dp"
                     android:layout_marginEnd="@dimen/button_margin"
@@ -90,7 +90,7 @@
                     android:layout_weight="1.5"
                     android:background="@drawable/trekbutton_gray_right"
                     android:maxLines="1"
-                    android:text="MODE"
+                    android:text="Reset"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -108,7 +108,7 @@
                     android:id="@+id/textstatus_top"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:text="top status"
+                    android:text="Videos Viewer"
                     android:textColor="@android:color/holo_green_light"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -127,8 +127,27 @@
         android:layout_weight="80"
         android:background="@android:color/black"
         android:baselineAligned="false"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:weightSum="10">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="6">
+
+            <ListView
+                android:id="@+id/list_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        </ScrollView>
+
+        <VideoView
+            android:id="@+id/video_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_gravity="center"
+            android:layout_weight="4" />
 
     </LinearLayout>
 
