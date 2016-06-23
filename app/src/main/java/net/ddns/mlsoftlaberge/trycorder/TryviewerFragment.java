@@ -1,6 +1,8 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
@@ -13,9 +15,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.MediaController;
 import android.widget.TextView;
@@ -101,6 +107,7 @@ public class TryviewerFragment extends Fragment {
 
     // the list of videos to view
     private ListView mListView;
+    private ListUriAdapter mListUriAdapter;
 
     // the video view widget to show contents
     private VideoView mVideoView;
@@ -229,7 +236,21 @@ public class TryviewerFragment extends Fragment {
         // the center layout to show contents
         mCenterLayout = (LinearLayout) view.findViewById(R.id.center_layout);
 
+        // start the filling of the list with uris of videos
+        filllistview();
+
+        // the list containing the names of files to display
         mListView = (ListView) view.findViewById(R.id.list_view);
+        mListUriAdapter = new ListUriAdapter(getActivity(),mImageUris);
+        mListView.setAdapter(mListUriAdapter);
+        mListView.setClickable(true);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                buttonsound();
+                listuriclicked(position);
+            }
+        });
 
         mVideoView = (VideoView) view.findViewById(R.id.video_view);
 
@@ -256,8 +277,6 @@ public class TryviewerFragment extends Fragment {
         mRecordButton.setTypeface(face2);
         mGalleryButton.setTypeface(face2);
         mTextstatus_bottom.setTypeface(face3);
-        // start the filling of the list
-        filllistview();
     }
 
     @Override
@@ -312,8 +331,8 @@ public class TryviewerFragment extends Fragment {
     //private Uri staticUri =  Uri.parse("android.resource://"
     //        + getActivity().getPackageName()
     //        + "/" + R.raw.powers_of_ten);
-    private Uri staticUri =  Uri.parse("android.resource://net.ddns.mlsoftlaberge.trycorder"
-            + "/" + R.raw.powers_of_ten);
+    //private Uri staticUri =  Uri.parse("android.resource://net.ddns.mlsoftlaberge.trycorder"
+    //        + "/" + R.raw.powers_of_ten);
 
     private Uri dynamicUri = null;
 
@@ -326,9 +345,7 @@ public class TryviewerFragment extends Fragment {
             mMediaController.setAnchorView(mVideoView);
             mVideoView.setMediaController(mMediaController);
         }
-        if(dynamicUri==null) {
-            mVideoView.setVideoURI(staticUri);
-        } else {
+        if(dynamicUri!=null) {
             mVideoView.setVideoURI(dynamicUri);
         }
         mVideoView.requestFocus();
@@ -355,7 +372,7 @@ public class TryviewerFragment extends Fragment {
 
     // ======================== Image list loader ==========================================
 
-    private List<Uri> mImageUris = new ArrayList<Uri>();
+    private ArrayList<Uri> mImageUris = new ArrayList<Uri>();
     private int currenturi=0;
 
     private void filllistview() {
@@ -383,6 +400,34 @@ public class TryviewerFragment extends Fragment {
             }
         }
         say("Videos Uris loaded");
+    }
+
+    public class ListUriAdapter extends ArrayAdapter<Uri> {
+        public ListUriAdapter(Context context, ArrayList<Uri> uris) {
+            super(context, 0, uris);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            // Get the data item for this position
+            Uri uri = getItem(position);
+            // Check if an existing view is being reused, otherwise inflate the view
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.tryviewer_row, parent, false);
+            }
+            // Lookup view for data population
+            TextView label = (TextView) convertView.findViewById(R.id.label);
+            ImageView icon = (ImageView) convertView.findViewById(R.id.icon);
+            // Populate the data into the template view using the data object
+            label.setText(uri.toString());
+            // Return the completed view to render on screen
+            return convertView;
+        }
+    }
+
+    private void listuriclicked(int position) {
+        dynamicUri=mImageUris.get(position);
+        startvideo();
     }
 
 

@@ -52,7 +52,7 @@ public class TrycorderActivity extends FragmentActivity implements
 
     @Override
     public void onTrycorderModeChange(int mode) {
-        Toast.makeText(this, "Trycorder mode changed : " + mode, Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "Trycorder mode changed : " + mode, Toast.LENGTH_LONG).show();
         // start the fragment full screen
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(android.R.id.content, mTryviewerFragment, TAG);
@@ -61,7 +61,7 @@ public class TrycorderActivity extends FragmentActivity implements
 
     @Override
     public void onTryviewerModeChange(int mode) {
-        Toast.makeText(this, "Tryviewer mode changed : " + mode, Toast.LENGTH_LONG).show();
+        //Toast.makeText(this, "Tryviewer mode changed : " + mode, Toast.LENGTH_LONG).show();
         // start the fragment full screen
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(android.R.id.content, mTrycorderFragment, TAG);
