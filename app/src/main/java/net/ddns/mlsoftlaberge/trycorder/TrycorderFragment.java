@@ -251,10 +251,12 @@ public class TrycorderFragment extends Fragment
     private Button mLogsInfoButton;
     private Button mLogsPlansButton;
     private Button mLogsSysButton;
-    private Button mLogsCrewButton;
-    private Button mLogsInvButton;
 
     private Button mModeButton;
+    private Button mModePhotogalButton;
+    private Button mModeVideogalButton;
+    private Button mModeCrewButton;
+    private Button mModeInvButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -273,6 +275,7 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mButtonsmotorLayout;
     private LinearLayout mButtonsviewerLayout;
     private LinearLayout mButtonslogsLayout;
+    private LinearLayout mButtonsmodeLayout;
     private int mButtonsmode = 0;
 
     // the bottom right layout for viewing media
@@ -418,7 +421,8 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                opengallery();
+                //opengallery();
+                switchtrycordermode(2);
             }
         });
 
@@ -800,24 +804,6 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        mLogsCrewButton = (Button) view.findViewById(R.id.logscrew_button);
-        mLogsCrewButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                buttonsound();
-                accesscrew();
-            }
-        });
-
-        mLogsInvButton = (Button) view.findViewById(R.id.logsinv_button);
-        mLogsInvButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                buttonsound();
-                accessinventory();
-            }
-        });
-
         // ===================== switch mode button ============================
         // the viewer button
         mModeButton = (Button) view.findViewById(R.id.mode_button);
@@ -825,7 +811,43 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                switchbuttonlayout(10);
+            }
+        });
+
+        mModePhotogalButton = (Button) view.findViewById(R.id.mode_photogal_button);
+        mModePhotogalButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
                 switchtrycordermode(2);
+            }
+        });
+
+        mModeVideogalButton = (Button) view.findViewById(R.id.mode_videogal_button);
+        mModeVideogalButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchtrycordermode(3);
+            }
+        });
+
+        mModeCrewButton = (Button) view.findViewById(R.id.mode_contact_button);
+        mModeCrewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                accesscrew();
+            }
+        });
+
+        mModeInvButton = (Button) view.findViewById(R.id.mode_product_button);
+        mModeInvButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                accessinventory();
             }
         });
 
@@ -844,6 +866,7 @@ public class TrycorderFragment extends Fragment
         mButtonsmotorLayout = (LinearLayout) view.findViewById(R.id.buttons_motor_layout);
         mButtonsviewerLayout = (LinearLayout) view.findViewById(R.id.buttons_viewer_layout);
         mButtonslogsLayout = (LinearLayout) view.findViewById(R.id.buttons_logs_layout);
+        mButtonsmodeLayout = (LinearLayout) view.findViewById(R.id.buttons_mode_layout);
 
         // the viewer layout, to contain my surfaceview and some logs and infos
         mViewerLayout = (LinearLayout) view.findViewById(R.id.viewer_layout);
@@ -1050,8 +1073,11 @@ public class TrycorderFragment extends Fragment
         mLogsInfoButton.setTypeface(face2);
         mLogsPlansButton.setTypeface(face2);
         mLogsSysButton.setTypeface(face2);
-        mLogsCrewButton.setTypeface(face2);
-        mLogsInvButton.setTypeface(face2);
+
+        mModePhotogalButton.setTypeface(face2);
+        mModeVideogalButton.setTypeface(face2);
+        mModeCrewButton.setTypeface(face2);
+        mModeInvButton.setTypeface(face2);
     }
 
     @Override
@@ -1330,6 +1356,7 @@ public class TrycorderFragment extends Fragment
         mButtonsmotorLayout.setVisibility(View.GONE);
         mButtonsviewerLayout.setVisibility(View.GONE);
         mButtonslogsLayout.setVisibility(View.GONE);
+        mButtonsmodeLayout.setVisibility(View.GONE);
         switch (no) {
             case 1:
                 say("Sensors Mode");
@@ -1366,6 +1393,10 @@ public class TrycorderFragment extends Fragment
             case 9:
                 say("Logs Mode");
                 mButtonslogsLayout.setVisibility(View.VISIBLE);
+                break;
+            case 10:
+                say("Mode Mode");
+                mButtonsmodeLayout.setVisibility(View.VISIBLE);
                 break;
         }
         mButtonsmode = no;

@@ -14,21 +14,24 @@ import android.widget.Toast;
  */
 public class TrycorderActivity extends FragmentActivity implements
         TrycorderFragment.OnTrycorderInteractionListener,
-        TryviewerFragment.OnTryviewerInteractionListener {
+        TryviewerFragment.OnTryviewerInteractionListener,
+        TrygalleryFragment.OnTrygalleryInteractionListener {
 
     private static String TAG = "Trycorder";
 
     private TrycorderFragment mTrycorderFragment;
     private TryviewerFragment mTryviewerFragment;
+    private TrygalleryFragment mTrygalleryFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // ask the permissions
         askpermissions();
-        // create the 2 fragments
+        // create the 3 fragments
         mTrycorderFragment=new TrycorderFragment();
         mTryviewerFragment=new TryviewerFragment();
+        mTrygalleryFragment=new TrygalleryFragment();
         // start the fragment full screen
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.add(android.R.id.content, mTrycorderFragment, TAG);
@@ -52,21 +55,38 @@ public class TrycorderActivity extends FragmentActivity implements
 
     @Override
     public void onTrycorderModeChange(int mode) {
-        //Toast.makeText(this, "Trycorder mode changed : " + mode, Toast.LENGTH_LONG).show();
-        // start the fragment full screen
-        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(android.R.id.content, mTryviewerFragment, TAG);
-        ft.commit();
+        switchfragment(mode);
     }
 
     @Override
     public void onTryviewerModeChange(int mode) {
-        //Toast.makeText(this, "Tryviewer mode changed : " + mode, Toast.LENGTH_LONG).show();
-        // start the fragment full screen
-        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(android.R.id.content, mTrycorderFragment, TAG);
-        ft.commit();
+        switchfragment(mode);
     }
+
+    @Override
+    public void onTrygalleryModeChange(int mode) {
+        switchfragment(mode);
+    }
+
+    private void switchfragment(int mode) {
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        switch(mode) {
+            case 1:
+                ft.replace(android.R.id.content, mTrycorderFragment, TAG);
+                ft.commit();
+                break;
+            case 2:
+                ft.replace(android.R.id.content, mTrygalleryFragment, TAG);
+                ft.commit();
+                break;
+            case 3:
+                ft.replace(android.R.id.content, mTryviewerFragment, TAG);
+                ft.commit();
+                break;
+        }
+    }
+
+
 
     // ==========================================================================
 

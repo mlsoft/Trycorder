@@ -151,6 +151,7 @@ public class GalleryActivity extends Activity implements
     // ======================== Image list loader ==========================================
 
     private void loadimageuris() {
+        mImageUris.clear();
         String path = Environment.getExternalStorageDirectory().toString()+"/DCIM/Camera";
         Log.d("Files", "Path: " + path);
         File f = new File(path);

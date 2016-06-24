@@ -758,7 +758,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
                     <Button
@@ -875,7 +875,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="17"
+                        android:layout_weight="25"
                         android:background="@drawable/trekbutton_blue_left"
                         android:text="Logs"
                         android:textSize="18sp" />
@@ -887,7 +887,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="17"
+                        android:layout_weight="25"
                         android:background="@drawable/trekbutton_blue_center"
                         android:text="Info"
                         android:textSize="18sp" />
@@ -899,7 +899,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="17"
+                        android:layout_weight="25"
                         android:background="@drawable/trekbutton_blue_center"
                         android:text="Plan"
                         android:textSize="18sp" />
@@ -911,33 +911,71 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="17"
-                        android:background="@drawable/trekbutton_blue_center"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_blue_right"
                         android:text="Sys"
                         android:textSize="18sp" />
 
+
+                </LinearLayout>
+
+                <!-- ========== button layout for mode ============== -->
+                <LinearLayout
+                    android:id="@+id/buttons_mode_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="visible"
+                    android:weightSum="100">
+
                     <Button
-                        android:id="@+id/logscrew_button"
+                        android:id="@+id/mode_photogal_button"
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="16"
-                        android:background="@drawable/trekbutton_blue_center"
-                        android:text="Crew"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_gray_left"
+                        android:text="Photo Gallery"
                         android:textSize="18sp" />
 
                     <Button
-                        android:id="@+id/logsinv_button"
+                        android:id="@+id/mode_videogal_button"
                         android:layout_width="0dp"
                         android:layout_height="48dp"
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="16"
-                        android:background="@drawable/trekbutton_blue_right"
-                        android:text="Inv"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_gray_center"
+                        android:text="Video Gallery"
+                        android:textSize="18sp" />
+
+                    <Button
+                        android:id="@+id/mode_contact_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_gray_center"
+                        android:text="Crew Info"
+                        android:textSize="18sp" />
+
+                    <Button
+                        android:id="@+id/mode_product_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="25"
+                        android:background="@drawable/trekbutton_gray_right"
+                        android:text="Ship Invent."
                         android:textSize="18sp" />
 
 
