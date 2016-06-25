@@ -261,13 +261,17 @@ public class TrygalleryFragment extends Fragment implements
     private void buttonsend() {
         if(mImageUris==null) return;
         Uri uri = mImageUris.get(currenturi);
+        String filepath = uri.toString();
         // send this image to someone
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        //shareIntent.setData(uri);
         shareIntent.setType("image/*");
-        // For a file in shared storage.  For data in private storage, use a ContentProvider.
-        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-        startActivity(shareIntent);
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT,"Image");
+        shareIntent.putExtra(Intent.EXTRA_TEXT,"From my Trycorder\n"+uri.toString());
+        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+filepath));
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        //shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        startActivity(Intent.createChooser(shareIntent, "Send image to ..."));
     }
 
     // =====================================================================================
