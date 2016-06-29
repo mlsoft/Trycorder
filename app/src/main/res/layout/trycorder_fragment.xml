@@ -937,7 +937,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_gray_left"
                         android:text="Photo Gallery"
                         android:textSize="18sp" />
@@ -949,9 +949,21 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_gray_center"
                         android:text="Video Gallery"
+                        android:textSize="18sp" />
+
+                    <Button
+                        android:id="@+id/mode_walkie_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="20"
+                        android:background="@drawable/trekbutton_gray_center"
+                        android:text="Walkie Talkie"
                         android:textSize="18sp" />
 
                     <Button
@@ -961,7 +973,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_gray_center"
                         android:text="Crew Info"
                         android:textSize="18sp" />
@@ -973,7 +985,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="25"
+                        android:layout_weight="20"
                         android:background="@drawable/trekbutton_gray_right"
                         android:text="Ship Invent."
                         android:textSize="18sp" />

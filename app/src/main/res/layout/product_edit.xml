@@ -157,6 +157,8 @@
             android:hint="0"
             android:lines="1"
             android:maxLines="1"
+            android:inputType="number|numberSigned|numberDecimal"
+            android:imeOptions="actionNext"
             android:textColor="@android:color/white"
             android:textSize="20sp" />
 
@@ -189,6 +191,8 @@
             android:hint="Name"
             android:lines="1"
             android:maxLines="1"
+            android:inputType="text"
+            android:imeOptions="actionNext"
             android:textColor="@android:color/white"
             android:textSize="20sp" />
 
@@ -222,6 +226,8 @@
             android:hint="UPC"
             android:lines="1"
             android:maxLines="1"
+            android:inputType="text"
+            android:imeOptions="actionNext"
             android:textColor="@android:color/white"
             android:textSize="20sp" />
 
@@ -253,6 +259,8 @@
             android:background="@android:color/black"
             android:gravity="top"
             android:hint="Description"
+            android:inputType="text"
+            android:imeOptions="actionDone"
             android:textColor="@android:color/white"
             android:textSize="20sp" />
 

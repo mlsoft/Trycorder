@@ -9,19 +9,26 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.widget.Toast;
 
+import net.ddns.mlsoftlaberge.trycorder.trycorder.TrycorderFragment;
+import net.ddns.mlsoftlaberge.trycorder.trygallery.TrygalleryFragment;
+import net.ddns.mlsoftlaberge.trycorder.tryviewer.TryviewerFragment;
+import net.ddns.mlsoftlaberge.trycorder.trywalkie.TrywalkieFragment;
+
 /**
  * Created by mlsoft on 16-05-13.
  */
 public class TrycorderActivity extends FragmentActivity implements
         TrycorderFragment.OnTrycorderInteractionListener,
         TryviewerFragment.OnTryviewerInteractionListener,
-        TrygalleryFragment.OnTrygalleryInteractionListener {
+        TrygalleryFragment.OnTrygalleryInteractionListener,
+        TrywalkieFragment.OnTrywalkieInteractionListener {
 
     private static String TAG = "Trycorder";
 
     private TrycorderFragment mTrycorderFragment;
-    private TryviewerFragment mTryviewerFragment;
     private TrygalleryFragment mTrygalleryFragment;
+    private TryviewerFragment mTryviewerFragment;
+    private TrywalkieFragment mTrywalkieFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,8 +37,9 @@ public class TrycorderActivity extends FragmentActivity implements
         askpermissions();
         // create the 3 fragments
         mTrycorderFragment=new TrycorderFragment();
-        mTryviewerFragment=new TryviewerFragment();
         mTrygalleryFragment=new TrygalleryFragment();
+        mTryviewerFragment=new TryviewerFragment();
+        mTrywalkieFragment=new TrywalkieFragment();
         // start the fragment full screen
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.add(android.R.id.content, mTrycorderFragment, TAG);
@@ -59,12 +67,17 @@ public class TrycorderActivity extends FragmentActivity implements
     }
 
     @Override
+    public void onTrygalleryModeChange(int mode) {
+        switchfragment(mode);
+    }
+
+    @Override
     public void onTryviewerModeChange(int mode) {
         switchfragment(mode);
     }
 
     @Override
-    public void onTrygalleryModeChange(int mode) {
+    public void onTrywalkieModeChange(int mode) {
         switchfragment(mode);
     }
 
@@ -81,6 +94,10 @@ public class TrycorderActivity extends FragmentActivity implements
                 break;
             case 3:
                 ft.replace(android.R.id.content, mTryviewerFragment, TAG);
+                ft.commit();
+                break;
+            case 4:
+                ft.replace(android.R.id.content, mTrywalkieFragment, TAG);
                 ft.commit();
                 break;
         }
