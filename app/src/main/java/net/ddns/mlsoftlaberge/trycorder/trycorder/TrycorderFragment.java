@@ -2250,11 +2250,36 @@ public class TrycorderFragment extends Fragment
         mLogsConsole.setText(logbuffer);
     }
 
+    // ==============================================================================
+    // accents resource : éèêë áàâä íìîï óòôö úùûü çÇ
+    // ==============================================================================
     private boolean matchvoice(String textein) {
         String texte = textein.toLowerCase();
-        if (texte.contains("martin")) {
-            switchbuttonlayout(0);
-            speak("Martin is my Master.");
+        if (texte.contains("french") || texte.contains("français")) {
+            listenLanguage="FR";
+            speakLanguage="FR";
+            speak("français");
+            return (true);
+        }
+        if (texte.contains("english") || texte.contains("anglais")) {
+            listenLanguage="EN";
+            speakLanguage="EN";
+            speak("english");
+            return (true);
+        }
+        if (texte.contains("martin") || texte.contains("master")) {
+            if(speakLanguage.equals("FR")) speak("Martin est mon maître.");
+            else speak("Martin is my Master.");
+            return (true);
+        }
+        if (texte.contains("fuck") || texte.contains("shit") || texte.contains("merde")) {
+            if(speakLanguage.equals("FR")) speak("Ce n'est pas très poli");
+            else speak("This is not very polite.");
+            return (true);
+        }
+        if (texte.contains("computer") || texte.contains("ordinateur")) {
+            if(speakLanguage.equals("FR")) speak("Faites votre requète");
+            else speak("State your question");
             return (true);
         }
         if (texte.contains("phaser")) {

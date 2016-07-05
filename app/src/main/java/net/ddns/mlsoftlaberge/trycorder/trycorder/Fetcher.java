@@ -185,7 +185,12 @@ public class Fetcher {
         return result;
     }
 
-    // ====================================================================================
+    public String fetch_ip_address() {
+        NetInfo netinfo = new NetInfo(context);
+        return netinfo.getIPAddress();
+    }
+
+    // ===================================================================================
     // public functions to obtain different infos from network interface
 
     public class NetInfo {

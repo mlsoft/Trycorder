@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -16,13 +17,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import net.ddns.mlsoftlaberge.trycorder.R;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.Fetcher;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -81,7 +94,17 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     // the main contents layout in the center
     private LinearLayout mCenterLayout;
+    private LinearLayout mTopLayout;
+    private LinearLayout mBottomLayout;
 
+    // in the top layout
+    private TextView mMyip;
+    private EditText mDestip;
+    private Button mConnectButton;
+    private TextView mSendedtext;
+    private TextView mReceivedtext;
+
+    // in the bottom layout
     private TextView mLogsConsole;
 
     // the preferences holder
@@ -177,9 +200,26 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
         // the center layout to show contents
         mCenterLayout = (LinearLayout) view.findViewById(R.id.center_layout);
+        mTopLayout = (LinearLayout) view.findViewById(R.id.top_layout);
+        mBottomLayout = (LinearLayout) view.findViewById(R.id.bottom_layout);
 
+        // in the top layout
+        mMyip = (TextView) view.findViewById(R.id.myip_text);
+        mDestip = (EditText) view.findViewById(R.id.destip_text);
+        mConnectButton = (Button) view.findViewById(R.id.connect_button);
+        mConnectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                stopclient();
+                initclient();
+            }
+        });
+        mSendedtext = (TextView) view.findViewById(R.id.sended_msg);
+        mReceivedtext = (TextView) view.findViewById(R.id.received_msg);
+
+        // in the bottom layout
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
-
 
         return view;
 
@@ -200,6 +240,14 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         mSpeakButton.setTypeface(face2);
         mSendButton.setTypeface(face2);
         mTextstatus_bottom.setTypeface(face3);
+        // top layout
+        mMyip.setTypeface(face2);
+        mDestip.setTypeface(face2);
+        mConnectButton.setTypeface(face2);
+        mSendedtext.setTypeface(face3);
+        mReceivedtext.setTypeface(face3);
+        // bottom layout
+        mLogsConsole.setTypeface(face2);
     }
 
     @Override
@@ -213,15 +261,29 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
         // dynamic status part
         mRunStatus = sharedPref.getBoolean("pref_key_run_status", false);
+        mDestip.setText(sharedPref.getString("pref_key_destip", "192.168.0.0"));
+        // override the languages for french
+        speakLanguage="FR";
+        listenLanguage="FR";
+        // fill my fields
+        Fetcher fetcher=new Fetcher(getContext());
+        mMyip.setText(fetcher.fetch_ip_address());
+        // start the listener server
+        initserver();
+        initclient();
     }
 
     @Override
     public void onPause() {
+        super.onPause();
         // save the current status
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean("pref_key_run_status", mRunStatus);
+        editor.putString("pref_key_destip", mDestip.getText().toString());
         editor.commit();
-        super.onPause();
+        // stop the listener server
+        stopserver();
+        stopclient();
     }
 
     // ask the activity to switch to another fragment
@@ -250,14 +312,38 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         mLogsConsole.setText(logbuffer);
     }
 
-
-
     // settings activity incorporation in the display
     public void settingsactivity() {
         say("Settings");
         if(isChatty) speak("Settings");
         Intent i = new Intent(getActivity(), SettingsActivity.class);
         startActivity(i);
+    }
+
+    // =========================================================================
+    // usage of text-to-speech to speak a sensence
+    private TextToSpeech tts=null;
+
+    private void speak(String texte) {
+        if(tts==null) {
+            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    if (status != TextToSpeech.ERROR) {
+                        tts.setLanguage(Locale.US);
+                    }
+                }
+            });
+        }
+        if (speakLanguage.equals("FR")) {
+            tts.setLanguage(Locale.FRENCH);
+        } else if (speakLanguage.equals("EN")) {
+            tts.setLanguage(Locale.US);
+        } else {
+            // default prechoosen language
+        }
+        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
+        say("Speaked: "+texte);
     }
 
     // ========================================================================================
@@ -280,7 +366,7 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
             mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
             //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
@@ -334,91 +420,193 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
     }
 
     @Override
-    public void onResults(Bundle results) {
-        ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        if (dutexte != null && dutexte.size() > 0) {
-            for (int i = 0; i < dutexte.size(); ++i) {
-                String mSentence = dutexte.get(i);
-                if (matchvoice(mSentence)) {
-                    mTextstatus_top.setText(mSentence);
-                    say("Said: " + mSentence);
-                    return;
-                }
-            }
-            mTextstatus_top.setText(dutexte.get(0));
-            say("Understood: " + dutexte.get(0));
-            if(speakLanguage.equals("FR")) speak("Commande inconnue.");
-            else speak("Unknown command.");
-        }
-    }
-
-    @Override
     public void onRmsChanged(float rmsdB) {
     }
 
-    // ==============================================================================
-    // match the understood content with a possible action
-    private boolean matchvoice(String textein) {
-        String texte = textein.toLowerCase();
-        if (texte.contains("french") || texte.contains("français")) {
-            listenLanguage="FR";
-            speakLanguage="FR";
-            speak("français");
-            return (true);
+    @Override
+    public void onResults(Bundle results) {
+        ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        if (dutexte != null && dutexte.size() > 0) {
+            mSendedtext.setText(dutexte.get(0));
+            say("Said:"+dutexte.get(0));
+            sendtext();
         }
-        if (texte.contains("english") || texte.contains("anglais")) {
-            listenLanguage="EN";
-            speakLanguage="EN";
-            speak("english");
-            return (true);
-        }
-        if (texte.contains("martin")) {
-            speak("Martin is my Master.");
-            return (true);
-        }
-        if (texte.contains("fuck") || texte.contains("shit") || texte.contains("merde")) {
-            if(speakLanguage.equals("FR")) speak("Ce n'est pas tres poli");
-            else speak("This is not very polite.");
-            return (true);
-        }
-        if (texte.contains("computer")) {
-            if(speakLanguage.equals("FR")) speak("Faites votre requete");
-            else speak("State your question");
-            return (true);
-        }
-        if (texte.contains("send")) {
-            speak("contents sended");
-            return (true);
-        }
-        return (false);
     }
 
-    // =========================================================================
-    // usage of text-to-speech to speak a sensence
-    private TextToSpeech tts=null;
+    // =====================================================================================
+    // network operations
 
-    private void speak(String texte) {
-        if(tts==null) {
-            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
-                @Override
-                public void onInit(int status) {
-                    if (status != TextToSpeech.ERROR) {
-                        tts.setLanguage(Locale.US);
-                    }
+    public static final int SERVERPORT = 6000;
+
+    Handler updateConversationHandler;
+
+    private ServerSocket serverSocket = null;
+
+    Thread serverThread = null;
+
+    private Socket clientSocket = null;
+
+    Thread clientThread = null;
+
+    // send a message to the other
+    private void sendtext() {
+        say("Send ["+mSendedtext.getText()+"] to "+mDestip.getText());
+        // try to send the message
+        try {
+            String str = mSendedtext.getText().toString();
+            PrintWriter out = new PrintWriter(new BufferedWriter(
+                    new OutputStreamWriter(clientSocket.getOutputStream())),
+                    true);
+            out.println(str);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // initialize the servers
+    private void initserver() {
+        say("Initialize the network server/client");
+        // create the handler to receive events from communication thread
+        updateConversationHandler = new Handler();
+        // start the server thread
+        serverThread = new Thread(new ServerThread());
+        serverThread.start();
+    }
+
+    private void initclient() {
+        // start the client thread
+        clientThread = new Thread(new ClientThread());
+        clientThread.start();
+    }
+
+    // stop the servers
+    private void stopserver() {
+        say("Stop the network");
+        // stop the server thread
+        serverThread.interrupt();
+        // close the socket of the server
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void stopclient() {
+        // close the socket of the client
+        try {
+            clientSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ====================================================================================
+    // server part
+
+    class ServerThread implements Runnable {
+
+        public void run() {
+            Socket socket = null;
+            try {
+                serverSocket = new ServerSocket(SERVERPORT);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            while (!Thread.currentThread().isInterrupted()) {
+
+                try {
+
+                    socket = serverSocket.accept();
+
+                    CommunicationThread commThread = new CommunicationThread(socket);
+                    new Thread(commThread).start();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            });
+            }
         }
-        if (speakLanguage.equals("FR")) {
-            tts.setLanguage(Locale.FRENCH);
-        } else if (speakLanguage.equals("EN")) {
-            tts.setLanguage(Locale.US);
-        } else {
-            // default prechoosen language
-        }
-        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
-        say("Speaked: "+texte);
     }
 
+    class CommunicationThread implements Runnable {
 
+        private Socket commSocket;
+
+        private BufferedReader bufinput;
+
+        public CommunicationThread(Socket socket) {
+
+            this.commSocket = socket;
+
+            try {
+
+                bufinput = new BufferedReader(new InputStreamReader(commSocket.getInputStream()));
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void run() {
+
+            while (!Thread.currentThread().isInterrupted()) {
+
+                try {
+
+                    String read = bufinput.readLine();
+
+                    updateConversationHandler.post(new updateUIThread(read));
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    // tread to update the ui
+    class updateUIThread implements Runnable {
+        private String msg;
+
+        public updateUIThread(String str) {
+            msg = str;
+        }
+
+        @Override
+        public void run() {
+            mReceivedtext.setText( msg );
+            say("Received: "+msg);
+            speak(msg);
+        }
+    }
+
+    // ====================================================================================
+    // client part
+
+    class ClientThread implements Runnable {
+
+        @Override
+        public void run() {
+
+            try {
+                InetAddress serverAddr = InetAddress.getByName(mDestip.getText().toString());
+
+                clientSocket = new Socket(serverAddr, SERVERPORT);
+
+            } catch (UnknownHostException e1) {
+                e1.printStackTrace();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+
+        }
+
+    }
 
 }
