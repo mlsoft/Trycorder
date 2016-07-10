@@ -187,7 +187,7 @@ public class Fetcher {
 
     public String fetch_ip_address() {
         NetInfo netinfo = new NetInfo(context);
-        return netinfo.getIPAddress();
+        return netinfo.getWifiIpAddress();
     }
 
     // ===================================================================================

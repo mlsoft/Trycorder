@@ -1,10 +1,13 @@
-package net.ddns.mlsoftlaberge.trycorder.trywalkie;
+package net.ddns.mlsoftlaberge.trycorder;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -13,6 +16,7 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +29,7 @@ import android.widget.TextView;
 import net.ddns.mlsoftlaberge.trycorder.R;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.Fetcher;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.Speak;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -211,8 +216,6 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
             @Override
             public void onClick(View view) {
                 buttonsound();
-                stopclient();
-                initclient();
             }
         });
         mSendedtext = (TextView) view.findViewById(R.id.sended_msg);
@@ -268,14 +271,15 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         // fill my fields
         Fetcher fetcher=new Fetcher(getContext());
         mMyip.setText(fetcher.fetch_ip_address());
+        // start the speak server
+        initspeak();
         // start the listener server
         initserver();
-        initclient();
+        registerService();
     }
 
     @Override
     public void onPause() {
-        super.onPause();
         // save the current status
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean("pref_key_run_status", mRunStatus);
@@ -283,7 +287,8 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         editor.commit();
         // stop the listener server
         stopserver();
-        stopclient();
+        unregisterService();
+        super.onPause();
     }
 
     // ask the activity to switch to another fragment
@@ -322,27 +327,17 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     // =========================================================================
     // usage of text-to-speech to speak a sensence
-    private TextToSpeech tts=null;
+    private Speak mSpeak=null;
+
+    private void initspeak() {
+        if(mSpeak==null) {
+            mSpeak = new Speak(getContext());
+        }
+    }
 
     private void speak(String texte) {
-        if(tts==null) {
-            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
-                @Override
-                public void onInit(int status) {
-                    if (status != TextToSpeech.ERROR) {
-                        tts.setLanguage(Locale.US);
-                    }
-                }
-            });
-        }
-        if (speakLanguage.equals("FR")) {
-            tts.setLanguage(Locale.FRENCH);
-        } else if (speakLanguage.equals("EN")) {
-            tts.setLanguage(Locale.US);
-        } else {
-            // default prechoosen language
-        }
-        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
+        initspeak();
+        mSpeak.speak(texte,speakLanguage);
         say("Speaked: "+texte);
     }
 
@@ -367,9 +362,9 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
+            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 500);
+            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 200);
 
             // produce a FC on android 4.0.3
             //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
@@ -393,6 +388,7 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     @Override
     public void onBeginningOfSpeech() {
+        Log.d("listen","beginning of speech");
     }
 
     @Override
@@ -401,10 +397,12 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     @Override
     public void onEndOfSpeech() {
+        Log.d("listen","end of speech");
     }
 
     @Override
     public void onError(int error) {
+        Log.d("listen","error: "+error);
     }
 
     @Override
@@ -413,10 +411,12 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     @Override
     public void onPartialResults(Bundle partialResults) {
+        Log.d("listen","partial results");
     }
 
     @Override
     public void onReadyForSpeech(Bundle params) {
+        Log.d("listen","ready for speech");
     }
 
     @Override
@@ -426,17 +426,37 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
     @Override
     public void onResults(Bundle results) {
         ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        if(dutexte!=null) Log.d("listen","nb results: "+dutexte.size());
         if (dutexte != null && dutexte.size() > 0) {
-            mSendedtext.setText(dutexte.get(0));
-            say("Said:"+dutexte.get(0));
-            sendtext();
+            if(!matchvoice(dutexte.get(0))) {
+                mSendedtext.setText(dutexte.get(0));
+                say("Said:" + dutexte.get(0));
+                sendtext();
+            }
         }
+    }
+
+    private boolean matchvoice(String textein) {
+        String texte = textein.toLowerCase();
+        if (texte.contains("french") || texte.contains("français")) {
+            listenLanguage = "FR";
+            speakLanguage = "FR";
+            speak("français");
+            return (true);
+        }
+        if (texte.contains("english") || texte.contains("anglais")) {
+            listenLanguage = "EN";
+            speakLanguage = "EN";
+            speak("english");
+            return (true);
+        }
+        return (false);
     }
 
     // =====================================================================================
     // network operations
 
-    public static final int SERVERPORT = 6000;
+    public static final int SERVERPORT = 1701;  // NCC-1701
 
     Handler updateConversationHandler;
 
@@ -444,43 +464,14 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     Thread serverThread = null;
 
-    private Socket clientSocket = null;
-
-    Thread clientThread = null;
-
-    // send a message to the other
-    private void sendtext() {
-        say("Send ["+mSendedtext.getText()+"] to "+mDestip.getText());
-        // try to send the message
-        try {
-            String str = mSendedtext.getText().toString();
-            PrintWriter out = new PrintWriter(new BufferedWriter(
-                    new OutputStreamWriter(clientSocket.getOutputStream())),
-                    true);
-            out.println(str);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     // initialize the servers
     private void initserver() {
-        say("Initialize the network server/client");
+        say("Initialize the network server");
         // create the handler to receive events from communication thread
         updateConversationHandler = new Handler();
         // start the server thread
         serverThread = new Thread(new ServerThread());
         serverThread.start();
-    }
-
-    private void initclient() {
-        // start the client thread
-        clientThread = new Thread(new ClientThread());
-        clientThread.start();
     }
 
     // stop the servers
@@ -491,15 +482,6 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         // close the socket of the server
         try {
             serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void stopclient() {
-        // close the socket of the client
-        try {
-            clientSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -520,13 +502,15 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
             while (!Thread.currentThread().isInterrupted()) {
 
                 try {
-
+                    Log.d("serverthread","accepting server socket");
                     socket = serverSocket.accept();
+                    Log.d("serverthread","accepted server socket");
 
                     CommunicationThread commThread = new CommunicationThread(socket);
                     new Thread(commThread).start();
 
                 } catch (IOException e) {
+                    Log.d("serverthread","exception "+e.toString());
                     e.printStackTrace();
                 }
             }
@@ -541,13 +525,14 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
         public CommunicationThread(Socket socket) {
 
-            this.commSocket = socket;
+            commSocket = socket;
 
             try {
 
                 bufinput = new BufferedReader(new InputStreamReader(commSocket.getInputStream()));
 
             } catch (IOException e) {
+                Log.d("commthreadinit","exception "+e.toString());
                 e.printStackTrace();
             }
         }
@@ -559,10 +544,12 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
                 try {
 
                     String read = bufinput.readLine();
-
+                    if(read==null) break;
+                    Log.d("commthreadrun","update conversation");
                     updateConversationHandler.post(new updateUIThread(read));
 
                 } catch (IOException e) {
+                    Log.d("commthreadrun","exception "+e.toString());
                     e.printStackTrace();
                 }
             }
@@ -576,37 +563,262 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
         public updateUIThread(String str) {
             msg = str;
+            Log.d("uithread",str);
         }
 
         @Override
         public void run() {
-            mReceivedtext.setText( msg );
-            say("Received: "+msg);
-            speak(msg);
+            if(msg!=null) {
+                mReceivedtext.setText(msg);
+                say("Received: " + msg);
+                speak(msg);
+            }
         }
     }
 
     // ====================================================================================
     // client part
 
+    private Socket clientSocket = null;
+
+    Thread clientThread = null;
+
+    // send a message to the other
+    private void sendtext() {
+        say("Send ["+mSendedtext.getText()+"] to "+mDestip.getText());
+        String str = mSendedtext.getText().toString();
+        // start the client thread
+        clientThread = new Thread(new ClientThread(str));
+        clientThread.start();
+    }
+
     class ClientThread implements Runnable {
+
+        private String mesg;
+
+        public ClientThread(String str) {
+            mesg=str;
+        }
 
         @Override
         public void run() {
-
+            // try to connect to a socket
             try {
+                Log.d("clientthread","try to connect to a server");
                 InetAddress serverAddr = InetAddress.getByName(mDestip.getText().toString());
-
                 clientSocket = new Socket(serverAddr, SERVERPORT);
-
+                Log.d("clientthread","server connected");
             } catch (UnknownHostException e1) {
+                Log.d("clientthread",e1.toString());
                 e1.printStackTrace();
             } catch (IOException e1) {
+                Log.d("clientthread",e1.toString());
                 e1.printStackTrace();
             }
-
+            // try to send the message
+            try {
+                Log.d("clientthread","sending data");
+                PrintWriter out = new PrintWriter(new BufferedWriter(
+                        new OutputStreamWriter(clientSocket.getOutputStream())), true);
+                out.println(mesg);
+                Log.d("clientthread","data sent");
+            } catch (UnknownHostException e) {
+                Log.d("clientthread",e.toString());
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.d("clientthread",e.toString());
+                e.printStackTrace();
+            } catch (Exception e) {
+                Log.d("clientthread",e.toString());
+                e.printStackTrace();
+            }
+            // try to close the socket of the client
+            try {
+                Log.d("clientthread","closing socket");
+                clientSocket.close();
+                Log.d("clientthread","socket closed");
+            } catch (Exception e) {
+                Log.d("clientthread",e.toString());
+                e.printStackTrace();
+            }
         }
 
+    }
+
+    // =====================================================================================
+    // register my service with NSD
+
+    private String mServiceName;
+    private NsdManager mNsdManager;
+    private NsdManager.RegistrationListener mRegistrationListener;
+    private NsdManager.DiscoveryListener mDiscoveryListener;
+    private NsdManager.ResolveListener mResolveListener;
+    private NsdServiceInfo mService;
+    private String SERVICE_TYPE="_http._tcp.";
+    private String SERVICE_NAME="Trycorder";
+
+    public void registerService() {
+        mNsdManager = (NsdManager) getContext().getSystemService(Context.NSD_SERVICE);
+
+        NsdServiceInfo serviceInfo  = new NsdServiceInfo();
+        serviceInfo.setServiceName(SERVICE_NAME);
+        serviceInfo.setServiceType(SERVICE_TYPE);
+        serviceInfo.setPort(SERVERPORT);
+
+        initializeRegistrationListener();
+
+        mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
+
+        initializeResolveListener();
+
+        initializeDiscoveryListener();
+
+        mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+
+    }
+
+    public void unregisterService() {
+        mNsdManager.unregisterService(mRegistrationListener);
+        mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+    }
+
+    public void initializeRegistrationListener() {
+        mRegistrationListener = new NsdManager.RegistrationListener() {
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo NsdServiceInfo) {
+                // Save the service name.  Android may have changed it in order to
+                // resolve a conflict, so update the name you initially requested
+                // with the name Android actually used.
+                mServiceName = NsdServiceInfo.getServiceName();
+                Log.d("registration", "Registration done: "+mServiceName);
+            }
+
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Registration failed!  Put debugging code here to determine why.
+                Log.d("registration", "Registration failed");
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo arg0) {
+                // Service has been unregistered.  This only happens when you call
+                // NsdManager.unregisterService() and pass in this listener.
+                Log.d("registration", "Unregistration done");
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Unregistration failed.  Put debugging code here to determine why.
+                Log.d("registration", "Unregistration failed");
+            }
+        };
+    }
+
+    public void initializeResolveListener() {
+        mResolveListener = new NsdManager.ResolveListener() {
+
+            @Override
+            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Called when the resolve fails.  Use the error code to debug.
+                Log.e("discovery", "Resolve failed: " + errorCode);
+            }
+
+            @Override
+            public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                Log.e("discovery", "Resolve Succeeded: " + serviceInfo);
+
+                if (serviceInfo.getServiceName().equals(mServiceName)) {
+                    Log.d("discovery", "Same IP.");
+                    return;
+                }
+                mService = serviceInfo;
+                int port = mService.getPort();
+                InetAddress host = mService.getHost();
+                Log.d("discovery","Host: "+host.toString()+" Port: "+port);
+                updateConversationHandler.post(new sayThread("Resolved "+mService.getServiceName()+
+                        " Host: "+host.toString()+" Port: "+port));
+            }
+        };
+    }
+
+    public void initializeDiscoveryListener() {
+
+        // Instantiate a new DiscoveryListener
+        mDiscoveryListener = new NsdManager.DiscoveryListener() {
+
+            //  Called as soon as service discovery begins.
+            @Override
+            public void onDiscoveryStarted(String regType) {
+                Log.d("discovery", "Service discovery started");
+            }
+
+            @Override
+            public void onServiceFound(NsdServiceInfo service) {
+                // A service was found!  Do something with it.
+                Log.d("discovery", "Service discovery success: " + service);
+                if (!service.getServiceType().equals(SERVICE_TYPE)) {
+                    // Service type is the string containing the protocol and
+                    // transport layer for this service.
+                    Log.d("discovery", "Unknown Service Type: " + service.getServiceType());
+                } else if (service.getServiceName().equals(mServiceName)) {
+                    // The name of the service tells the user what they'd be
+                    // connecting to. It could be "Bob's Chat App".
+                    Log.d("discovery", "Same machine: " + mServiceName);
+                } else if (service.getServiceName().contains(SERVICE_NAME)){
+                    Log.d("discovery","Resolved service: "+service.getServiceName());
+                    Log.d("discovery","Resolved service: "+service.getHost());
+                    Log.d("discovery","Resolved service: "+service.getPort());
+                    try {
+                        mNsdManager.resolveService(service, mResolveListener);
+                    } catch (Exception e) {
+                        Log.d("discovery","resolve error: "+e.toString());
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceLost(NsdServiceInfo service) {
+                // When the network service is no longer available.
+                // Internal bookkeeping code goes here.
+                Log.e("discovery", "service lost: " + service);
+                updateConversationHandler.post(new sayThread("Lost: "+service.getHost()));
+            }
+
+            @Override
+            public void onDiscoveryStopped(String serviceType) {
+                Log.i("discovery", "Discovery stopped: " + serviceType);
+            }
+
+            @Override
+            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e("discovery", "Start Discovery failed: Error code: " + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+
+            @Override
+            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e("discovery", "Stop Discovery failed: Error code: " + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+        };
+    }
+
+    // tread to update the ui
+    class sayThread implements Runnable {
+        private String msg;
+
+        public sayThread(String str) {
+            msg = str;
+            Log.d("saythread",str);
+        }
+
+        @Override
+        public void run() {
+            if(msg!=null) {
+                say(msg);
+            }
+        }
     }
 
 }

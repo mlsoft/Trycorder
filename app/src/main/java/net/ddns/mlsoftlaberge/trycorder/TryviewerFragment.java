@@ -1,13 +1,10 @@
-package net.ddns.mlsoftlaberge.trycorder.trygallery;
+package net.ddns.mlsoftlaberge.trycorder;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,22 +16,21 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Gallery;
 import android.widget.ImageButton;
-import android.widget.ImageSwitcher;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.MediaController;
 import android.widget.TextView;
-import android.widget.ViewSwitcher;
+import android.widget.VideoView;
 
 import net.ddns.mlsoftlaberge.trycorder.R;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,60 +39,72 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by mlsoft on 16-06-23.
+ * Created by mlsoft on 16-06-20.
  */
-public class TrygalleryFragment extends Fragment implements
-        AdapterView.OnItemSelectedListener, ViewSwitcher.ViewFactory {
+public class TryviewerFragment extends Fragment {
 
-    public TrygalleryFragment() {
+    public TryviewerFragment() {
     }
 
     // ======================================================================================
-    public interface OnTrygalleryInteractionListener {
-        public void onTrygalleryModeChange(int mode);
+    public interface OnTryviewerInteractionListener {
+        public void onTryviewerModeChange(int mode);
     }
 
-    private OnTrygalleryInteractionListener mOnTrygalleryInteractionListener;
+    private OnTryviewerInteractionListener mOnTryviewerInteractionListener;
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         try {
             // Assign callback listener which the holding activity must implement.
-            mOnTrygalleryInteractionListener = (OnTrygalleryInteractionListener) activity;
+            mOnTryviewerInteractionListener = (OnTryviewerInteractionListener) activity;
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
-                    + " must implement OnTrygalleryInteractionListener");
+                    + " must implement OnTryviewerInteractionListener");
         }
     }
 
     // ======================================================================================
 
-
-    private ImageButton mBacktopButton;
-    private Button mBackButton;
-    private Button mGalleryappButton;
-    private Button mSendButton;
-
     // the button to talk to computer
-    private ImageButton mBackbottomButton;
+    private ImageButton mBacktopButton;
+
+    // the button for sound activation
+    private Button mBackButton;
 
     // the button to start it all
-    private Button mPhotoButton;
+    private Button mStartButton;
+
+    // the button to stop it all
+    private Button mStopButton;
+    private boolean mRunStatus = false;
 
     // the button for settings
-    private Button mVideogalButton;
+    private Button mRestartButton;
 
     // the one status line
     private TextView mTextstatus_top;
     private TextView mTextstatus_bottom;
 
+    // the button to talk to computer
+    private ImageButton mBackbottomButton;
 
-    private ImageSwitcher mImageSwitcher;
-    private Gallery mImageGallery;
+    // the button to stop it all
+    private Button mRecordButton;
 
-    private List<Uri> mImageUris = new ArrayList<Uri>();
-    private int currenturi=0;
+    // the button for settings
+    private Button mGalleryButton;
+
+    // the main contents layout in the center
+    private LinearLayout mCenterLayout;
+
+    // the list of videos to view
+    private ListView mListView;
+    private ListUriAdapter mListUriAdapter;
+
+    // the video view widget to show contents
+    private VideoView mVideoView;
 
     // the preferences holder
     private SharedPreferences sharedPref;
@@ -111,7 +119,7 @@ public class TrygalleryFragment extends Fragment implements
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.trygallery_fragment, container, false);
+        View view = inflater.inflate(R.layout.tryviewer_fragment, container, false);
 
         PreferenceManager.setDefaultValues(getActivity(), R.xml.preferences, false);
 
@@ -129,7 +137,7 @@ public class TrygalleryFragment extends Fragment implements
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchtrygallerymode(1);
+                switchtryviewermode(1);
             }
         });
 
@@ -139,26 +147,37 @@ public class TrygalleryFragment extends Fragment implements
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchtrygallerymode(1);
+                switchtryviewermode(1);
             }
         });
 
-        // the search button
-        mGalleryappButton = (Button) view.findViewById(R.id.gallery_app_button);
-        mGalleryappButton.setOnClickListener(new View.OnClickListener() {
+        // the start button
+        mStartButton = (Button) view.findViewById(R.id.start_button);
+        mStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
-                buttongallery();
+                startvideo();
             }
         });
-        // the search button
-        mSendButton = (Button) view.findViewById(R.id.photo_send_button);
-        mSendButton.setOnClickListener(new View.OnClickListener() {
+
+        // the stop button
+        mStopButton = (Button) view.findViewById(R.id.stop_button);
+        mStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
-                buttonsend();
+                stopvideo();
+            }
+        });
+
+        // the settings button
+        mRestartButton = (Button) view.findViewById(R.id.restart_button);
+        mRestartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                restartvideo();
             }
         });
 
@@ -171,47 +190,59 @@ public class TrygalleryFragment extends Fragment implements
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchtrygallerymode(1);
+                switchtryviewermode(1);
             }
         });
 
-        // the start button
-        mPhotoButton = (Button) view.findViewById(R.id.photo_button);
-        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+        // the stop button
+        mRecordButton = (Button) view.findViewById(R.id.record_button);
+        mRecordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
-                takephoto();
+                recordvideo();
             }
         });
 
         // the settings button
-        mVideogalButton = (Button) view.findViewById(R.id.videogal_button);
-        mVideogalButton.setOnClickListener(new View.OnClickListener() {
+        mGalleryButton = (Button) view.findViewById(R.id.gallery_button);
+        mGalleryButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchtrygallerymode(3);
+                switchtryviewermode(2);
             }
         });
 
         mTextstatus_bottom = (TextView) view.findViewById(R.id.textstatus_bottom);
         mTextstatus_bottom.setText("Ready");
 
-        // load the list of uris from camera directory
-        loadimageuris();
+        // =========================== center content area ============================
 
-        // obtain and program the switcher and gallery
-        mImageSwitcher = (ImageSwitcher) view.findViewById(R.id.image_switcher);
-        mImageGallery = (Gallery) view.findViewById(R.id.image_gallery);
+        // the center layout to show contents
+        mCenterLayout = (LinearLayout) view.findViewById(R.id.center_layout);
 
-        mImageSwitcher.setFactory(this);
-        mImageSwitcher.setInAnimation(AnimationUtils.loadAnimation(getContext(), android.R.anim.fade_in));
-        mImageSwitcher.setOutAnimation(AnimationUtils.loadAnimation(getContext(), android.R.anim.fade_out));
-        mImageGallery.setAdapter(new ImageAdapter(getContext()));
-        mImageGallery.setOnItemSelectedListener(this);
+        // start the filling of the list with uris of videos
+        filllistview();
 
-        return(view);
+        // the list containing the names of files to display
+        mListView = (ListView) view.findViewById(R.id.list_view);
+        mListUriAdapter = new ListUriAdapter(getActivity(),mImageUris);
+        mListView.setAdapter(mListUriAdapter);
+        mListView.setClickable(true);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                buttonsound();
+                view.setSelected(true);
+                listuriclicked(position);
+            }
+        });
+
+        mVideoView = (VideoView) view.findViewById(R.id.video_view);
+
+        return view;
+
     }
 
     // setup the fonts on every text-containing widgets
@@ -222,21 +253,56 @@ public class TrygalleryFragment extends Fragment implements
         Typeface face2 = Typeface.createFromAsset(getActivity().getAssets(), "finalold.ttf");
         Typeface face3 = Typeface.createFromAsset(getActivity().getAssets(), "finalnew.ttf");
         // top buttons
+        mStartButton.setTypeface(face2);
+        mStopButton.setTypeface(face2);
         mBackButton.setTypeface(face2);
-        mGalleryappButton.setTypeface(face2);
-        mSendButton.setTypeface(face2);
+        mRestartButton.setTypeface(face2);
         mTextstatus_top.setTypeface(face);
         // bottom buttons
-        mPhotoButton.setTypeface(face2);
-        mVideogalButton.setTypeface(face2);
+        mRecordButton.setTypeface(face2);
+        mGalleryButton.setTypeface(face2);
         mTextstatus_bottom.setTypeface(face3);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // settings part of the preferences
+        autoListen = sharedPref.getBoolean("pref_key_auto_listen", false);
+        isChatty = sharedPref.getBoolean("pref_key_ischatty", false);
+        speakLanguage = sharedPref.getString("pref_key_speak_language", "");
+        listenLanguage = sharedPref.getString("pref_key_listen_language", "");
+        displayLanguage = sharedPref.getString("pref_key_display_language", "");
+        // dynamic status part
+        mRunStatus = sharedPref.getBoolean("pref_key_run_status", false);
+        // resurect the application to last settings
+        //switchbuttonlayout(mButtonsmode);
+    }
 
-    // ==================================================================================
+    @Override
+    public void onPause() {
+        // save the current status
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("pref_key_run_status", mRunStatus);
+        editor.commit();
+        //stopsensors();
+        super.onPause();
+    }
 
+    // ask the activity to switch to another fragment
+    private void switchtryviewermode(int mode) {
+        mOnTryviewerInteractionListener.onTryviewerModeChange(mode);
+    }
+
+    // beep
     private void buttonsound() {
         MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
+        mediaPlayer.start(); // no need to call prepare(); create() does that for you
+    }
+
+    // booooop
+    private void buttonbad() {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.denybeep1);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
     }
 
@@ -245,42 +311,66 @@ public class TrygalleryFragment extends Fragment implements
         mTextstatus_bottom.setText(texte);
     }
 
-    // ask the activity to switch to another fragment
-    private void switchtrygallerymode(int mode) {
-        mOnTrygalleryInteractionListener.onTrygalleryModeChange(mode);
+    // =======================================================================================
+
+    //private Uri staticUri =  Uri.parse("android.resource://"
+    //        + getActivity().getPackageName()
+    //        + "/" + R.raw.powers_of_ten);
+    //private Uri staticUri =  Uri.parse("android.resource://net.ddns.mlsoftlaberge.trycorder"
+    //        + "/" + R.raw.powers_of_ten);
+
+    private Uri dynamicUri = null;
+
+    private MediaController mMediaController=null;
+
+    private void startvideo() {
+        say("Start Video");
+        if(mMediaController==null) {
+            mMediaController = new MediaController(getActivity());
+            mMediaController.setAnchorView(mVideoView);
+            mVideoView.setMediaController(mMediaController);
+        }
+        if(dynamicUri!=null) {
+            mVideoView.setVideoURI(dynamicUri);
+        }
+        mVideoView.requestFocus();
+        mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                mp.setLooping(false);
+                mVideoView.start();
+                say("Video is started");
+            }
+        });
+        //mVideoView.start();
     }
 
-    // start the external gallery application
-    private void buttongallery() {
-        Intent intent = new Intent();
-        intent.setAction(android.content.Intent.ACTION_VIEW);
-        intent.setType("image/*");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+    private void stopvideo() {
+        mVideoView.pause();
+        say("Video is paused");
     }
 
-    // send the current content to someone
-    private void buttonsend() {
-        if(mImageUris==null) return;
-        Uri uri = mImageUris.get(currenturi);
-        String filepath = uri.toString();
-        // send this image to someone
-        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-        //shareIntent.setData(uri);
-        shareIntent.setType("image/*");
-        shareIntent.putExtra(Intent.EXTRA_SUBJECT,"Image");
-        shareIntent.putExtra(Intent.EXTRA_TEXT,"From my Trycorder\n"+uri.toString());
-        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+filepath));
-        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        //shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-        startActivity(Intent.createChooser(shareIntent, "Send image to ..."));
+    private void restartvideo() {
+        mVideoView.start();
+        say("Video is restarted");
     }
 
-    // =====================================================================================
     // ======================== Image list loader ==========================================
+
+    private ArrayList<Uri> mImageUris = new ArrayList<Uri>();
+    private int currenturi=0;
+
+    private void filllistview() {
+        loadimageuris();
+        if (mImageUris.size()>0) {
+            currenturi=0;
+            dynamicUri=mImageUris.get(currenturi);
+        }
+    }
 
     private void loadimageuris() {
         mImageUris.clear();
+        say("Loading videos Uris");
         String path = Environment.getExternalStorageDirectory().toString()+"/DCIM/Camera";
         Log.d("Files", "Path: " + path);
         File f = new File(path);
@@ -289,7 +379,7 @@ public class TrygalleryFragment extends Fragment implements
         for (int i=0; i < file.length; i++)
         {
             String name = file[i].getName();
-            if(name.contains(".jpg")) {
+            if(name.contains(".mp4")) {
                 Log.d("Files", "FileName:" + name);
                 Uri uri = Uri.parse(path + "/" + name);
                 mImageUris.add(uri);
@@ -298,109 +388,35 @@ public class TrygalleryFragment extends Fragment implements
         // sort the name list in reverse order
         Comparator comparator = Collections.reverseOrder();
         Collections.sort(mImageUris,comparator);
+        say("Videos Uris loaded");
     }
 
-    // ===================================================================================
-    // ====================== Image Gallery callbacks ===================================
-
-    public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
-        currenturi=position;
-        if(mImageUris!=null) {
-            //mImageSwitcher.setImageURI(mImageUris.get(position));
-            File f = new File(mImageUris.get(position).getPath());
-            Bitmap b = decodeFile(f,800);
-            BitmapDrawable pic = new BitmapDrawable(b);
-            mImageSwitcher.setImageDrawable(pic);
-        }
-    }
-
-    public void onNothingSelected(AdapterView<?> parent) {
-    }
-
-    public View makeView() {
-        ImageView i = new ImageView(getContext());
-        i.setBackgroundColor(0xFF000000);
-        i.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        i.setLayoutParams(new ImageSwitcher.LayoutParams(Gallery.LayoutParams.MATCH_PARENT,
-                Gallery.LayoutParams.MATCH_PARENT));
-        return i;
-    }
-
-    // ===================================================================================
-    // ====================== Image Gallery Adapter ======================================
-
-    public class ImageAdapter extends BaseAdapter {
-        private Context mContext;
-
-        public ImageAdapter(Context c) {
-            mContext = c;
+    public class ListUriAdapter extends ArrayAdapter<Uri> {
+        public ListUriAdapter(Context context, ArrayList<Uri> uris) {
+            super(context, 0, uris);
         }
 
-        public int getCount() {
-            if(mImageUris!=null) {
-                return (mImageUris.size());
-            } else {
-                return(0);
-            }
-        }
-
-        public Object getItem(int position) {
-            return position;
-        }
-
-        public long getItemId(int position) {
-            return position;
-        }
-
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView i = new ImageView(mContext);
-            if(mImageUris!=null) {
-                File f = new File(mImageUris.get(position).getPath());
-                Bitmap b = decodeFile(f,100);
-                BitmapDrawable pic = new BitmapDrawable(b);
-                i.setImageDrawable(pic);
+            // Get the data item for this position
+            Uri uri = getItem(position);
+            // Check if an existing view is being reused, otherwise inflate the view
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.tryviewer_row, parent, false);
             }
-            i.setAdjustViewBounds(true);
-            i.setLayoutParams(new Gallery.LayoutParams(
-                    Gallery.LayoutParams.WRAP_CONTENT, Gallery.LayoutParams.WRAP_CONTENT));
-            i.setBackgroundResource(R.drawable.picture_frame);
-            return i;
+            // Lookup view for data population
+            TextView label = (TextView) convertView.findViewById(R.id.label);
+            ImageView icon = (ImageView) convertView.findViewById(R.id.icon);
+            // Populate the data into the template view using the data object
+            label.setText(uri.getLastPathSegment());
+            // Return the completed view to render on screen
+            return convertView;
         }
-
     }
 
-    // ==================================================================================
-    //decodes image and scales it to reduce memory consumption in gallery
-
-    private Bitmap decodeFile(File f, int size){
-        try {
-            //Decode image size
-            BitmapFactory.Options o = new BitmapFactory.Options();
-            o.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(new FileInputStream(f),null,o);
-
-            //Find the correct scale value. It should be the power of 2.
-            int width_tmp=o.outWidth, height_tmp=o.outHeight;
-            int scale=1;
-
-            while(true){
-                if(width_tmp/2<size || height_tmp/2<size)
-                    break;
-                width_tmp/=2;
-                height_tmp/=2;
-                scale*=2;
-            }
-
-            //Decode with inSampleSize
-            BitmapFactory.Options o2 = new BitmapFactory.Options();
-            o2.inSampleSize=scale;
-
-            return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
-        }
-
-        catch (FileNotFoundException e) {}
-
-        return null;
+    private void listuriclicked(int position) {
+        dynamicUri=mImageUris.get(position);
+        startvideo();
     }
 
     // ===================================================================================
@@ -491,8 +507,6 @@ public class TrygalleryFragment extends Fragment implements
                 Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 intent.setData(fileUri);
                 getActivity().sendBroadcast(intent);
-                loadimageuris();
-                mImageGallery.setAdapter(new ImageAdapter(getContext()));
             } else if (resultCode == getActivity().RESULT_CANCELED) {
                 // User cancelled the image capture
                 say("Cancelled Photo");
@@ -509,6 +523,7 @@ public class TrygalleryFragment extends Fragment implements
                 Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 intent.setData(fileUri);
                 getActivity().sendBroadcast(intent);
+                filllistview();
             } else if (resultCode == getActivity().RESULT_CANCELED) {
                 // User cancelled the video capture
                 say("Cancelled Video");

@@ -1,4 +1,4 @@
-package net.ddns.mlsoftlaberge.trycorder.trycorder;
+package net.ddns.mlsoftlaberge.trycorder;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -46,6 +46,19 @@ import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.gallery.GalleryActivity;
 import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.AudSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.Fetcher;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.FirSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.GIFView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.GraSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.MagSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.MotSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.OriSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.ShiSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.Speak;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.TemSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.TraSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.TrbSensorView;
 
 import java.io.File;
 import java.io.IOException;
@@ -1082,6 +1095,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(mSensormode);
         switchviewer(mViewermode);
         if(mSensormode<=4) startsensors(mSensormode);
+        initspeak();
     }
 
     @Override
@@ -2220,28 +2234,24 @@ public class TrycorderFragment extends Fragment
         say("Speak");
     }
 
-    private void speak(String texte) {
-        if(tts==null) {
-            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
-                @Override
-                public void onInit(int status) {
-                    if (status != TextToSpeech.ERROR) {
-                        tts.setLanguage(Locale.US);
-                    }
-                }
-            });
+    // =========================================================================
+    // usage of text-to-speech to speak a sensence
+    private Speak mSpeak=null;
+
+    private void initspeak() {
+        if(mSpeak==null) {
+            mSpeak = new Speak(getContext());
         }
-        if (speakLanguage.equals("FR")) {
-            tts.setLanguage(Locale.FRENCH);
-        } else if (speakLanguage.equals("EN")) {
-            tts.setLanguage(Locale.US);
-        } else {
-            // default prechoosen language
-        }
-        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
-        say(texte);
     }
 
+    private void speak(String texte) {
+        initspeak();
+        mSpeak.speak(texte,speakLanguage);
+        say("Speaked: "+texte);
+    }
+
+    // =========================================================================
+    // system log talker
     private StringBuffer logbuffer = new StringBuffer(500);
 
     private void say(String texte) {

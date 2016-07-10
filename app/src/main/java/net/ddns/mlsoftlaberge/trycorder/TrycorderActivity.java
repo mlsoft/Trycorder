@@ -7,12 +7,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.view.View;
-import android.widget.Toast;
-
-import net.ddns.mlsoftlaberge.trycorder.trycorder.TrycorderFragment;
-import net.ddns.mlsoftlaberge.trycorder.trygallery.TrygalleryFragment;
-import net.ddns.mlsoftlaberge.trycorder.tryviewer.TryviewerFragment;
-import net.ddns.mlsoftlaberge.trycorder.trywalkie.TrywalkieFragment;
 
 /**
  * Created by mlsoft on 16-05-13.
