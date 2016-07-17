@@ -35,6 +35,16 @@
             android:summary="Language used to pronounce text to speak"
             android:title="Speak Language"
             android:defaultValue="EN"/>
+        <EditTextPreference
+            android:key="pref_key_device_name"
+            android:summary="Device name used in walkie-talkie"
+            android:title="Device Name"
+            android:defaultValue="Trycorder"/>
+        <CheckBoxPreference
+            android:key="pref_key_replay_sent"
+            android:summary="Determine if we replay the sent text locally"
+            android:title="Replay Sent"
+            android:defaultValue="true" />
     </PreferenceCategory>
 
 </PreferenceScreen>

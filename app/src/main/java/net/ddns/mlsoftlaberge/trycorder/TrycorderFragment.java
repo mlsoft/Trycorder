@@ -41,7 +41,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import net.ddns.mlsoftlaberge.trycorder.R;
 import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.gallery.GalleryActivity;
 import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
@@ -103,11 +102,6 @@ public class TrycorderFragment extends Fragment
     // handles to camera and textureview
     private Camera mCamera = null;
     private TextureView mViewerWindow;
-
-    // handles for the conversation functions
-    private TextToSpeech tts=null;
-    private SpeechRecognizer mSpeechRecognizer=null;
-    private Intent mSpeechRecognizerIntent=null;
 
     // handle for the gps
     private LocationManager mLocationManager=null;
@@ -2142,12 +2136,75 @@ public class TrycorderFragment extends Fragment
         }
     }
 
+    // =========================================================================
+    // system log talker
+    private StringBuffer logbuffer = new StringBuffer(500);
+
+    private void say(String texte) {
+        mTextstatus_bottom.setText(texte);
+        logbuffer.insert(0, texte + "\n");
+        mLogsConsole.setText(logbuffer);
+    }
+
+    // =========================================================================
+    // usage of text-to-speech to speak a sensence
+    private Speak mSpeak=null;
+
+    private void initspeak() {
+        if(mSpeak==null) {
+            mSpeak = new Speak(getContext());
+        }
+    }
+
+    private void speak(String texte) {
+        initspeak();
+        mSpeak.speak(texte,speakLanguage);
+        say("Speaked: "+texte);
+    }
+
     // ========================================================================================
-    // functions to listen to the voice recognition callbacks
+    // functions to control the speech process
+
+    // handles for the conversation functions
+    private SpeechRecognizer mSpeechRecognizer=null;
+    private Intent mSpeechRecognizerIntent=null;
+
+    private void listen() {
+        if(mSpeechRecognizer==null) {
+            // ============== initialize the audio listener and talker ==============
+
+            //AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+
+            mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
+            mSpeechRecognizer.setRecognitionListener(this);
+            mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 300);
+
+            // produce a FC on android 4.0.3
+            //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
+        }
+
+        if (listenLanguage.equals("FR")) {
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
+        } else if (listenLanguage.equals("EN")) {
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
+        } else {
+            // automatic
+        }
+        mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+        mTextstatus_top.setText("");
+        say("Speak");
+    }
 
     // =================================================================================
     // listener for the speech recognition service
-
+    // ========================================================================================
+    // functions to listen to the voice recognition callbacks
 
     @Override
     public void onBeginningOfSpeech() {
@@ -2178,6 +2235,10 @@ public class TrycorderFragment extends Fragment
     }
 
     @Override
+    public void onRmsChanged(float rmsdB) {
+    }
+
+    @Override
     public void onResults(Bundle results) {
         ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         if (dutexte != null && dutexte.size() > 0) {
@@ -2195,70 +2256,6 @@ public class TrycorderFragment extends Fragment
         }
     }
 
-    @Override
-    public void onRmsChanged(float rmsdB) {
-    }
-
-    // ========================================================================================
-    // functions to control the speech process
-
-    private void listen() {
-        if(mSpeechRecognizer==null) {
-            // ============== initialize the audio listener and talker ==============
-
-            //AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
-
-            mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(getContext());
-            mSpeechRecognizer.setRecognitionListener(this);
-            mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
-            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
-
-            // produce a FC on android 4.0.3
-            //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
-        }
-
-        if (listenLanguage.equals("FR")) {
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
-        } else if (listenLanguage.equals("EN")) {
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
-        } else {
-            // automatic
-        }
-        mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
-        mTextstatus_top.setText("");
-        say("Speak");
-    }
-
-    // =========================================================================
-    // usage of text-to-speech to speak a sensence
-    private Speak mSpeak=null;
-
-    private void initspeak() {
-        if(mSpeak==null) {
-            mSpeak = new Speak(getContext());
-        }
-    }
-
-    private void speak(String texte) {
-        initspeak();
-        mSpeak.speak(texte,speakLanguage);
-        say("Speaked: "+texte);
-    }
-
-    // =========================================================================
-    // system log talker
-    private StringBuffer logbuffer = new StringBuffer(500);
-
-    private void say(String texte) {
-        mTextstatus_bottom.setText(texte);
-        logbuffer.insert(0, texte + "\n");
-        mLogsConsole.setText(logbuffer);
-    }
 
     // ==============================================================================
     // accents resource : éèêë áàâä íìîï óòôö úùûü çÇ

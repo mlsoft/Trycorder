@@ -147,7 +147,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_weight="3"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -160,43 +160,18 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
+                        android:text="My-IP: "
                         android:textColor="@android:color/white"
-                        android:textSize="18sp"
-                        android:text="My-IP: "/>
+                        android:textSize="18sp" />
 
                     <TextView
                         android:id="@+id/myip_text"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="8"
-                        android:textColor="@android:color/white"
-                        android:textSize="18sp"
-                        android:text="192.168.0.0"/>
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="2"
-                        android:textColor="@android:color/white"
-                        android:textSize="18sp"
-                        android:text="Dest-IP: "/>
-
-                    <EditText
-                        android:id="@+id/destip_text"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
                         android:layout_weight="5"
+                        android:text="192.168.0.0"
                         android:textColor="@android:color/white"
-                        android:textSize="18sp"
-                        android:hint="192.168.0.0"/>
+                        android:textSize="18sp" />
 
                     <Button
                         android:id="@+id/connect_button"
@@ -211,6 +186,47 @@
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="3"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="2"
+                        android:text="Dest-IP: "
+                        android:textColor="@android:color/white"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/destip_text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="8"
+                        android:hint="192.168.0.0"
+                        android:textColor="@android:color/white"
+                        android:textSize="18sp"
+                        android:visibility="gone" />
+
+                    <ScrollView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="8">
+
+                        <TextView
+                            android:id="@+id/destlist_text"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:hint="192.168.0.0"
+                            android:textColor="@android:color/white"
+                            android:textSize="18sp"
+                            android:visibility="visible" />
+
+                    </ScrollView>
 
                 </LinearLayout>
 
@@ -221,18 +237,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
+                android:text="sended"
                 android:textColor="@android:color/white"
-                android:textSize="18sp"
-                android:text="sended"/>
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/received_msg"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
+                android:text="received"
                 android:textColor="@android:color/white"
-                android:textSize="18sp"
-                android:text="received"/>
+                android:textSize="18sp" />
 
         </LinearLayout>
 
