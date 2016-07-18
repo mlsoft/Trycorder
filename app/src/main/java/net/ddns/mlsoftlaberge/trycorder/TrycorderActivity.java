@@ -19,21 +19,18 @@ public class TrycorderActivity extends FragmentActivity implements
 
     private static String TAG = "Trycorder";
 
-    private TrycorderFragment mTrycorderFragment;
-    private TrygalleryFragment mTrygalleryFragment;
-    private TryviewerFragment mTryviewerFragment;
-    private TrywalkieFragment mTrywalkieFragment;
+    private TrycorderFragment mTrycorderFragment=null;
+    private TrygalleryFragment mTrygalleryFragment=null;
+    private TryviewerFragment mTryviewerFragment=null;
+    private TrywalkieFragment mTrywalkieFragment=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // ask the permissions
         askpermissions();
-        // create the 3 fragments
+        // create the 1 initial fragment
         mTrycorderFragment=new TrycorderFragment();
-        mTrygalleryFragment=new TrygalleryFragment();
-        mTryviewerFragment=new TryviewerFragment();
-        mTrywalkieFragment=new TrywalkieFragment();
         // start the fragment full screen
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.add(android.R.id.content, mTrycorderFragment, TAG);
@@ -79,18 +76,22 @@ public class TrycorderActivity extends FragmentActivity implements
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         switch(mode) {
             case 1:
+                if(mTrycorderFragment==null) mTrycorderFragment=new TrycorderFragment();
                 ft.replace(android.R.id.content, mTrycorderFragment, TAG);
                 ft.commit();
                 break;
             case 2:
+                if(mTrygalleryFragment==null) mTrygalleryFragment=new TrygalleryFragment();
                 ft.replace(android.R.id.content, mTrygalleryFragment, TAG);
                 ft.commit();
                 break;
             case 3:
+                if(mTryviewerFragment==null) mTryviewerFragment=new TryviewerFragment();
                 ft.replace(android.R.id.content, mTryviewerFragment, TAG);
                 ft.commit();
                 break;
             case 4:
+                if(mTrywalkieFragment==null) mTrywalkieFragment=new TrywalkieFragment();
                 ft.replace(android.R.id.content, mTrywalkieFragment, TAG);
                 ft.commit();
                 break;

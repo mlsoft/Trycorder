@@ -431,7 +431,46 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:src="@drawable/earth_still"
-                            android:visibility="visible" />
+                            android:visibility="gone" />
+
+                        <ImageView
+                            android:id="@+id/startrek_logo"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/startrek_logo"
+                            android:visibility="gone" />
+
+                        <LinearLayout
+                            android:id="@+id/walkie_layout"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:visibility="visible">
+
+                            <Button
+                                android:id="@+id/walkie_speak_button"
+                                android:layout_width="64dp"
+                                android:layout_height="32dp"
+                                android:layout_gravity="center"
+                                android:layout_marginBottom="@dimen/button_margin"
+                                android:layout_marginEnd="@dimen/button_margin"
+                                android:layout_marginStart="@dimen/button_margin"
+                                android:layout_marginTop="@dimen/button_margin"
+                                android:background="@drawable/trekbutton_orange"
+                                android:maxLines="1"
+                                android:text="Speak"
+                                android:textSize="18sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/walkie_iplist"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textSize="18sp"
+                                android:textColor="@android:color/holo_green_light"
+                                android:text="192.168.0.0"/>
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
@@ -572,7 +611,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     android:weightSum="100">
 
                     <Button
@@ -582,7 +621,7 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="50"
+                        android:layout_weight="33"
                         android:background="@drawable/trekbutton_green_left"
                         android:text="OPEN COMM" />
 
@@ -593,9 +632,20 @@
                         android:layout_gravity="center"
                         android:layout_marginLeft="2dp"
                         android:layout_marginRight="2dp"
-                        android:layout_weight="50"
-                        android:background="@drawable/trekbutton_green_right"
+                        android:layout_weight="34"
+                        android:background="@drawable/trekbutton_green_center"
                         android:text="CLOSE COMM" />
+
+                    <Button
+                        android:id="@+id/intercomm_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="2dp"
+                        android:layout_marginRight="2dp"
+                        android:layout_weight="33"
+                        android:background="@drawable/trekbutton_green_right"
+                        android:text="INTER COMM" />
 
                 </LinearLayout>
 
@@ -927,7 +977,7 @@
                     android:background="@android:color/black"
                     android:gravity="center"
                     android:orientation="horizontal"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     android:weightSum="100">
 
                     <Button

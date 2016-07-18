@@ -1,6 +1,7 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -18,7 +19,10 @@ import android.location.LocationManager;
 import android.media.FaceDetector;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.speech.RecognitionListener;
@@ -59,12 +63,22 @@ import net.ddns.mlsoftlaberge.trycorder.trycorder.TemSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.TraSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.TrbSensorView;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -141,6 +155,12 @@ public class TrycorderFragment extends Fragment
 
     // the Earth-Still Logo on sensor screen
     private ImageView mEarthStill;
+    // the startrek logo on sensor screen
+    private ImageView mStartrekLogo;
+    // the walkie layout on sensor screen
+    private LinearLayout mWalkieLayout;
+    private Button mWalkieSpeakButton;
+    private TextView mWalkieIpList;
 
     // the button to talk to computer
     private ImageButton mTalkButton;
@@ -188,6 +208,8 @@ public class TrycorderFragment extends Fragment
     private Button mCommButton;
     private Button mOpenCommButton;
     private Button mCloseCommButton;
+    private Button mInterCommButton;
+    private int mCommStatus=0;
 
     // the button to control shields
     private Button mShieldButton;
@@ -290,6 +312,8 @@ public class TrycorderFragment extends Fragment
     private String speakLanguage;
     private String listenLanguage;
     private String displayLanguage;
+    private String deviceName;
+    private boolean replaySent;
 
     // the preferences holder
     private SharedPreferences sharedPref;
@@ -308,6 +332,8 @@ public class TrycorderFragment extends Fragment
         speakLanguage = sharedPref.getString("pref_key_speak_language", "");
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
+        deviceName = sharedPref.getString("pref_key_device_name", "");
+        replaySent = sharedPref.getBoolean("pref_key_replay_sent", true);
 
         // ===================== top horizontal button grid ==========================
         // the start button
@@ -501,7 +527,6 @@ public class TrycorderFragment extends Fragment
         mOpenCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                switchsensorlayout(5);
                 opencomm();
             }
         });
@@ -510,8 +535,15 @@ public class TrycorderFragment extends Fragment
         mCloseCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                switchsensorlayout(5);
                 closecomm();
+            }
+        });
+        // the close comm button
+        mInterCommButton = (Button) view.findViewById(R.id.intercomm_button);
+        mInterCommButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                intercomm();
             }
         });
 
@@ -988,7 +1020,24 @@ public class TrycorderFragment extends Fragment
         // position 0 of sensor layout
         mEarthStill = (ImageView) view.findViewById(R.id.earth_still);
 
+        // position 11 of sensor layout
+        mStartrekLogo = (ImageView) view.findViewById(R.id.startrek_logo);
+
+        // position 12 of sensor layout
+        mWalkieLayout = (LinearLayout) view.findViewById(R.id.walkie_layout);
+        mWalkieSpeakButton = (Button) view.findViewById(R.id.walkie_speak_button);
+        mWalkieSpeakButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+            listen();
+            }
+        });
+        mWalkieIpList = (TextView) view.findViewById(R.id.walkie_iplist);
+
+        // utility class to fetch infos from the system
         mFetcher = new Fetcher(getContext());
+
+        mWalkieIpList.setText(mFetcher.fetch_ip_address());
 
         return view;
     }
@@ -1033,6 +1082,9 @@ public class TrycorderFragment extends Fragment
 
         mOpenCommButton.setTypeface(face3);
         mCloseCommButton.setTypeface(face3);
+        mInterCommButton.setTypeface(face3);
+        mWalkieSpeakButton.setTypeface(face2);
+        mWalkieIpList.setTypeface(face3);
 
         mShieldUpButton.setTypeface(face3);
         mShieldDownButton.setTypeface(face3);
@@ -1061,6 +1113,10 @@ public class TrycorderFragment extends Fragment
         mLogsPlansButton.setTypeface(face2);
         mLogsSysButton.setTypeface(face2);
 
+        mLogsConsole.setTypeface(face2);
+        mLogsSys.setTypeface(face2);
+        mLogsInfo.setTypeface(face2);
+
         mModePhotogalButton.setTypeface(face2);
         mModeVideogalButton.setTypeface(face2);
         mModeWalkieButton.setTypeface(face2);
@@ -1077,6 +1133,8 @@ public class TrycorderFragment extends Fragment
         speakLanguage = sharedPref.getString("pref_key_speak_language", "");
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
+        deviceName = sharedPref.getString("pref_key_device_name", "");
+        replaySent = sharedPref.getBoolean("pref_key_replay_sent", true);
         // dynamic status part
         mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
         mSensorpage = sharedPref.getInt("pref_key_sensor_page", 0);
@@ -1090,6 +1148,8 @@ public class TrycorderFragment extends Fragment
         switchviewer(mViewermode);
         if(mSensormode<=4) startsensors(mSensormode);
         initspeak();
+        initserver();
+        registerService();
     }
 
     @Override
@@ -1105,6 +1165,8 @@ public class TrycorderFragment extends Fragment
         editor.commit();
         stopsensors();
         switchcam(0);
+        unregisterService();
+        stopserver();
         super.onPause();
     }
 
@@ -1178,6 +1240,12 @@ public class TrycorderFragment extends Fragment
             case 10:
                 say("Sensors Motor Animation");
                 startmotsensors();
+                break;
+            case 11:
+                say("Sensors Startrek Logo");
+                break;
+            case 12:
+                say("Sensors Walkie Panel");
                 break;
             default:
                 say("Sensors OFF");
@@ -1295,6 +1363,8 @@ public class TrycorderFragment extends Fragment
         mTrbSensorView.setVisibility(View.GONE);
         mMotSensorView.setVisibility(View.GONE);
         mEarthStill.setVisibility(View.GONE);
+        mStartrekLogo.setVisibility(View.GONE);
+        mWalkieLayout.setVisibility(View.GONE);
         switch (no) {
             case 0:
                 mEarthStill.setVisibility(View.VISIBLE);
@@ -1328,6 +1398,12 @@ public class TrycorderFragment extends Fragment
                 break;
             case 10:
                 mMotSensorView.setVisibility(View.VISIBLE);
+                break;
+            case 11:
+                mStartrekLogo.setVisibility(View.VISIBLE);
+                break;
+            case 12:
+                mWalkieLayout.setVisibility(View.VISIBLE);
                 break;
         }
         if(no<=4) mSensorpage = no;
@@ -1421,8 +1497,19 @@ public class TrycorderFragment extends Fragment
             MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
             mediaPlayer.start(); // no need to call prepare(); create() does that for you
         }
-        switchsensorlayout(5);
         stopsensors();
+        switchsensorlayout(11);
+        say("Hailing frequency closed.");
+    }
+
+    private void intercomm() {
+        if(isChatty) speak("Intercom mode ready");
+        else {
+            MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
+            mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        }
+        stopsensors();
+        switchsensorlayout(12);
         say("Hailing frequency closed.");
     }
 
@@ -2247,12 +2334,15 @@ public class TrycorderFragment extends Fragment
                 if (matchvoice(mSentence)) {
                     mTextstatus_top.setText(mSentence);
                     say("Said: " + mSentence);
+                    sendtext(mSentence);
                     return;
                 }
             }
             mTextstatus_top.setText(dutexte.get(0));
             say("Understood: " + dutexte.get(0));
-            speak("Unknown command.");
+            sendtext(dutexte.get(0));
+            //if(speakLanguage.equals("FR")) speak("Commande inconnue.");
+            //else speak("Unknown command.");
         }
     }
 
@@ -2377,6 +2467,441 @@ public class TrycorderFragment extends Fragment
             return (true);
         }
         return (false);
+    }
+
+    // =====================================================================================
+    // network operations
+    // =====================================================================================
+
+    public static final int SERVERPORT = 1701;  // NCC-1701
+
+    Handler updateConversationHandler;
+
+    private ServerSocket serverSocket = null;
+
+    Thread serverThread = null;
+
+    // initialize the servers
+    private void initserver() {
+        say("Initialize the network server");
+        // create the handler to receive events from communication thread
+        updateConversationHandler = new Handler();
+        // start the server thread
+        serverThread = new Thread(new ServerThread());
+        serverThread.start();
+    }
+
+    // stop the servers
+    private void stopserver() {
+        say("Stop the network");
+        // stop the server thread
+        serverThread.interrupt();
+        // close the socket of the server
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ====================================================================================
+    // server part
+
+    class ServerThread implements Runnable {
+
+        public void run() {
+            Socket socket = null;
+            try {
+                serverSocket = new ServerSocket(SERVERPORT);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            while (!Thread.currentThread().isInterrupted()) {
+
+                try {
+                    Log.d("serverthread", "accepting server socket");
+                    socket = serverSocket.accept();
+                    Log.d("serverthread", "accepted server socket");
+
+                    CommunicationThread commThread = new CommunicationThread(socket);
+                    new Thread(commThread).start();
+
+                } catch (IOException e) {
+                    Log.d("serverthread", "exception " + e.toString());
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    class CommunicationThread implements Runnable {
+
+        private Socket commSocket;
+
+        private BufferedReader bufinput;
+
+        public CommunicationThread(Socket socket) {
+
+            commSocket = socket;
+
+            try {
+
+                bufinput = new BufferedReader(new InputStreamReader(commSocket.getInputStream()));
+
+            } catch (IOException e) {
+                Log.d("commthreadinit", "exception " + e.toString());
+                e.printStackTrace();
+            }
+        }
+
+        public void run() {
+
+            while (!Thread.currentThread().isInterrupted()) {
+
+                try {
+
+                    String read = bufinput.readLine();
+                    if (read == null) break;
+                    Log.d("commthreadrun", "update conversation");
+                    updateConversationHandler.post(new updateUIThread(read));
+
+                } catch (IOException e) {
+                    Log.d("commthreadrun", "exception " + e.toString());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    // tread to update the ui
+    class updateUIThread implements Runnable {
+        private String msg;
+
+        public updateUIThread(String str) {
+            msg = str;
+            Log.d("uithread", str);
+        }
+
+        @Override
+        public void run() {
+            if (msg != null) {
+                mTextstatus_top.setText(msg);
+                say("Received: " + msg);
+                speak(msg);
+                matchvoice(msg);
+            }
+        }
+    }
+
+    // ====================================================================================
+    // client part
+
+    private Socket clientSocket = null;
+
+    Thread clientThread = null;
+
+    // send a message to the other
+    private void sendtext(String text) {
+        // start the client thread
+        clientThread = new Thread(new ClientThread(text));
+        clientThread.start();
+    }
+
+    class ClientThread implements Runnable {
+
+        private String mesg;
+
+        public ClientThread(String str) {
+            mesg = str;
+        }
+
+        @Override
+        public void run() {
+            String myip = mFetcher.fetch_ip_address();
+            for (int i = 0; i < mIpList.size(); ++i) {
+                if(replaySent==false && myip.equals(mIpList.get(i))) {
+                    Log.d("clientthread","do not replay locally");
+                    continue;
+                }
+                clientsend(mIpList.get(i));
+            }
+        }
+
+        private void clientsend(String destip) {
+            // try to connect to a socket
+            try {
+                Log.d("clientthread", "try to connect to a server " + destip);
+                InetAddress serverAddr = InetAddress.getByName(destip);
+                clientSocket = new Socket(serverAddr, SERVERPORT);
+                Log.d("clientthread", "server connected " + destip);
+            } catch (UnknownHostException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            }
+            // try to send the message
+            try {
+                Log.d("clientthread", "sending data");
+                PrintWriter out = new PrintWriter(new BufferedWriter(
+                        new OutputStreamWriter(clientSocket.getOutputStream())), true);
+                out.println(mesg);
+                Log.d("clientthread", "data sent");
+            } catch (UnknownHostException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            } catch (Exception e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            }
+            // try to close the socket of the client
+            try {
+                Log.d("clientthread", "closing socket");
+                clientSocket.close();
+                Log.d("clientthread", "socket closed");
+            } catch (Exception e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    // =====================================================================================
+    // register my service with NSD
+
+    private String mServiceName;
+    private NsdManager mNsdManager;
+    private NsdManager.RegistrationListener mRegistrationListener;
+    private NsdManager.DiscoveryListener mDiscoveryListener;
+    private NsdManager.ResolveListener mResolveListener;
+    private NsdServiceInfo mService;
+    private String SERVICE_TYPE = "_http._tcp.";
+    private String SERVICE_NAME = "Trycorder";
+
+    private List<String> mIpList = new ArrayList<String>();
+    private List<String> mNameList = new ArrayList<String>();
+
+    public void registerService() {
+        if(deviceName.isEmpty()) deviceName=SERVICE_NAME;
+
+        mIpList.clear();
+        mIpList.add(mFetcher.fetch_ip_address());
+        mNameList.clear();
+        mNameList.add(deviceName);
+
+        mNsdManager = (NsdManager) getContext().getSystemService(Context.NSD_SERVICE);
+
+        NsdServiceInfo serviceInfo = new NsdServiceInfo();
+        serviceInfo.setServiceName(deviceName);
+        serviceInfo.setServiceType(SERVICE_TYPE);
+        serviceInfo.setPort(SERVERPORT);
+
+        say("Register service");
+        initializeRegistrationListener();
+
+        mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
+
+        say("Discover services");
+        initializeResolveListener();
+
+        initializeDiscoveryListener();
+
+        mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+
+    }
+
+    public void unregisterService() {
+        mNsdManager.unregisterService(mRegistrationListener);
+        mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+    }
+
+    public void initializeRegistrationListener() {
+        mRegistrationListener = new NsdManager.RegistrationListener() {
+
+            @Override
+            public void onServiceRegistered(NsdServiceInfo NsdServiceInfo) {
+                // Save the service name.  Android may have changed it in order to
+                // resolve a conflict, so update the name you initially requested
+                // with the name Android actually used.
+                mServiceName = NsdServiceInfo.getServiceName();
+                Log.d("registration", "Registration done: " + mServiceName);
+                saypost("Registration done: " + mServiceName);
+            }
+
+            @Override
+            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Registration failed!  Put debugging code here to determine why.
+                Log.d("registration", "Registration failed");
+                saypost("Registration failed: " + mServiceName);
+            }
+
+            @Override
+            public void onServiceUnregistered(NsdServiceInfo arg0) {
+                // Service has been unregistered.  This only happens when you call
+                // NsdManager.unregisterService() and pass in this listener.
+                Log.d("registration", "Unregistration done");
+            }
+
+            @Override
+            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Unregistration failed.  Put debugging code here to determine why.
+                Log.d("registration", "Unregistration failed");
+            }
+        };
+    }
+
+    public void initializeResolveListener() {
+        mResolveListener = new NsdManager.ResolveListener() {
+
+            @Override
+            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Called when the resolve fails.  Use the error code to debug.
+                Log.e("discovery", "Resolve failed: " + errorCode);
+                saypost("Resolve failed: "+serviceInfo.getServiceName()+" Err:"+errorCode);
+            }
+
+            @Override
+            public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                Log.e("discovery", "Resolve Succeeded: " + serviceInfo);
+
+                if (serviceInfo.getServiceName().equals(mServiceName)) {
+                    Log.d("discovery", "Same IP.");
+                    saypost("Local machine "+mServiceName);
+                    //return;
+                }
+                mService = serviceInfo;
+                int port = mService.getPort();
+                InetAddress host = mService.getHost();
+                Log.d("discovery", "Host: " + host.toString() + " Port: " + port);
+                saypost("Resolved " + mService.getServiceName() +
+                        " Host: " + host.toString() + " Port: " + port);
+                StringBuffer str=new StringBuffer(host.toString());
+                addiplist(str.substring(1),mService.getServiceName());
+            }
+        };
+    }
+
+    public void initializeDiscoveryListener() {
+
+        // Instantiate a new DiscoveryListener
+        mDiscoveryListener = new NsdManager.DiscoveryListener() {
+
+            //  Called as soon as service discovery begins.
+            @Override
+            public void onDiscoveryStarted(String regType) {
+                Log.d("discovery", "Service discovery started");
+            }
+
+            @Override
+            public void onServiceFound(NsdServiceInfo service) {
+                // A service was found!  Do something with it.
+                Log.d("discovery", "Service discovery success: " + service);
+                saypost("Service discovered: "+service.getServiceName());
+                if (!service.getServiceType().equals(SERVICE_TYPE)) {
+                    // Service type is the string containing the protocol and
+                    // transport layer for this service.
+                    Log.d("discovery", "Unknown Service Type: " + service.getServiceType());
+                } else {
+                    if (service.getServiceName().equals(mServiceName)) {
+                        // The name of the service tells the user what they'd be
+                        // connecting to. It could be "Bob's Chat App".
+                        Log.d("discovery", "Same machine: " + mServiceName);
+                    }
+                    Log.d("discovery", "Resolved service: " + service.getServiceName());
+                    //Log.d("discovery", "Resolved service: " + service.getHost());  // empty
+                    //Log.d("discovery", "Resolved service: " + service.getPort());  // empty
+                    try {
+                        mNsdManager.resolveService(service, mResolveListener);
+                    } catch (Exception e) {
+                        Log.d("discovery", "resolve error: " + e.toString());
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceLost(NsdServiceInfo service) {
+                // When the network service is no longer available.
+                // Internal bookkeeping code goes here.
+                Log.e("discovery", "service lost: " + service);
+                saypost("Lost: " + service.getServiceName());
+            }
+
+            @Override
+            public void onDiscoveryStopped(String serviceType) {
+                Log.i("discovery", "Discovery stopped: " + serviceType);
+            }
+
+            @Override
+            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e("discovery", "Start Discovery failed: Error code: " + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+
+            @Override
+            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e("discovery", "Stop Discovery failed: Error code: " + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+        };
+    }
+
+    // post something to say on the main thread (from a secondary thread)
+    public void saypost(String str) {
+        updateConversationHandler.post(new sayThread(str));
+    }
+
+    // tread to update the ui
+    class sayThread implements Runnable {
+        private String msg;
+
+        public sayThread(String str) {
+            msg = str;
+            Log.d("saythread",str);
+        }
+
+        @Override
+        public void run() {
+            if(msg!=null) {
+                say(msg);
+            }
+        }
+    }
+
+    private void addiplist(String ip,String name) {
+        for(int i=0;i<mIpList.size();++i) {
+            if(ip.equals(mIpList.get(i))) {
+                return;
+            }
+        }
+        mIpList.add(ip);
+        mNameList.add(name);
+        listpost();
+    }
+
+    public void listpost() {
+        updateConversationHandler.post(new listThread());
+    }
+
+    // tread to update the ui
+    class listThread implements Runnable {
+
+        public listThread() {
+        }
+
+        @Override
+        public void run() {
+            StringBuffer str=new StringBuffer("");
+            for(int i=0;i<mIpList.size();++i) {
+                str.append(mIpList.get(i)+" - "+mNameList.get(i)+"\n");
+            }
+            mWalkieIpList.setText(str.toString());
+        }
     }
 
 
