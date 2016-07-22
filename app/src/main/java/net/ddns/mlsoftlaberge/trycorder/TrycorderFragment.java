@@ -1,5 +1,10 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
+/*
+*  By Martin Laberge, From March 2016 to July 2016.
+*  Licence: Can be shared with anyone, for non profit, provided my name stays in the comments.
+*/
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -16,8 +21,13 @@ import android.graphics.Typeface;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioRecord;
+import android.media.AudioTrack;
 import android.media.FaceDetector;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
@@ -33,6 +43,7 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,7 +61,7 @@ import net.ddns.mlsoftlaberge.trycorder.gallery.GalleryActivity;
 import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.AudSensorView;
-import net.ddns.mlsoftlaberge.trycorder.trycorder.Fetcher;
+import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.FirSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.GIFView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.GraSensorView;
@@ -58,7 +69,6 @@ import net.ddns.mlsoftlaberge.trycorder.trycorder.MagSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.MotSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.OriSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.ShiSensorView;
-import net.ddns.mlsoftlaberge.trycorder.trycorder.Speak;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.TemSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.TraSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.TrbSensorView;
@@ -71,7 +81,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -82,7 +95,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * A placeholder fragment containing a simple view.
+ * A Fantastic fragment, containing a lot of views
  */
 public class TrycorderFragment extends Fragment
         implements TextureView.SurfaceTextureListener,
@@ -160,6 +173,8 @@ public class TrycorderFragment extends Fragment
     // the walkie layout on sensor screen
     private LinearLayout mWalkieLayout;
     private Button mWalkieSpeakButton;
+    private Button mWalkieTalkButton;
+    private Button mWalkieConnectButton;
     private TextView mWalkieIpList;
 
     // the button to talk to computer
@@ -1025,6 +1040,7 @@ public class TrycorderFragment extends Fragment
 
         // position 12 of sensor layout
         mWalkieLayout = (LinearLayout) view.findViewById(R.id.walkie_layout);
+
         mWalkieSpeakButton = (Button) view.findViewById(R.id.walkie_speak_button);
         mWalkieSpeakButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1032,6 +1048,39 @@ public class TrycorderFragment extends Fragment
             listen();
             }
         });
+
+        mWalkieTalkButton = (Button) view.findViewById(R.id.walkie_talk_button);
+        mWalkieTalkButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view,MotionEvent event) {
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        startstreamingaudio();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        stopstreamingaudio();
+                        break;
+                }
+                return false;
+            }
+        });
+
+        mWalkieConnectButton = (Button) view.findViewById(R.id.walkie_connect_button);
+        mWalkieConnectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                // stop all servers
+                stoptalkserver();
+                unregisterService();
+                stopserver();
+                // restart all servers
+                initserver();
+                registerService();
+                inittalkserver();
+            }
+        });
+
         mWalkieIpList = (TextView) view.findViewById(R.id.walkie_iplist);
 
         // utility class to fetch infos from the system
@@ -1084,6 +1133,8 @@ public class TrycorderFragment extends Fragment
         mCloseCommButton.setTypeface(face3);
         mInterCommButton.setTypeface(face3);
         mWalkieSpeakButton.setTypeface(face2);
+        mWalkieTalkButton.setTypeface(face2);
+        mWalkieConnectButton.setTypeface(face2);
         mWalkieIpList.setTypeface(face3);
 
         mShieldUpButton.setTypeface(face3);
@@ -1150,6 +1201,7 @@ public class TrycorderFragment extends Fragment
         initspeak();
         initserver();
         registerService();
+        inittalkserver();
     }
 
     @Override
@@ -1165,6 +1217,7 @@ public class TrycorderFragment extends Fragment
         editor.commit();
         stopsensors();
         switchcam(0);
+        stoptalkserver();
         unregisterService();
         stopserver();
         super.onPause();
@@ -1510,7 +1563,7 @@ public class TrycorderFragment extends Fragment
         }
         stopsensors();
         switchsensorlayout(12);
-        say("Hailing frequency closed.");
+        say("Intercom mode ready.");
     }
 
     private void transporterout() {
@@ -2235,17 +2288,41 @@ public class TrycorderFragment extends Fragment
 
     // =========================================================================
     // usage of text-to-speech to speak a sensence
-    private Speak mSpeak=null;
+    private TextToSpeech tts=null;
 
     private void initspeak() {
-        if(mSpeak==null) {
-            mSpeak = new Speak(getContext());
+        if(tts==null) {
+            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    if (status != TextToSpeech.ERROR) {
+                        setspeaklang(speakLanguage);
+                    }
+                }
+            });
         }
     }
 
-    private void speak(String texte) {
+    public void setspeaklang(String lng) {
+        if (lng.equals("FR")) {
+            tts.setLanguage(Locale.FRENCH);
+        } else if (lng.equals("EN")) {
+            tts.setLanguage(Locale.US);
+        } else {
+            // default prechoosen language
+        }
+    }
+
+    public void speak(String texte) {
         initspeak();
-        mSpeak.speak(texte,speakLanguage);
+        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
+        say("Speaked: "+texte);
+    }
+
+    public void speak(String texte,String lng) {
+        initspeak();
+        setspeaklang(lng);
+        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
         say("Speaked: "+texte);
     }
 
@@ -2269,8 +2346,8 @@ public class TrycorderFragment extends Fragment
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
             //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
-            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 300);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 50);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 20);
 
             // produce a FC on android 4.0.3
             //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
@@ -2355,13 +2432,13 @@ public class TrycorderFragment extends Fragment
         if (texte.contains("french") || texte.contains("français")) {
             listenLanguage="FR";
             speakLanguage="FR";
-            speak("français");
+            speak("français",speakLanguage);
             return (true);
         }
         if (texte.contains("english") || texte.contains("anglais")) {
             listenLanguage="EN";
             speakLanguage="EN";
-            speak("english");
+            speak("english",speakLanguage);
             return (true);
         }
         if (texte.contains("martin") || texte.contains("master")) {
@@ -2369,14 +2446,17 @@ public class TrycorderFragment extends Fragment
             else speak("Martin is my Master.");
             return (true);
         }
-        if (texte.contains("fuck") || texte.contains("shit") || texte.contains("merde")) {
-            if(speakLanguage.equals("FR")) speak("Ce n'est pas très poli");
-            else speak("This is not very polite.");
-            return (true);
-        }
         if (texte.contains("computer") || texte.contains("ordinateur")) {
             if(speakLanguage.equals("FR")) speak("Faites votre requète");
             else speak("State your question");
+            return (true);
+        }
+        if (texte.contains("fuck") || texte.contains("shit")) {
+            if(speakLanguage.equals("FR")) speak("Ce n'est pas très poli");
+            else speak("This is not very polite.");
+            switchviewer(0);
+            switchsensorlayout(0);
+            switchbuttonlayout(0);
             return (true);
         }
         if (texte.contains("phaser")) {
@@ -2459,21 +2539,14 @@ public class TrycorderFragment extends Fragment
             switchviewer(2);
             return (true);
         }
-        if (texte.contains("fuck") || texte.contains("shit")) {
-            speak("This is not very polite.");
-            switchviewer(0);
-            switchsensorlayout(0);
-            switchbuttonlayout(0);
-            return (true);
-        }
         return (false);
     }
 
     // =====================================================================================
-    // network operations
+    // network operations.   ===   Hi Elvis!
     // =====================================================================================
 
-    public static final int SERVERPORT = 1701;  // NCC-1701
+    public static final int SERVERPORT = 1701;  // Network Common Channel - NCC-1701
 
     Handler updateConversationHandler;
 
@@ -2576,7 +2649,7 @@ public class TrycorderFragment extends Fragment
 
     // tread to update the ui
     class updateUIThread implements Runnable {
-        private String msg;
+        private String msg=null;
 
         public updateUIThread(String str) {
             msg = str;
@@ -2588,8 +2661,9 @@ public class TrycorderFragment extends Fragment
             if (msg != null) {
                 mTextstatus_top.setText(msg);
                 say("Received: " + msg);
-                speak(msg);
-                matchvoice(msg);
+                if(matchvoice(msg)==false) {
+                    speak(msg);
+                }
             }
         }
     }
@@ -2604,6 +2678,7 @@ public class TrycorderFragment extends Fragment
     // send a message to the other
     private void sendtext(String text) {
         // start the client thread
+        say("Send: "+text);
         clientThread = new Thread(new ClientThread(text));
         clientThread.start();
     }
@@ -2876,6 +2951,7 @@ public class TrycorderFragment extends Fragment
     private void addiplist(String ip,String name) {
         for(int i=0;i<mIpList.size();++i) {
             if(ip.equals(mIpList.get(i))) {
+                listpost();
                 return;
             }
         }
@@ -2904,5 +2980,168 @@ public class TrycorderFragment extends Fragment
         }
     }
 
+    // =====================================================================================
+    // voice capture and send on udp
+
+    private int RECORDING_RATE=44100;
+    private int CHANNEL= AudioFormat.CHANNEL_IN_MONO;
+    private int FORMAT= AudioFormat.ENCODING_PCM_16BIT;
+
+    private int BUFFER_SIZE = AudioRecord.getMinBufferSize(RECORDING_RATE,CHANNEL,FORMAT);
+
+    private AudioRecord recorder;
+
+    private boolean currentlySendingAudio = false;
+
+    private void startstreamingaudio() {
+        say("start streaming audio");
+        currentlySendingAudio=true;
+        startStreaming();
+    }
+
+    private void stopstreamingaudio() {
+        say("stop streaming audio");
+        currentlySendingAudio=false;
+        try {
+            recorder.release();
+        } catch (Exception e) {
+            Log.d("stop streaming","stop streaming error");
+        }
+    }
+
+    private void startStreaming() {
+
+        Log.i("startstreaming", "Starting the background thread to stream the audio data");
+
+        Thread streamThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+
+                    Log.d("streamaudio", "Obtaining server address");
+                    String SERVER;
+                    if(mIpList.size()>=2) {
+                        SERVER = mIpList.get(1);
+                    } else {
+                        SERVER = mIpList.get(0);
+                    }
+                    int PORT=SERVERPORT;
+
+                    Log.d("streamaudio", "Creating the datagram socket");
+                    DatagramSocket socket = new DatagramSocket();
+
+                    Log.d("streamaudio", "Creating the buffer of size " + BUFFER_SIZE);
+                    byte[] buffer = new byte[BUFFER_SIZE];
+
+                    Log.d("streamaudio", "Connecting to " + SERVER + ":" + PORT);
+                    final InetAddress serverAddress = InetAddress.getByName(SERVER);
+                    Log.d("streamaudio", "Connected to " + SERVER + ":" + PORT);
+
+                    Log.d("streamaudio", "Creating the reuseable DatagramPacket");
+                    DatagramPacket packet;
+
+                    Log.d("streamaudio", "Creating the AudioRecord");
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                            RECORDING_RATE, CHANNEL, FORMAT, BUFFER_SIZE * 10);
+
+                    Log.d("streamaudio", "AudioRecord recording...");
+                    recorder.startRecording();
+
+                    while (currentlySendingAudio == true) {
+
+                        // read the data into the buffer
+                        int read = recorder.read(buffer, 0, buffer.length);
+
+                        // place contents of buffer into the packet
+                        packet = new DatagramPacket(buffer, read, serverAddress, PORT);
+
+                        Log.d("streamloop", "Sending packet : "+read);
+                        // send the packet
+                        socket.send(packet);
+                    }
+
+                    Log.d("streamaudio", "AudioRecord finished recording");
+
+                } catch (Exception e) {
+                    Log.e("streamaudio", "Exception: " + e);
+                }
+            }
+        });
+
+        // start the thread
+        streamThread.start();
+    }
+
+    // =====================================================================================
+    // voice receive on udp and playback
+    private Thread talkServerThread=null;
+
+    private void inittalkserver() {
+        say("Start talk server thread");
+        talkServerThread = new Thread(new TalkServerThread());
+        talkServerThread.start();
+    }
+
+    private void stoptalkserver() {
+        say("Stop the talk server");
+        // stop the server thread
+        try {
+            talkServerThread.interrupt();
+        } catch (Exception e) {
+            say("cant stop talk server thread");
+        }
+    }
+
+    class TalkServerThread implements Runnable {
+
+        private int bufferSize=10000;
+
+        public void run() {
+
+            DatagramSocket talkServerSocket;
+            try {
+                // create the server socket
+                talkServerSocket = new DatagramSocket(null);
+                talkServerSocket.setReuseAddress(true);
+                talkServerSocket.bind(new InetSocketAddress(SERVERPORT));
+                Log.d("talkserver","socket created");
+            } catch (Exception e) {
+                saypost("talkserverthread Cant create socket");
+                return;
+            }
+
+            byte[] receiveData = new byte[bufferSize];
+
+            AudioTrack track = new AudioTrack(AudioManager.STREAM_MUSIC,
+                    RECORDING_RATE, AudioFormat.CHANNEL_CONFIGURATION_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, bufferSize,
+                    AudioTrack.MODE_STREAM);
+            track.play();
+
+            while (!Thread.currentThread().isInterrupted()) {
+
+                try {
+                    Log.d("talkloop","ready to receive "+ bufferSize);
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
+                    talkServerSocket.receive(receivePacket);
+                    byte[] buffer= receivePacket.getData();
+                    int offset = receivePacket.getOffset();
+                    int len = receivePacket.getLength();
+                    Log.d("talkloop","received bytes : "+offset+" - "+len);
+                    track.write(buffer,offset,len);
+                } catch (Exception e) {
+                    Log.d("talkloop","exception: "+e);
+                }
+
+            }
+
+            track.flush();
+            track.release();
+            talkServerSocket.close();
+
+        }
+
+    }
 
 }

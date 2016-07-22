@@ -447,28 +447,68 @@
                             android:orientation="vertical"
                             android:visibility="visible">
 
-                            <Button
-                                android:id="@+id/walkie_speak_button"
-                                android:layout_width="64dp"
-                                android:layout_height="32dp"
-                                android:layout_gravity="center"
-                                android:layout_marginBottom="@dimen/button_margin"
-                                android:layout_marginEnd="@dimen/button_margin"
-                                android:layout_marginStart="@dimen/button_margin"
-                                android:layout_marginTop="@dimen/button_margin"
-                                android:background="@drawable/trekbutton_orange"
-                                android:maxLines="1"
-                                android:text="Speak"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:weightSum="3">
+
+                                <Button
+                                    android:id="@+id/walkie_speak_button"
+                                    android:layout_width="0dp"
+                                    android:layout_height="48dp"
+                                    android:layout_weight="1"
+                                    android:layout_gravity="center"
+                                    android:layout_marginBottom="@dimen/button_margin"
+                                    android:layout_marginEnd="@dimen/button_margin"
+                                    android:layout_marginStart="@dimen/button_margin"
+                                    android:layout_marginTop="@dimen/button_margin"
+                                    android:background="@drawable/trekbutton_indigo"
+                                    android:maxLines="1"
+                                    android:text="SPEAK"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <Button
+                                    android:id="@+id/walkie_talk_button"
+                                    android:layout_width="0dp"
+                                    android:layout_height="48dp"
+                                    android:layout_weight="1"
+                                    android:layout_gravity="center"
+                                    android:layout_marginBottom="@dimen/button_margin"
+                                    android:layout_marginEnd="@dimen/button_margin"
+                                    android:layout_marginStart="@dimen/button_margin"
+                                    android:layout_marginTop="@dimen/button_margin"
+                                    android:background="@drawable/trekbutton_orange"
+                                    android:text="Push to TALK"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <Button
+                                    android:id="@+id/walkie_connect_button"
+                                    android:layout_width="0dp"
+                                    android:layout_height="48dp"
+                                    android:layout_weight="1"
+                                    android:layout_gravity="center"
+                                    android:layout_marginBottom="@dimen/button_margin"
+                                    android:layout_marginEnd="@dimen/button_margin"
+                                    android:layout_marginStart="@dimen/button_margin"
+                                    android:layout_marginTop="@dimen/button_margin"
+                                    android:background="@drawable/trekbutton_green"
+                                    android:maxLines="1"
+                                    android:text="Connect"
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                            </LinearLayout>
 
                             <TextView
                                 android:id="@+id/walkie_iplist"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:textSize="18sp"
+                                android:text="192.168.0.0"
                                 android:textColor="@android:color/holo_green_light"
-                                android:text="192.168.0.0"/>
+                                android:textSize="18sp" />
 
                         </LinearLayout>
 
@@ -1118,7 +1158,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:src="@drawable/earth_still"
-                            android:visibility="gone"/>
+                            android:visibility="gone" />
 
                     </FrameLayout>
 

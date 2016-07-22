@@ -21,16 +21,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import net.ddns.mlsoftlaberge.trycorder.R;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
-import net.ddns.mlsoftlaberge.trycorder.trycorder.Fetcher;
-import net.ddns.mlsoftlaberge.trycorder.trycorder.Listen;
-import net.ddns.mlsoftlaberge.trycorder.trycorder.Speak;
+import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -113,6 +109,9 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     // in the bottom layout
     private TextView mLogsConsole;
+
+    // utility class to fetch system infos
+    private Fetcher mFetcher;
 
     // the preferences holder
     private SharedPreferences sharedPref;
@@ -229,6 +228,11 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         // in the bottom layout
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
 
+        // utility class to fetch infos from the system
+        mFetcher = new Fetcher(getContext());
+
+        mDestlist.setText(mFetcher.fetch_ip_address());
+
         return view;
 
     }
@@ -333,19 +337,46 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     // =========================================================================
     // usage of text-to-speech to speak a sensence
-    private Speak mSpeak = null;
+    // =========================================================================
+    // usage of text-to-speech to speak a sensence
+    private TextToSpeech tts=null;
 
     private void initspeak() {
-        if (mSpeak == null) {
-            mSpeak = new Speak(getContext());
+        if(tts==null) {
+            tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    if (status != TextToSpeech.ERROR) {
+                        setspeaklang(speakLanguage);
+                    }
+                }
+            });
         }
     }
 
-    private void speak(String texte) {
-        initspeak();
-        mSpeak.speak(texte, speakLanguage);
-        say("Speaked: " + texte);
+    public void setspeaklang(String lng) {
+        if (lng.equals("FR")) {
+            tts.setLanguage(Locale.FRENCH);
+        } else if (lng.equals("EN")) {
+            tts.setLanguage(Locale.US);
+        } else {
+            // default prechoosen language
+        }
     }
+
+    public void speak(String texte) {
+        initspeak();
+        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
+        say("Speaked: "+texte);
+    }
+
+    public void speak(String texte,String lng) {
+        initspeak();
+        setspeaklang(lng);
+        tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
+        say("Speaked: "+texte);
+    }
+
 
     // ========================================================================================
     // functions to control the speech process
@@ -367,8 +398,8 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
             mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
             //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
-            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 5000);
-            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 500);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1000);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 200);
 
             // produce a FC on android 4.0.3
             //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
@@ -430,13 +461,17 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
             for (int i = 0; i < dutexte.size(); ++i) {
                 String mSentence = dutexte.get(i);
                 if (matchvoice(mSentence)) {
+                    mTextstatus_top.setText(mSentence);
                     say("Said: " + mSentence);
+                    sendtext(mSentence);
                     return;
                 }
             }
+            mTextstatus_top.setText(dutexte.get(0));
             say("Understood: " + dutexte.get(0));
-            mSendedtext.setText(dutexte.get(0));
-            sendtext();
+            sendtext(dutexte.get(0));
+            //if(speakLanguage.equals("FR")) speak("Commande inconnue.");
+            //else speak("Unknown command.");
         }
     }
 
@@ -445,22 +480,23 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         if (texte.contains("french") || texte.contains("français")) {
             listenLanguage = "FR";
             speakLanguage = "FR";
-            speak("français");
+            speak("français",speakLanguage);
             return (true);
         }
         if (texte.contains("english") || texte.contains("anglais")) {
             listenLanguage = "EN";
             speakLanguage = "EN";
-            speak("english");
+            speak("english",speakLanguage);
             return (true);
         }
         return (false);
     }
 
     // =====================================================================================
-    // network operations
+    // network operations.   ===   Hi Elvis!
+    // =====================================================================================
 
-    public static final int SERVERPORT = 1701;  // NCC-1701
+    public static final int SERVERPORT = 1701;  // Network Common Channel - NCC-1701
 
     Handler updateConversationHandler;
 
@@ -563,7 +599,7 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
     // tread to update the ui
     class updateUIThread implements Runnable {
-        private String msg;
+        private String msg=null;
 
         public updateUIThread(String str) {
             msg = str;
@@ -573,9 +609,11 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         @Override
         public void run() {
             if (msg != null) {
-                mReceivedtext.setText(msg);
+                mTextstatus_top.setText(msg);
                 say("Received: " + msg);
-                speak(msg);
+                if(matchvoice(msg)==false) {
+                    speak(msg);
+                }
             }
         }
     }
@@ -588,11 +626,10 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
     Thread clientThread = null;
 
     // send a message to the other
-    private void sendtext() {
-        say("Send [" + mSendedtext.getText() + "] to destlist");
-        String str = mSendedtext.getText().toString();
+    private void sendtext(String text) {
         // start the client thread
-        clientThread = new Thread(new ClientThread(str));
+        say("Send: "+text);
+        clientThread = new Thread(new ClientThread(text));
         clientThread.start();
     }
 
@@ -606,14 +643,13 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
 
         @Override
         public void run() {
+            String myip = mFetcher.fetch_ip_address();
             for (int i = 0; i < mIpList.size(); ++i) {
-                StringBuffer str = new StringBuffer(mIpList.get(i));
-                String myip = mMyip.getText().toString();
-                if(replaySent==false && myip.equals(str.substring(1))) {
+                if(replaySent==false && myip.equals(mIpList.get(i))) {
                     Log.d("clientthread","do not replay locally");
                     continue;
                 }
-                clientsend(str.substring(1));
+                clientsend(mIpList.get(i));
             }
         }
 
@@ -674,9 +710,15 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
     private String SERVICE_NAME = "Trycorder";
 
     private List<String> mIpList = new ArrayList<String>();
+    private List<String> mNameList = new ArrayList<String>();
 
     public void registerService() {
+        if(deviceName.isEmpty()) deviceName=SERVICE_NAME;
+
         mIpList.clear();
+        mIpList.add(mFetcher.fetch_ip_address());
+        mNameList.clear();
+        mNameList.add(deviceName);
 
         mNsdManager = (NsdManager) getContext().getSystemService(Context.NSD_SERVICE);
 
@@ -764,7 +806,8 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
                 Log.d("discovery", "Host: " + host.toString() + " Port: " + port);
                 saypost("Resolved " + mService.getServiceName() +
                         " Host: " + host.toString() + " Port: " + port);
-                addiplist(host.toString());
+                StringBuffer str=new StringBuffer(host.toString());
+                addiplist(str.substring(1),mService.getServiceName());
             }
         };
     }
@@ -855,13 +898,15 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         }
     }
 
-    private void addiplist(String ip) {
+    private void addiplist(String ip,String name) {
         for(int i=0;i<mIpList.size();++i) {
             if(ip.equals(mIpList.get(i))) {
+                listpost();
                 return;
             }
         }
         mIpList.add(ip);
+        mNameList.add(name);
         listpost();
     }
 
@@ -879,12 +924,11 @@ public class TrywalkieFragment extends Fragment implements RecognitionListener {
         public void run() {
             StringBuffer str=new StringBuffer("");
             for(int i=0;i<mIpList.size();++i) {
-                str.append(mIpList.get(i)+"\n");
+                str.append(mIpList.get(i)+" - "+mNameList.get(i)+"\n");
             }
             mDestlist.setText(str.toString());
         }
     }
-
 
 
 }

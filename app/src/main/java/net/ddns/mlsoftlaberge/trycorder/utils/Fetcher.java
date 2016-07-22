@@ -1,4 +1,4 @@
-package net.ddns.mlsoftlaberge.trycorder.trycorder;
+package net.ddns.mlsoftlaberge.trycorder.utils;
 
 import android.app.ActivityManager;
 import android.content.Context;
