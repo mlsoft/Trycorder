@@ -2,12 +2,16 @@ package net.ddns.mlsoftlaberge.trycorder.utils;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
+import android.os.StatFs;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -20,6 +24,7 @@ import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by mlsoft on 16-06-25.
@@ -342,6 +347,59 @@ public class Fetcher {
 
     private void say(String texte) {
         // dont say anything
+    }
+
+    // ==================================================================================
+    //  get system info module
+
+    private StatFs getStatFs() {
+        File path = Environment.getDataDirectory();
+        return new StatFs(path.getPath());
+    }
+
+    private long getAvailableInternalMemorySize(StatFs stat) {
+        long blockSize = stat.getBlockSize();
+        long availableBlocks = stat.getAvailableBlocks();
+        return availableBlocks * blockSize;
+    }
+
+    private long getTotalInternalMemorySize(StatFs stat) {
+        long blockSize = stat.getBlockSize();
+        long totalBlocks = stat.getBlockCount();
+        return totalBlocks * blockSize;
+    }
+
+    public String fetch_packinfo() {
+        StringBuilder message=new StringBuilder();
+        message.append("Locale: ").append(Locale.getDefault()).append('\n');
+        try {
+            PackageManager pm = context.getPackageManager();
+            PackageInfo pi;
+            pi = pm.getPackageInfo(context.getPackageName(), 0);
+            message.append("Version: ").append(pi.versionName).append('\n');
+            message.append("Package: ").append(pi.packageName).append('\n');
+        } catch (Exception e) {
+            Log.e("CustomExceptionHandler", "Error", e);
+            message.append("Could not get Version information for ").append(
+                    context.getPackageName());
+        }
+        message.append("Phone Model: ").append(android.os.Build.MODEL).append('\n');
+        message.append("Android Version: ").append(android.os.Build.VERSION.RELEASE).append('\n');
+        message.append("Board: ").append(android.os.Build.BOARD).append('\n');
+        message.append("Brand: ").append(android.os.Build.BRAND).append('\n');
+        message.append("Device: ").append(android.os.Build.DEVICE).append('\n');
+        message.append("Host: ").append(android.os.Build.HOST).append('\n');
+        message.append("ID: ").append(android.os.Build.ID).append('\n');
+        message.append("Model: ").append(android.os.Build.MODEL).append('\n');
+        message.append("Product: ").append(android.os.Build.PRODUCT).append(
+                '\n');
+        message.append("Type: ").append(android.os.Build.TYPE).append('\n');
+        StatFs stat = getStatFs();
+        message.append("Total Internal memory: ").append(
+                getTotalInternalMemorySize(stat)).append('\n');
+        message.append("Available Internal memory: ").append(
+                getAvailableInternalMemorySize(stat)).append('\n');
+        return(message.toString());
     }
 
 }

@@ -94,6 +94,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+
+
+
 /**
  * A Fantastic fragment, containing a lot of views
  */
@@ -299,14 +302,14 @@ public class TrycorderFragment extends Fragment
     // the bottom right layout for viewing media
     private LinearLayout mViewerLayout;
 
-    // the 3 modes from the viewer buttons layout
+    // the 2 statics modes from the viewer buttons layout
     private ImageView mFederationlogo;
-    private ImageView mStarshipPlans;
     private ImageView mViewerPhoto;
 
-    // the 3 modes from the logs buttons layout
+    // the 4 modes from the logs buttons layout
     private TextView mLogsConsole;
     private TextView mLogsInfo;
+    private ImageView mStarshipPlans;
     private TextView mLogsSys;
 
     // the mode animation for motor layout
@@ -533,7 +536,15 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 switchbuttonlayout(2);
-                switchsensorlayout(5);
+                if(mCommStatus==0) {
+                    switchsensorlayout(11);
+                }
+                if(mCommStatus==1) {
+                    switchsensorlayout(5);
+                }
+                if(mCommStatus==2) {
+                    switchsensorlayout(12);
+                }
                 buttonsound();
             }
         });
@@ -542,6 +553,7 @@ public class TrycorderFragment extends Fragment
         mOpenCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mCommStatus=1;
                 opencomm();
             }
         });
@@ -550,6 +562,7 @@ public class TrycorderFragment extends Fragment
         mCloseCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mCommStatus=0;
                 closecomm();
             }
         });
@@ -558,6 +571,7 @@ public class TrycorderFragment extends Fragment
         mInterCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mCommStatus=2;
                 intercomm();
             }
         });
@@ -1192,6 +1206,7 @@ public class TrycorderFragment extends Fragment
         mButtonsmode = sharedPref.getInt("pref_key_buttons_mode", 0);
         mViewermode = sharedPref.getInt("pref_key_viewer_mode", 0);
         mSoundStatus = sharedPref.getBoolean("pref_key_audio_mode", false);
+        mCommStatus = sharedPref.getInt("pref_key_comm_status", 0);
         mViewerfront = sharedPref.getBoolean("pref_key_viewer_front", false);
         // resurect the application to last settings
         switchbuttonlayout(mButtonsmode);
@@ -1213,6 +1228,7 @@ public class TrycorderFragment extends Fragment
         editor.putInt("pref_key_buttons_mode", mButtonsmode);
         editor.putInt("pref_key_viewer_mode", mViewermode);
         editor.putBoolean("pref_key_audio_mode", mSoundStatus);
+        editor.putInt("pref_key_comm_status", mCommStatus);
         editor.putBoolean("pref_key_viewer_front", mViewerfront);
         editor.commit();
         stopsensors();
@@ -2018,6 +2034,8 @@ public class TrycorderFragment extends Fragment
                 mLogsInfo.append(mFetcher.fetch_system_info());
                 mLogsInfo.append("--------------------\nOperSys\n--------------------\n");
                 mLogsInfo.append(mFetcher.fetch_os_info());
+                mLogsInfo.append("--------------------\nPackage\n--------------------\n");
+                mLogsInfo.append(mFetcher.fetch_packinfo());
                 //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
                 //mLogsInfo.append(mFetcher.fetch_dmesg_info());
                 //mLogsInfo.append("--------------------\nProcess\n--------------------\n");
@@ -2457,6 +2475,12 @@ public class TrycorderFragment extends Fragment
             switchviewer(0);
             switchsensorlayout(0);
             switchbuttonlayout(0);
+            return (true);
+        }
+        // actions on the trycorder
+        if (texte.contains("intercom")) {
+            switchbuttonlayout(2);
+            intercomm();
             return (true);
         }
         if (texte.contains("phaser")) {
@@ -3021,11 +3045,6 @@ public class TrycorderFragment extends Fragment
 
                     Log.d("streamaudio", "Obtaining server address");
                     String SERVER;
-                    if(mIpList.size()>=2) {
-                        SERVER = mIpList.get(1);
-                    } else {
-                        SERVER = mIpList.get(0);
-                    }
                     int PORT=SERVERPORT;
 
                     Log.d("streamaudio", "Creating the datagram socket");
@@ -3034,9 +3053,14 @@ public class TrycorderFragment extends Fragment
                     Log.d("streamaudio", "Creating the buffer of size " + BUFFER_SIZE);
                     byte[] buffer = new byte[BUFFER_SIZE];
 
-                    Log.d("streamaudio", "Connecting to " + SERVER + ":" + PORT);
-                    final InetAddress serverAddress = InetAddress.getByName(SERVER);
-                    Log.d("streamaudio", "Connected to " + SERVER + ":" + PORT);
+                    List<InetAddress> mServerAddress = new ArrayList<>();
+                    mServerAddress.clear();
+                    for(int i=0;i<mIpList.size();++i) {
+                        SERVER = mIpList.get(i);
+                        Log.d("streamaudio", "Connecting to " + SERVER + ":" + PORT);
+                        mServerAddress.add(InetAddress.getByName(SERVER));
+                        Log.d("streamaudio", "Connected to " + SERVER + ":" + PORT);
+                    }
 
                     Log.d("streamaudio", "Creating the reuseable DatagramPacket");
                     DatagramPacket packet;
@@ -3050,15 +3074,23 @@ public class TrycorderFragment extends Fragment
 
                     while (currentlySendingAudio == true) {
 
+                        Log.d("streamloop", "Reading data from recorder");
                         // read the data into the buffer
                         int read = recorder.read(buffer, 0, buffer.length);
 
-                        // place contents of buffer into the packet
-                        packet = new DatagramPacket(buffer, read, serverAddress, PORT);
+                        // repeat to myself if i am alone on the net only
+                        int j;
+                        if(mIpList.size()<2) j=0;
+                        else j=1;
+                        // repeat to each other address from list
+                        for(int i=j;i<mIpList.size();++i) {
+                            // place contents of buffer into the packet
+                            packet = new DatagramPacket(buffer, read, mServerAddress.get(i), PORT);
 
-                        Log.d("streamloop", "Sending packet : "+read);
-                        // send the packet
-                        socket.send(packet);
+                            Log.d("streamloop", "Sending packet : " + read + " to "+mIpList.get(i));
+                            // send the packet
+                            socket.send(packet);
+                        }
                     }
 
                     Log.d("streamaudio", "AudioRecord finished recording");
