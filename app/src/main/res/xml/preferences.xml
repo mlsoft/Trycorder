@@ -44,7 +44,7 @@
             android:key="pref_key_replay_sent"
             android:summary="Determine if we replay the sent text locally"
             android:title="Replay Sent"
-            android:defaultValue="true" />
+            android:defaultValue="false" />
     </PreferenceCategory>
 
 </PreferenceScreen>

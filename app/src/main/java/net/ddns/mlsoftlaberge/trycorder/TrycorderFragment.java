@@ -61,6 +61,7 @@ import net.ddns.mlsoftlaberge.trycorder.gallery.GalleryActivity;
 import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.AudSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.LogsStatView;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.FirSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.GIFView;
@@ -93,8 +94,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-
-
 
 
 /**
@@ -134,7 +133,7 @@ public class TrycorderFragment extends Fragment
     private TextureView mViewerWindow;
 
     // handle for the gps
-    private LocationManager mLocationManager=null;
+    private LocationManager mLocationManager = null;
 
     // the handle to the sensors
     private SensorManager mSensorManager;
@@ -171,13 +170,19 @@ public class TrycorderFragment extends Fragment
 
     // the Earth-Still Logo on sensor screen
     private ImageView mEarthStill;
+
     // the startrek logo on sensor screen
     private ImageView mStartrekLogo;
+
     // the walkie layout on sensor screen
     private LinearLayout mWalkieLayout;
     private Button mWalkieSpeakButton;
     private Button mWalkieTalkButton;
     private Button mWalkieConnectButton;
+    private Button mWalkieSpeaklistButton;
+    private Button mWalkieServeronButton;
+    private Button mWalkieServeroffButton;
+    private Button mWalkieLogslistButton;
     private TextView mWalkieIpList;
 
     // the button to talk to computer
@@ -227,7 +232,7 @@ public class TrycorderFragment extends Fragment
     private Button mOpenCommButton;
     private Button mCloseCommButton;
     private Button mInterCommButton;
-    private int mCommStatus=0;
+    private int mCommStatus = 0;
 
     // the button to control shields
     private Button mShieldButton;
@@ -271,6 +276,7 @@ public class TrycorderFragment extends Fragment
     private Button mLogsInfoButton;
     private Button mLogsPlansButton;
     private Button mLogsSysButton;
+    private Button mLogsStatButton;
 
     private Button mModeButton;
     private Button mModePhotogalButton;
@@ -311,6 +317,7 @@ public class TrycorderFragment extends Fragment
     private TextView mLogsInfo;
     private ImageView mStarshipPlans;
     private TextView mLogsSys;
+    private LogsStatView mLogsStat;
 
     // the mode animation for motor layout
     private FrameLayout mViewerAnimate;
@@ -351,7 +358,13 @@ public class TrycorderFragment extends Fragment
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
         deviceName = sharedPref.getString("pref_key_device_name", "");
-        replaySent = sharedPref.getBoolean("pref_key_replay_sent", true);
+        replaySent = sharedPref.getBoolean("pref_key_replay_sent", false);
+
+        // ==============================================================================
+        // create layout params for the created views
+        final LinearLayout.LayoutParams tlayoutParams =
+                new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT);
 
         // ===================== top horizontal button grid ==========================
         // the start button
@@ -536,13 +549,13 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 switchbuttonlayout(2);
-                if(mCommStatus==0) {
+                if (mCommStatus == 0) {
                     switchsensorlayout(11);
                 }
-                if(mCommStatus==1) {
+                if (mCommStatus == 1) {
                     switchsensorlayout(5);
                 }
-                if(mCommStatus==2) {
+                if (mCommStatus == 2) {
                     switchsensorlayout(12);
                 }
                 buttonsound();
@@ -553,7 +566,7 @@ public class TrycorderFragment extends Fragment
         mOpenCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mCommStatus=1;
+                mCommStatus = 1;
                 opencomm();
             }
         });
@@ -562,7 +575,7 @@ public class TrycorderFragment extends Fragment
         mCloseCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mCommStatus=0;
+                mCommStatus = 0;
                 closecomm();
             }
         });
@@ -571,7 +584,7 @@ public class TrycorderFragment extends Fragment
         mInterCommButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mCommStatus=2;
+                mCommStatus = 2;
                 intercomm();
             }
         });
@@ -781,7 +794,6 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchcam(0);
                 switchviewer(0);
             }
         });
@@ -791,7 +803,6 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchcam(0);
                 switchviewer(5);
             }
         });
@@ -812,7 +823,6 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchcam(0);
                 switchviewer(2);
             }
         });
@@ -822,7 +832,6 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchcam(0);
                 switchviewer(3);
             }
         });
@@ -832,7 +841,6 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchcam(0);
                 switchviewer(4);
             }
         });
@@ -842,8 +850,16 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
-                switchcam(0);
                 switchviewer(6);
+            }
+        });
+
+        mLogsStatButton = (Button) view.findViewById(R.id.logsstat_button);
+        mLogsStatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchviewer(9);
             }
         });
 
@@ -940,8 +956,11 @@ public class TrycorderFragment extends Fragment
                 switchplans();
             }
         });
-        mViewerPhoto =  (ImageView) view.findViewById(R.id.photo_view);
+        mViewerPhoto = (ImageView) view.findViewById(R.id.photo_view);
         mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
+
+        mLogsStat = new LogsStatView(getContext());
+        mViewerLayout.addView(mLogsStat,tlayoutParams);
 
         // frame for motor animations
         mViewerAnimate = (FrameLayout) view.findViewById(R.id.viewer_animate);
@@ -949,10 +968,10 @@ public class TrycorderFragment extends Fragment
         mImageEarthStill = (ImageView) view.findViewById(R.id.image_earthstill);
 
         // warp effect animation gif
-        mGIFView= new GIFView(getContext(),R.raw.warp_animation);
+        mGIFView = new GIFView(getContext(), R.raw.warp_animation);
         mViewerAnimate.addView(mGIFView);
         // impulse effect animation gif
-        mGIFView1= new GIFView(getContext(),R.raw.earth_rotating);
+        mGIFView1 = new GIFView(getContext(), R.raw.earth_rotating);
         mViewerAnimate.addView(mGIFView1);
 
         // set all visibilitys of Vieweranimate frame
@@ -971,14 +990,9 @@ public class TrycorderFragment extends Fragment
         mStarshipPlans.setVisibility(View.GONE);
         mViewerPhoto.setVisibility(View.GONE);
         mLogsSys.setVisibility(View.GONE);
+        mLogsStat.setVisibility(View.GONE);
         mViewerAnimate.setVisibility(View.GONE);
         mVieweron = false;
-
-        // ==============================================================================
-        // create layout params for the created views
-        final LinearLayout.LayoutParams tlayoutParams =
-                new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT);
 
         // ============== create a sensor display and incorporate in layout ==============
 
@@ -989,12 +1003,12 @@ public class TrycorderFragment extends Fragment
         mLocationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
 
         // my sensorview that display the sensors data
-        mMagSensorView = new MagSensorView(getContext(),mSensorManager);
+        mMagSensorView = new MagSensorView(getContext(), mSensorManager);
         // add my sensorview to the layout 1
         mSensorLayout.addView(mMagSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
-        mOriSensorView = new OriSensorView(getContext(),mSensorManager,mLocationManager);
+        mOriSensorView = new OriSensorView(getContext(), mSensorManager, mLocationManager);
         mOriSensorView.setClickable(true);
         mOriSensorView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1007,12 +1021,12 @@ public class TrycorderFragment extends Fragment
         mSensorLayout.addView(mOriSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
-        mGraSensorView = new GraSensorView(getContext(),mSensorManager);
+        mGraSensorView = new GraSensorView(getContext(), mSensorManager);
         // add my sensorview to the layout 1
         mSensorLayout.addView(mGraSensorView, tlayoutParams);
 
         // my sensorview that display the sensors data
-        mTemSensorView = new TemSensorView(getContext(),mSensorManager);
+        mTemSensorView = new TemSensorView(getContext(), mSensorManager);
         // add my sensorview to the layout 1
         mSensorLayout.addView(mTemSensorView, tlayoutParams);
 
@@ -1059,15 +1073,15 @@ public class TrycorderFragment extends Fragment
         mWalkieSpeakButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            listen();
+                listen();
             }
         });
 
         mWalkieTalkButton = (Button) view.findViewById(R.id.walkie_talk_button);
         mWalkieTalkButton.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onTouch(View view,MotionEvent event) {
-                switch(event.getAction()) {
+            public boolean onTouch(View view, MotionEvent event) {
+                switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         startstreamingaudio();
                         break;
@@ -1085,22 +1099,65 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 // stop all servers
-                stoptalkserver();
-                unregisterService();
+                //stoptalkserver();
+                //unregisterService();
+                stopdiscoverService();
                 stopserver();
                 // restart all servers
                 initserver();
-                registerService();
-                inittalkserver();
+                //registerService();
+                startdiscoverService();
+                //inittalkserver();
             }
         });
 
+        mWalkieSpeaklistButton = (Button) view.findViewById(R.id.walkie_speaklist_button);
+        mWalkieSpeaklistButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchviewer(8);
+            }
+        });
+
+        mWalkieServeronButton = (Button) view.findViewById(R.id.walkie_serveron_button);
+        mWalkieServeronButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                startTrycorderService();
+            }
+        });
+
+        mWalkieServeroffButton = (Button) view.findViewById(R.id.walkie_serveroff_button);
+        mWalkieServeroffButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                stopTrycorderService();
+            }
+        });
+
+        mWalkieLogslistButton = (Button) view.findViewById(R.id.walkie_logslist_button);
+        mWalkieLogslistButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchviewer(2);
+            }
+        });
+
+        // the list of ip - machine that we discover
         mWalkieIpList = (TextView) view.findViewById(R.id.walkie_iplist);
 
         // utility class to fetch infos from the system
         mFetcher = new Fetcher(getContext());
 
+        // fill the list with at least our private IP until some events fill it more
         mWalkieIpList.setText(mFetcher.fetch_ip_address());
+
+        // start the talk network listener server player (lol)
+        //startTrycorderService();
 
         return view;
     }
@@ -1149,6 +1206,10 @@ public class TrycorderFragment extends Fragment
         mWalkieSpeakButton.setTypeface(face2);
         mWalkieTalkButton.setTypeface(face2);
         mWalkieConnectButton.setTypeface(face2);
+        mWalkieSpeaklistButton.setTypeface(face2);
+        mWalkieServeronButton.setTypeface(face2);
+        mWalkieServeroffButton.setTypeface(face2);
+        mWalkieLogslistButton.setTypeface(face2);
         mWalkieIpList.setTypeface(face3);
 
         mShieldUpButton.setTypeface(face3);
@@ -1177,10 +1238,11 @@ public class TrycorderFragment extends Fragment
         mLogsInfoButton.setTypeface(face2);
         mLogsPlansButton.setTypeface(face2);
         mLogsSysButton.setTypeface(face2);
+        mLogsStatButton.setTypeface(face2);
 
         mLogsConsole.setTypeface(face2);
-        mLogsSys.setTypeface(face2);
         mLogsInfo.setTypeface(face2);
+        //mLogsSys.setTypeface(face);
 
         mModePhotogalButton.setTypeface(face2);
         mModeVideogalButton.setTypeface(face2);
@@ -1199,7 +1261,7 @@ public class TrycorderFragment extends Fragment
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
         deviceName = sharedPref.getString("pref_key_device_name", "");
-        replaySent = sharedPref.getBoolean("pref_key_replay_sent", true);
+        replaySent = sharedPref.getBoolean("pref_key_replay_sent", false);
         // dynamic status part
         mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
         mSensorpage = sharedPref.getInt("pref_key_sensor_page", 0);
@@ -1212,11 +1274,13 @@ public class TrycorderFragment extends Fragment
         switchbuttonlayout(mButtonsmode);
         switchsensorlayout(mSensormode);
         switchviewer(mViewermode);
-        if(mSensormode<=4) startsensors(mSensormode);
+        if (mSensormode <= 4) startsensors(mSensormode);
         initspeak();
         initserver();
-        registerService();
-        inittalkserver();
+        startTrycorderService();
+        //registerService();
+        startdiscoverService();
+        //inittalkserver();
     }
 
     @Override
@@ -1233,18 +1297,21 @@ public class TrycorderFragment extends Fragment
         editor.commit();
         stopsensors();
         switchcam(0);
-        stoptalkserver();
-        unregisterService();
+        mLogsStat.stop();
+        //stopTrycorderService();
+        //stoptalkserver();
+        //unregisterService();
+        stopdiscoverService();
         stopserver();
         super.onPause();
     }
 
-    private int planno=0;
+    private int planno = 0;
 
     private void switchplans() {
         planno++;
-        if (planno>=6) planno=0;
-        switch(planno) {
+        if (planno >= 6) planno = 0;
+        switch (planno) {
             case 0:
                 mStarshipPlans.setImageResource(R.drawable.starship_view);
                 break;
@@ -1320,7 +1387,7 @@ public class TrycorderFragment extends Fragment
                 say("Sensors OFF");
                 break;
         }
-        if(mode<=4) mSensorpage = mode;
+        if (mode <= 4) mSensorpage = mode;
         mSensormode = mode;
     }
 
@@ -1341,7 +1408,7 @@ public class TrycorderFragment extends Fragment
     // settings activity incorporation in the display
     public void settingsactivity() {
         say("Settings");
-        if(isChatty) speak("Settings");
+        if (isChatty) speak("Settings");
         Intent i = new Intent(getActivity(), SettingsActivity.class);
         startActivity(i);
     }
@@ -1349,7 +1416,7 @@ public class TrycorderFragment extends Fragment
     // settings activity incorporation in the display
     public void accesscrew() {
         say("Access Starship Crew");
-        if(isChatty) speak("Crew information and evaluation");
+        if (isChatty) speak("Crew information and evaluation");
         Intent i = new Intent(getActivity(), ContactsListActivity.class);
         startActivity(i);
     }
@@ -1357,14 +1424,14 @@ public class TrycorderFragment extends Fragment
     // settings activity incorporation in the display
     public void accessinventory() {
         say("Access Starship Inventory");
-        if(isChatty) speak("Inventory");
+        if (isChatty) speak("Inventory");
         Intent i = new Intent(getActivity(), ProductsListActivity.class);
         startActivity(i);
     }
 
     private void opengallery() {
         say("Open Gallery Class");
-        if(isChatty) speak("Gallery");
+        if (isChatty) speak("Gallery");
         Intent i = new Intent(getActivity(), GalleryActivity.class);
         startActivity(i);
     }
@@ -1377,11 +1444,11 @@ public class TrycorderFragment extends Fragment
     // map activity to see where we are on the map of this planet
 
     public void googlemapactivity() {
-        float longitude=mOriSensorView.getLongitude();
-        float latitude=mOriSensorView.getLatitude();
+        float longitude = mOriSensorView.getLongitude();
+        float latitude = mOriSensorView.getLatitude();
 
         //final Intent viewIntent = new Intent(Intent.ACTION_VIEW, constructGeoUri(view.getContentDescription().toString()));
-        String geopath = "geo:"+String.valueOf(latitude)+","+String.valueOf(longitude);
+        String geopath = "geo:" + String.valueOf(latitude) + "," + String.valueOf(longitude);
         Uri geouri = Uri.parse(geopath);
         say("Open planetary mapping");
         say(geopath);
@@ -1475,7 +1542,7 @@ public class TrycorderFragment extends Fragment
                 mWalkieLayout.setVisibility(View.VISIBLE);
                 break;
         }
-        if(no<=4) mSensorpage = no;
+        if (no <= 4) mSensorpage = no;
         mSensormode = no;
     }
 
@@ -1550,7 +1617,7 @@ public class TrycorderFragment extends Fragment
     }
 
     private void opencomm() {
-        if(isChatty) speak("Hailing frequency opened");
+        if (isChatty) speak("Hailing frequency opened");
         else {
             MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commopen);
             mediaPlayer.start(); // no need to call prepare(); create() does that for you
@@ -1561,7 +1628,7 @@ public class TrycorderFragment extends Fragment
     }
 
     private void closecomm() {
-        if(isChatty) speak("Hailing frequency closed");
+        if (isChatty) speak("Hailing frequency closed");
         else {
             MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.commclose);
             mediaPlayer.start(); // no need to call prepare(); create() does that for you
@@ -1572,7 +1639,7 @@ public class TrycorderFragment extends Fragment
     }
 
     private void intercomm() {
-        if(isChatty) speak("Intercom mode ready");
+        if (isChatty) speak("Intercom mode ready");
         else {
             MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.keyok2);
             mediaPlayer.start(); // no need to call prepare(); create() does that for you
@@ -1589,7 +1656,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(8);
         mTraSensorView.setmode(2);
         startsensors(8);
-        if(isChatty) speak("Transport In Progress. . . Transport Complete");
+        if (isChatty) speak("Transport In Progress. . . Transport Complete");
     }
 
     private void transporterin() {
@@ -1599,7 +1666,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(8);
         mTraSensorView.setmode(1);
         startsensors(8);
-        if(isChatty) speak("Transport In Progress. . . Transport Complete");
+        if (isChatty) speak("Transport In Progress. . . Transport Complete");
     }
 
     private void raiseshields() {
@@ -1609,7 +1676,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(6);
         mShiSensorView.setmode(1);
         startsensors(6);
-        if(isChatty) speak("Shields Up");
+        if (isChatty) speak("Shields Up");
     }
 
     private void lowershields() {
@@ -1619,7 +1686,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(6);
         mShiSensorView.setmode(2);
         startsensors(6);
-        if(isChatty) speak("Shields Down");
+        if (isChatty) speak("Shields Down");
     }
 
     private void tractorpush() {
@@ -1629,7 +1696,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(9);
         mTrbSensorView.setmode(1);
         startsensors(9);
-        if(isChatty) speak("Repulser Beam Engaged");
+        if (isChatty) speak("Repulser Beam Engaged");
     }
 
     private void tractoroff() {
@@ -1639,7 +1706,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(9);
         mTrbSensorView.setmode(0);
         stopsensors();
-        if(isChatty) speak("Beam Off");
+        if (isChatty) speak("Beam Off");
     }
 
     private void tractorpull() {
@@ -1649,7 +1716,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(9);
         mTrbSensorView.setmode(2);
         startsensors(9);
-        if(isChatty) speak("Tractor Beam Engaged");
+        if (isChatty) speak("Tractor Beam Engaged");
     }
 
     private void motorimpulse() {
@@ -1661,7 +1728,7 @@ public class TrycorderFragment extends Fragment
         startsensors(10);
         switchviewer(7);
         switchanimate(1);
-        if(isChatty) speak("Impulse Engine Engaged");
+        if (isChatty) speak("Impulse Engine Engaged");
     }
 
     private void motoroff() {
@@ -1673,7 +1740,7 @@ public class TrycorderFragment extends Fragment
         stopsensors();
         switchviewer(7);
         switchanimate(0);
-        if(isChatty) speak("All engines down");
+        if (isChatty) speak("All engines down");
     }
 
     private void motorwarp() {
@@ -1685,7 +1752,7 @@ public class TrycorderFragment extends Fragment
         startsensors(10);
         switchviewer(7);
         switchanimate(2);
-        if(isChatty) speak("Warp Drive Engaged");
+        if (isChatty) speak("Warp Drive Engaged");
     }
 
     private void firephaser() {
@@ -1695,7 +1762,7 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(7);
         mFirSensorView.setmode(2);
         startsensors(7);
-        if(isChatty) speak("The target is disabled");
+        if (isChatty) speak("The target is disabled");
     }
 
     private void firemissiles() {
@@ -1705,14 +1772,14 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(7);
         mFirSensorView.setmode(1);
         startsensors(7);
-        if(isChatty) speak("The ship is destroyed");
+        if (isChatty) speak("The ship is destroyed");
     }
 
     private void switchanimate(int no) {
         mImageEarthStill.setVisibility(View.GONE);
         mGIFView.setVisibility(View.GONE);
         mGIFView1.setVisibility(View.GONE);
-        switch(no) {
+        switch (no) {
             case 0:
                 mImageEarthStill.setVisibility(View.VISIBLE);
                 break;
@@ -2002,7 +2069,10 @@ public class TrycorderFragment extends Fragment
         mStarshipPlans.setVisibility(View.GONE);
         mViewerPhoto.setVisibility(View.GONE);
         mLogsSys.setVisibility(View.GONE);
+        mLogsStat.setVisibility(View.GONE);
         mViewerAnimate.setVisibility(View.GONE);
+        mLogsStat.stop();
+        switchcam(0);
         switch (no) {
             case 0:
                 say("Viewer OFF");
@@ -2053,21 +2123,33 @@ public class TrycorderFragment extends Fragment
                 break;
             case 6:
                 say("System Info");
-                mLogsSys.setVisibility(View.VISIBLE);
+                mLogsInfo.setVisibility(View.VISIBLE);
                 mVieweron = false;
-                mLogsSys.setText("");
-                mLogsSys.append("--------------------\nConnectivity\n--------------------\n");
-                mLogsSys.append(mFetcher.fetch_connectivity());
-                mLogsSys.append("--------------------\nSensors List\n--------------------\n");
-                mLogsSys.append(mFetcher.fetch_sensors_list());
-                mLogsSys.append("--------------------\nCPU Info\n--------------------\n");
-                mLogsSys.append(mFetcher.fetch_cpu_info());
-                mLogsSys.append("--------------------\nMemory Info\n--------------------\n");
-                mLogsSys.append(mFetcher.fetch_memory_info());
+                mLogsInfo.setText("");
+                mLogsInfo.append("--------------------\nConnectivity\n--------------------\n");
+                mLogsInfo.append(mFetcher.fetch_connectivity());
+                mLogsInfo.append("--------------------\nSensors List\n--------------------\n");
+                mLogsInfo.append(mFetcher.fetch_sensors_list());
+                mLogsInfo.append("--------------------\nCPU Info\n--------------------\n");
+                mLogsInfo.append(mFetcher.fetch_cpu_info());
+                mLogsInfo.append("--------------------\nMemory Info\n--------------------\n");
+                mLogsInfo.append(mFetcher.fetch_memory_info());
                 break;
             case 7:
                 say("Animate Viewer");
                 mViewerAnimate.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
+            case 8:
+                say("Speak List");
+                mLogsSys.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                mLogsSys.setText(mListenText);
+                break;
+            case 9:
+                say("Logs Stat");
+                mLogsStat.setVisibility(View.VISIBLE);
+                mLogsStat.start();
                 mVieweron = false;
                 break;
         }
@@ -2111,7 +2193,7 @@ public class TrycorderFragment extends Fragment
         switchviewer(5);
         mViewerPhoto.setImageURI(imageFileUri);
         Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath());
-        if(image!=null) processbitmap(image);
+        if (image != null) processbitmap(image);
         // do not restart camera if we switch the viewer page before
         // camera.startPreview();
     }
@@ -2306,10 +2388,10 @@ public class TrycorderFragment extends Fragment
 
     // =========================================================================
     // usage of text-to-speech to speak a sensence
-    private TextToSpeech tts=null;
+    private TextToSpeech tts = null;
 
     private void initspeak() {
-        if(tts==null) {
+        if (tts == null) {
             tts = new TextToSpeech(getContext(), new TextToSpeech.OnInitListener() {
                 @Override
                 public void onInit(int status) {
@@ -2334,25 +2416,25 @@ public class TrycorderFragment extends Fragment
     public void speak(String texte) {
         initspeak();
         tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
-        say("Speaked: "+texte);
+        say("Speaked: " + texte);
     }
 
-    public void speak(String texte,String lng) {
+    public void speak(String texte, String lng) {
         initspeak();
         setspeaklang(lng);
         tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
-        say("Speaked: "+texte);
+        say("Speaked: " + texte);
     }
 
     // ========================================================================================
     // functions to control the speech process
 
     // handles for the conversation functions
-    private SpeechRecognizer mSpeechRecognizer=null;
-    private Intent mSpeechRecognizerIntent=null;
+    private SpeechRecognizer mSpeechRecognizer = null;
+    private Intent mSpeechRecognizerIntent = null;
 
     private void listen() {
-        if(mSpeechRecognizer==null) {
+        if (mSpeechRecognizer == null) {
             // ============== initialize the audio listener and talker ==============
 
             //AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
@@ -2448,29 +2530,29 @@ public class TrycorderFragment extends Fragment
     private boolean matchvoice(String textein) {
         String texte = textein.toLowerCase();
         if (texte.contains("french") || texte.contains("français")) {
-            listenLanguage="FR";
-            speakLanguage="FR";
-            speak("français",speakLanguage);
+            listenLanguage = "FR";
+            speakLanguage = "FR";
+            speak("français", speakLanguage);
             return (true);
         }
         if (texte.contains("english") || texte.contains("anglais")) {
-            listenLanguage="EN";
-            speakLanguage="EN";
-            speak("english",speakLanguage);
+            listenLanguage = "EN";
+            speakLanguage = "EN";
+            speak("english", speakLanguage);
             return (true);
         }
         if (texte.contains("martin") || texte.contains("master")) {
-            if(speakLanguage.equals("FR")) speak("Martin est mon maître.");
+            if (speakLanguage.equals("FR")) speak("Martin est mon maître.");
             else speak("Martin is my Master.");
             return (true);
         }
         if (texte.contains("computer") || texte.contains("ordinateur")) {
-            if(speakLanguage.equals("FR")) speak("Faites votre requète");
+            if (speakLanguage.equals("FR")) speak("Faites votre requète");
             else speak("State your question");
             return (true);
         }
         if (texte.contains("fuck") || texte.contains("shit")) {
-            if(speakLanguage.equals("FR")) speak("Ce n'est pas très poli");
+            if (speakLanguage.equals("FR")) speak("Ce n'est pas très poli");
             else speak("This is not very polite.");
             switchviewer(0);
             switchsensorlayout(0);
@@ -2543,7 +2625,7 @@ public class TrycorderFragment extends Fragment
             opencomm();
             return (true);
         }
-        if (texte.contains("beam me up") || texte.contains("scotty")) {
+        if (texte.contains("beam me up") || texte.contains("scotty") || texte.contains("transporteur")) {
             switchbuttonlayout(5);
             transporterin();
             return (true);
@@ -2565,6 +2647,29 @@ public class TrycorderFragment extends Fragment
         }
         return (false);
     }
+
+    public String mListenText = "The SPEAK will respond to:\n" +
+            "francais | french\n" +
+            "anglais | english\n" +
+            "computer | ordinateur\n" +
+            "intercom\n" +
+            "phaser\n" +
+            "fire | torpedo\n" +
+            "shield down\n" +
+            "raise shield\n" +
+            "sensor off\n" +
+            "sensor\n" +
+            "magnetic\n" +
+            "orientation | direction\n" +
+            "gravity | vibration\n" +
+            "temperature | pressure | light\n" +
+            "hailing close\n" +
+            "hailing | frequency\n" +
+            "beam me up | scotty | transporteur\n" +
+            "beam me down\n" +
+            "viewer\n" +
+            "logs\n" +
+            "fuck | shit\n";
 
     // =====================================================================================
     // network operations.   ===   Hi Elvis!
@@ -2673,7 +2778,7 @@ public class TrycorderFragment extends Fragment
 
     // tread to update the ui
     class updateUIThread implements Runnable {
-        private String msg=null;
+        private String msg = null;
 
         public updateUIThread(String str) {
             msg = str;
@@ -2685,7 +2790,7 @@ public class TrycorderFragment extends Fragment
             if (msg != null) {
                 mTextstatus_top.setText(msg);
                 say("Received: " + msg);
-                if(matchvoice(msg)==false) {
+                if (matchvoice(msg) == false) {
                     speak(msg);
                 }
             }
@@ -2702,7 +2807,7 @@ public class TrycorderFragment extends Fragment
     // send a message to the other
     private void sendtext(String text) {
         // start the client thread
-        say("Send: "+text);
+        say("Send: " + text);
         clientThread = new Thread(new ClientThread(text));
         clientThread.start();
     }
@@ -2719,8 +2824,8 @@ public class TrycorderFragment extends Fragment
         public void run() {
             String myip = mFetcher.fetch_ip_address();
             for (int i = 0; i < mIpList.size(); ++i) {
-                if(replaySent==false && myip.equals(mIpList.get(i))) {
-                    Log.d("clientthread","do not replay locally");
+                if (replaySent == false && myip.equals(mIpList.get(i))) {
+                    Log.d("clientthread", "do not replay locally");
                     continue;
                 }
                 clientsend(mIpList.get(i));
@@ -2774,25 +2879,15 @@ public class TrycorderFragment extends Fragment
     // =====================================================================================
     // register my service with NSD
 
-    private String mServiceName;
-    private NsdManager mNsdManager;
-    private NsdManager.RegistrationListener mRegistrationListener;
-    private NsdManager.DiscoveryListener mDiscoveryListener;
-    private NsdManager.ResolveListener mResolveListener;
-    private NsdServiceInfo mService;
+    private String mServiceName=null;
+    private NsdManager mNsdManager=null;
+    private NsdManager.RegistrationListener mRegistrationListener=null;
+    private NsdServiceInfo mService=null;
     private String SERVICE_TYPE = "_http._tcp.";
     private String SERVICE_NAME = "Trycorder";
 
-    private List<String> mIpList = new ArrayList<String>();
-    private List<String> mNameList = new ArrayList<String>();
-
     public void registerService() {
-        if(deviceName.isEmpty()) deviceName=SERVICE_NAME;
-
-        mIpList.clear();
-        mIpList.add(mFetcher.fetch_ip_address());
-        mNameList.clear();
-        mNameList.add(deviceName);
+        if (deviceName.isEmpty()) deviceName = SERVICE_NAME;
 
         mNsdManager = (NsdManager) getContext().getSystemService(Context.NSD_SERVICE);
 
@@ -2806,18 +2901,10 @@ public class TrycorderFragment extends Fragment
 
         mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
 
-        say("Discover services");
-        initializeResolveListener();
-
-        initializeDiscoveryListener();
-
-        mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
-
     }
 
     public void unregisterService() {
         mNsdManager.unregisterService(mRegistrationListener);
-        mNsdManager.stopServiceDiscovery(mDiscoveryListener);
     }
 
     public void initializeRegistrationListener() {
@@ -2855,6 +2942,38 @@ public class TrycorderFragment extends Fragment
         };
     }
 
+    // =======================================================================================
+    // discovery section
+
+    private NsdManager.DiscoveryListener mDiscoveryListener=null;
+    private NsdManager.ResolveListener mResolveListener=null;
+
+    private List<String> mIpList = new ArrayList<String>();
+    private List<String> mNameList = new ArrayList<String>();
+
+    public void startdiscoverService() {
+        if (deviceName.isEmpty()) deviceName = SERVICE_NAME;
+
+        mIpList.clear();
+        mIpList.add(mFetcher.fetch_ip_address());
+        mNameList.clear();
+        mNameList.add(deviceName);
+
+        mNsdManager = (NsdManager) getContext().getSystemService(Context.NSD_SERVICE);
+
+        say("Discover services");
+        initializeResolveListener();
+
+        initializeDiscoveryListener();
+
+        mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+
+    }
+
+    public void stopdiscoverService() {
+        mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+    }
+
     public void initializeResolveListener() {
         mResolveListener = new NsdManager.ResolveListener() {
 
@@ -2862,7 +2981,7 @@ public class TrycorderFragment extends Fragment
             public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
                 // Called when the resolve fails.  Use the error code to debug.
                 Log.e("discovery", "Resolve failed: " + errorCode);
-                saypost("Resolve failed: "+serviceInfo.getServiceName()+" Err:"+errorCode);
+                saypost("Resolve failed: " + serviceInfo.getServiceName() + " Err:" + errorCode);
             }
 
             @Override
@@ -2871,7 +2990,7 @@ public class TrycorderFragment extends Fragment
 
                 if (serviceInfo.getServiceName().equals(mServiceName)) {
                     Log.d("discovery", "Same IP.");
-                    saypost("Local machine "+mServiceName);
+                    saypost("Local machine " + mServiceName);
                     //return;
                 }
                 mService = serviceInfo;
@@ -2880,8 +2999,8 @@ public class TrycorderFragment extends Fragment
                 Log.d("discovery", "Host: " + host.toString() + " Port: " + port);
                 saypost("Resolved " + mService.getServiceName() +
                         " Host: " + host.toString() + " Port: " + port);
-                StringBuffer str=new StringBuffer(host.toString());
-                addiplist(str.substring(1),mService.getServiceName());
+                StringBuffer str = new StringBuffer(host.toString());
+                addiplist(str.substring(1), mService.getServiceName());
             }
         };
     }
@@ -2901,7 +3020,7 @@ public class TrycorderFragment extends Fragment
             public void onServiceFound(NsdServiceInfo service) {
                 // A service was found!  Do something with it.
                 Log.d("discovery", "Service discovery success: " + service);
-                saypost("Service discovered: "+service.getServiceName());
+                saypost("Service discovered: " + service.getServiceName());
                 if (!service.getServiceType().equals(SERVICE_TYPE)) {
                     // Service type is the string containing the protocol and
                     // transport layer for this service.
@@ -2961,20 +3080,20 @@ public class TrycorderFragment extends Fragment
 
         public sayThread(String str) {
             msg = str;
-            Log.d("saythread",str);
+            Log.d("saythread", str);
         }
 
         @Override
         public void run() {
-            if(msg!=null) {
+            if (msg != null) {
                 say(msg);
             }
         }
     }
 
-    private void addiplist(String ip,String name) {
-        for(int i=0;i<mIpList.size();++i) {
-            if(ip.equals(mIpList.get(i))) {
+    private void addiplist(String ip, String name) {
+        for (int i = 0; i < mIpList.size(); ++i) {
+            if (ip.equals(mIpList.get(i))) {
                 listpost();
                 return;
             }
@@ -2996,9 +3115,9 @@ public class TrycorderFragment extends Fragment
 
         @Override
         public void run() {
-            StringBuffer str=new StringBuffer("");
-            for(int i=0;i<mIpList.size();++i) {
-                str.append(mIpList.get(i)+" - "+mNameList.get(i)+"\n");
+            StringBuffer str = new StringBuffer("");
+            for (int i = 0; i < mIpList.size(); ++i) {
+                str.append(mIpList.get(i) + " - " + mNameList.get(i) + "\n");
             }
             mWalkieIpList.setText(str.toString());
         }
@@ -3007,11 +3126,11 @@ public class TrycorderFragment extends Fragment
     // =====================================================================================
     // voice capture and send on udp
 
-    private int RECORDING_RATE=44100;
-    private int CHANNEL= AudioFormat.CHANNEL_IN_MONO;
-    private int FORMAT= AudioFormat.ENCODING_PCM_16BIT;
+    private int RECORDING_RATE = 44100;
+    private int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+    private int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
 
-    private int BUFFER_SIZE = AudioRecord.getMinBufferSize(RECORDING_RATE,CHANNEL,FORMAT);
+    private int BUFFER_SIZE = AudioRecord.getMinBufferSize(RECORDING_RATE, CHANNEL, FORMAT);
 
     private AudioRecord recorder;
 
@@ -3019,17 +3138,17 @@ public class TrycorderFragment extends Fragment
 
     private void startstreamingaudio() {
         say("start streaming audio");
-        currentlySendingAudio=true;
+        currentlySendingAudio = true;
         startStreaming();
     }
 
     private void stopstreamingaudio() {
         say("stop streaming audio");
-        currentlySendingAudio=false;
+        currentlySendingAudio = false;
         try {
             recorder.release();
         } catch (Exception e) {
-            Log.d("stop streaming","stop streaming error");
+            Log.d("stop streaming", "stop streaming error");
         }
     }
 
@@ -3045,7 +3164,7 @@ public class TrycorderFragment extends Fragment
 
                     Log.d("streamaudio", "Obtaining server address");
                     String SERVER;
-                    int PORT=SERVERPORT;
+                    int PORT = SERVERPORT;
 
                     Log.d("streamaudio", "Creating the datagram socket");
                     DatagramSocket socket = new DatagramSocket();
@@ -3055,7 +3174,7 @@ public class TrycorderFragment extends Fragment
 
                     List<InetAddress> mServerAddress = new ArrayList<>();
                     mServerAddress.clear();
-                    for(int i=0;i<mIpList.size();++i) {
+                    for (int i = 0; i < mIpList.size(); ++i) {
                         SERVER = mIpList.get(i);
                         Log.d("streamaudio", "Connecting to " + SERVER + ":" + PORT);
                         mServerAddress.add(InetAddress.getByName(SERVER));
@@ -3080,14 +3199,14 @@ public class TrycorderFragment extends Fragment
 
                         // repeat to myself if i am alone on the net only
                         int j;
-                        if(mIpList.size()<2) j=0;
-                        else j=1;
+                        if (mIpList.size() < 2) j = 0;
+                        else j = 1;
                         // repeat to each other address from list
-                        for(int i=j;i<mIpList.size();++i) {
+                        for (int i = j; i < mIpList.size(); ++i) {
                             // place contents of buffer into the packet
                             packet = new DatagramPacket(buffer, read, mServerAddress.get(i), PORT);
 
-                            Log.d("streamloop", "Sending packet : " + read + " to "+mIpList.get(i));
+                            Log.d("streamloop", "Sending packet : " + read + " to " + mIpList.get(i));
                             // send the packet
                             socket.send(packet);
                         }
@@ -3107,7 +3226,7 @@ public class TrycorderFragment extends Fragment
 
     // =====================================================================================
     // voice receive on udp and playback
-    private Thread talkServerThread=null;
+    private Thread talkServerThread = null;
 
     private void inittalkserver() {
         say("Start talk server thread");
@@ -3127,7 +3246,7 @@ public class TrycorderFragment extends Fragment
 
     class TalkServerThread implements Runnable {
 
-        private int bufferSize=10000;
+        private int bufferSize = 10000;
 
         public void run() {
 
@@ -3137,7 +3256,7 @@ public class TrycorderFragment extends Fragment
                 talkServerSocket = new DatagramSocket(null);
                 talkServerSocket.setReuseAddress(true);
                 talkServerSocket.bind(new InetSocketAddress(SERVERPORT));
-                Log.d("talkserver","socket created");
+                Log.d("talkserver", "socket created");
             } catch (Exception e) {
                 saypost("talkserverthread Cant create socket");
                 return;
@@ -3154,16 +3273,16 @@ public class TrycorderFragment extends Fragment
             while (!Thread.currentThread().isInterrupted()) {
 
                 try {
-                    Log.d("talkloop","ready to receive "+ bufferSize);
-                    DatagramPacket receivePacket = new DatagramPacket(receiveData,receiveData.length);
+                    Log.d("talkloop", "ready to receive " + bufferSize);
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                     talkServerSocket.receive(receivePacket);
-                    byte[] buffer= receivePacket.getData();
+                    byte[] buffer = receivePacket.getData();
                     int offset = receivePacket.getOffset();
                     int len = receivePacket.getLength();
-                    Log.d("talkloop","received bytes : "+offset+" - "+len);
-                    track.write(buffer,offset,len);
+                    Log.d("talkloop", "received bytes : " + offset + " - " + len);
+                    track.write(buffer, offset, len);
                 } catch (Exception e) {
-                    Log.d("talkloop","exception: "+e);
+                    Log.d("talkloop", "exception: " + e);
                 }
 
             }
@@ -3174,6 +3293,26 @@ public class TrycorderFragment extends Fragment
 
         }
 
+    }
+
+    // ===================================================================================
+
+    private void startTrycorderService() {
+        say("Start Trycorder Service");
+        try {
+            getActivity().startService(new Intent(getContext(), TrycorderService.class));
+        } catch (Exception e) {
+            say("Cant start trycorder service");
+        }
+    }
+
+    private void stopTrycorderService() {
+        say("Stop Trycorder Service");
+        try {
+            getActivity().stopService(new Intent(getContext(), TrycorderService.class));
+        } catch (Exception e) {
+            say("Cant stop trycorder service");
+        }
     }
 
 }
