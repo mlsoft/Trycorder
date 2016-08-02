@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -402,4 +403,28 @@ public class Fetcher {
         return(message.toString());
     }
 
+    public String fetch_dhcpinfo() {
+        DhcpInfo d;
+        WifiManager wifii;
+
+        wifii = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        d = wifii.getDhcpInfo();
+
+        StringBuilder message=new StringBuilder();
+        message.append("Locale: ").append(Locale.getDefault()).append('\n');
+        message.append("DNS 1: " + addrtostring(d.dns1)+ "\n");
+        message.append("DNS 2: " + addrtostring(d.dns2)+ "\n");
+        message.append("Default Gateway: " + addrtostring(d.gateway)+ "\n");
+        message.append("IP Address: " + addrtostring(d.ipAddress)+ "\n");
+        message.append("Lease Time: " + String.valueOf(d.leaseDuration)+ "\n");
+        message.append("Subnet Mask: " + addrtostring(d.netmask)+ "\n");
+        message.append("Server IP: " + addrtostring(d.serverAddress)+ "\n");
+
+        return(message.toString());
+    }
+
+    private String addrtostring(int addr) {
+        String addrtext=(String.format("%d.%d.%d.%d",addr&0xff,(addr>>8)&0xff,(addr>>16)&0xff,(addr>>24)&0xff));
+        return(addrtext);
+    }
 }

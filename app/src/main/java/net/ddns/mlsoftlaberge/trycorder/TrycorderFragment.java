@@ -1102,12 +1102,13 @@ public class TrycorderFragment extends Fragment
                 //stoptalkserver();
                 //unregisterService();
                 stopdiscoverService();
-                stopserver();
+                //stopserver();
                 // restart all servers
-                initserver();
+                //initserver();
                 //registerService();
                 startdiscoverService();
                 //inittalkserver();
+                //scantrycorders();
             }
         });
 
@@ -1279,8 +1280,9 @@ public class TrycorderFragment extends Fragment
         initserver();
         startTrycorderService();
         //registerService();
-        startdiscoverService();
         //inittalkserver();
+        startdiscoverService();
+        //scantrycorders();
     }
 
     @Override
@@ -2106,6 +2108,8 @@ public class TrycorderFragment extends Fragment
                 mLogsInfo.append(mFetcher.fetch_os_info());
                 mLogsInfo.append("--------------------\nPackage\n--------------------\n");
                 mLogsInfo.append(mFetcher.fetch_packinfo());
+                mLogsInfo.append("--------------------\nWifi-Dhcp\n--------------------\n");
+                mLogsInfo.append(mFetcher.fetch_dhcpinfo());
                 //mLogsInfo.append("--------------------\nDmesg\n--------------------\n");
                 //mLogsInfo.append(mFetcher.fetch_dmesg_info());
                 //mLogsInfo.append("--------------------\nProcess\n--------------------\n");
@@ -3030,6 +3034,7 @@ public class TrycorderFragment extends Fragment
                         // The name of the service tells the user what they'd be
                         // connecting to. It could be "Bob's Chat App".
                         Log.d("discovery", "Same machine: " + mServiceName);
+                        return;
                     }
                     Log.d("discovery", "Resolved service: " + service.getServiceName());
                     //Log.d("discovery", "Resolved service: " + service.getHost());  // empty
@@ -3314,5 +3319,77 @@ public class TrycorderFragment extends Fragment
             say("Cant stop trycorder service");
         }
     }
+
+    // ====================================================================================
+    // port scanner part
+
+    private Socket scanSocket = null;
+
+    Thread scanThread = null;
+
+    private List<String> listIp = new ArrayList<>();
+
+    // scan all addresses and fill the list
+    private void scantrycorders() {
+        listIp.clear();
+        scanThread = new Thread(new ScanThread());
+        scanThread.start();
+    }
+
+    class ScanThread implements Runnable {
+
+        public ScanThread() {
+            // constructor
+        }
+
+        @Override
+        public void run() {
+            String myip = mFetcher.fetch_ip_address();
+            String mynet=myip.substring(0,myip.lastIndexOf('.'));
+            for(int i=1;i<255;++i) {
+                String destip = mynet+"."+String.valueOf(i);
+                if(destip.equals(myip)) {
+                    listIp.add(destip);
+                } else {
+                    clientcheck(destip);
+                }
+            }
+            mIpList=listIp;
+            mNameList=listIp;
+            listpost();
+        }
+
+        private void clientcheck(String destip) {
+            // try to connect to a socket
+            try {
+                Log.d("scanthread", "try to connect to a server " + destip);
+                InetAddress serverAddr = InetAddress.getByName(destip);
+                clientSocket = new Socket(serverAddr, SERVERPORT);
+                Log.d("scanthread", "server connected " + destip);
+            } catch (UnknownHostException e) {
+                Log.d("scanthread", e.toString());
+                e.printStackTrace();
+                return;
+            } catch (IOException e) {
+                Log.d("scanthread", e.toString());
+                e.printStackTrace();
+                return;
+            }
+            // add the ip found in the list
+            listIp.add(destip);
+            // try to close the socket of the client
+            try {
+                Log.d("scanthread", "closing socket");
+                clientSocket.close();
+                Log.d("scanthread", "socket closed");
+            } catch (Exception e) {
+                Log.d("scanthread", e.toString());
+                e.printStackTrace();
+                return;
+            }
+        }
+
+    }
+
 
 }

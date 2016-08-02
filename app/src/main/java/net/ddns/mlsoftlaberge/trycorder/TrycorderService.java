@@ -21,6 +21,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
@@ -34,6 +36,7 @@ public class TrycorderService extends Service {
     // the preferences holder
     private SharedPreferences sharedPref;
 
+    private Fetcher mFetcher;
 
     @Override
     public IBinder onBind(Intent arg0) {
@@ -48,22 +51,24 @@ public class TrycorderService extends Service {
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         deviceName = sharedPref.getString("pref_key_device_name", "");
 
+        mFetcher=new Fetcher(getApplicationContext());
+
+        inittalkserver();
+
+        registerService();
+
         PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
                 new Intent(getApplicationContext(), TrycorderActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setContentTitle("Trycorder")
-                .setContentText("Talk server running ...")
+                .setContentText("Talk server running on "+mFetcher.fetch_ip_address()+":1701")
                 .setContentIntent(pi)
                 .setSmallIcon(R.drawable.trycorder_icon)
                 .build();
 
         startForeground(NOTIFICATION_ID, notification);
-
-        inittalkserver();
-
-        registerService();
 
         return START_STICKY;
     }
@@ -83,8 +88,10 @@ public class TrycorderService extends Service {
 
     private void inittalkserver() {
         //say("Start talk server thread");
-        talkServerThread = new Thread(new TalkServerThread());
-        talkServerThread.start();
+        if(talkServerThread==null) {
+            talkServerThread = new Thread(new TalkServerThread());
+            talkServerThread.start();
+        }
     }
 
     private void stoptalkserver() {
@@ -95,6 +102,7 @@ public class TrycorderService extends Service {
         } catch (Exception e) {
             say("cant stop talk server thread");
         }
+        talkServerThread=null;
     }
 
     class TalkServerThread implements Runnable {
@@ -128,8 +136,10 @@ public class TrycorderService extends Service {
                     AudioTrack.MODE_STREAM);
             track.play();
 
+            long systime;
+            long lasttime;
+            lasttime=0;
             while (!Thread.currentThread().isInterrupted()) {
-
                 try {
                     Log.d("talkloop", "ready to receive " + bufferSize);
                     DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -137,6 +147,9 @@ public class TrycorderService extends Service {
                     byte[] buffer = receivePacket.getData();
                     int offset = receivePacket.getOffset();
                     int len = receivePacket.getLength();
+                    //systime=System.currentTimeMillis();
+                    //if((systime-lasttime)>1000) say("Speaking ...");
+                    //lasttime=systime;
                     Log.d("talkloop", "received bytes : " + offset + " - " + len);
                     track.write(buffer, offset, len);
                 } catch (Exception e) {
