@@ -48,10 +48,16 @@ public class TrycorderService extends Service {
         // Let it continue running until it is stopped.
         Toast.makeText(this, "Trycorder Service Starting ...", Toast.LENGTH_LONG).show();
 
-        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        deviceName = sharedPref.getString("pref_key_device_name", "");
-
         mFetcher=new Fetcher(getApplicationContext());
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        deviceName = sharedPref.getString("pref_key_device_name", "Trycorder");
+        if(deviceName.equals("Trycorder")) {
+            deviceName=mFetcher.fetch_device_name();
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("pref_key_device_name", deviceName);
+            editor.commit();
+        }
 
         inittalkserver();
 
@@ -62,7 +68,7 @@ public class TrycorderService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new Notification.Builder(getApplicationContext())
-                .setContentTitle("Trycorder")
+                .setContentTitle("Trycorder " + deviceName)
                 .setContentText("Talk server running on "+mFetcher.fetch_ip_address()+":1701")
                 .setContentIntent(pi)
                 .setSmallIcon(R.drawable.trycorder_icon)

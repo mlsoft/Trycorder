@@ -339,6 +339,8 @@ public class TrycorderFragment extends Fragment
     private String displayLanguage;
     private String deviceName;
     private boolean replaySent;
+    private boolean autoBoot;
+    private boolean autoStop;
 
     // the preferences holder
     private SharedPreferences sharedPref;
@@ -359,6 +361,8 @@ public class TrycorderFragment extends Fragment
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
         deviceName = sharedPref.getString("pref_key_device_name", "");
         replaySent = sharedPref.getBoolean("pref_key_replay_sent", false);
+        autoBoot = sharedPref.getBoolean("pref_key_auto_boot", true);
+        autoStop = sharedPref.getBoolean("pref_key_auto_stop", false);
 
         // ==============================================================================
         // create layout params for the created views
@@ -1261,8 +1265,17 @@ public class TrycorderFragment extends Fragment
         speakLanguage = sharedPref.getString("pref_key_speak_language", "");
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
-        deviceName = sharedPref.getString("pref_key_device_name", "");
+        deviceName = sharedPref.getString("pref_key_device_name", "Trycorder");
         replaySent = sharedPref.getBoolean("pref_key_replay_sent", false);
+        autoBoot = sharedPref.getBoolean("pref_key_auto_boot", true);
+        autoStop = sharedPref.getBoolean("pref_key_auto_stop", false);
+        // update device name for a device name from system
+        if(deviceName.equals("Trycorder")) {
+            deviceName=mFetcher.fetch_device_name();
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("pref_key_device_name", deviceName);
+            editor.commit();
+        }
         // dynamic status part
         mSensormode = sharedPref.getInt("pref_key_sensor_mode", 0);
         mSensorpage = sharedPref.getInt("pref_key_sensor_page", 0);
@@ -1300,7 +1313,9 @@ public class TrycorderFragment extends Fragment
         stopsensors();
         switchcam(0);
         mLogsStat.stop();
-        //stopTrycorderService();
+        if(autoStop) {
+            stopTrycorderService();
+        }
         //stoptalkserver();
         //unregisterService();
         stopdiscoverService();
@@ -2891,7 +2906,9 @@ public class TrycorderFragment extends Fragment
     private String SERVICE_NAME = "Trycorder";
 
     public void registerService() {
-        if (deviceName.isEmpty()) deviceName = SERVICE_NAME;
+        if (deviceName.isEmpty()) {
+            deviceName = SERVICE_NAME;
+        }
 
         mNsdManager = (NsdManager) getContext().getSystemService(Context.NSD_SERVICE);
 

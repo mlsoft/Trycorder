@@ -403,6 +403,10 @@ public class Fetcher {
         return(message.toString());
     }
 
+    public String fetch_device_name() {
+        return(android.os.Build.MODEL);
+    }
+
     public String fetch_dhcpinfo() {
         DhcpInfo d;
         WifiManager wifii;

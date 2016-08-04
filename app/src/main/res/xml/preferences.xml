@@ -45,6 +45,16 @@
             android:summary="Determine if we replay the sent text locally"
             android:title="Replay Sent"
             android:defaultValue="false" />
+        <CheckBoxPreference
+            android:key="pref_key_auto_boot"
+            android:summary="Determine if we start talk server at boot"
+            android:title="Auto Boot"
+            android:defaultValue="true" />
+        <CheckBoxPreference
+            android:key="pref_key_auto_stop"
+            android:summary="Determine if we stop the server at exit"
+            android:title="Auto Stop"
+            android:defaultValue="false" />
     </PreferenceCategory>
 
 </PreferenceScreen>
