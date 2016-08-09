@@ -41,6 +41,7 @@ import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -180,7 +181,7 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mWalkieLayout;
     private Button mWalkieSpeakButton;
     private Button mWalkieTalkButton;
-    private Button mWalkieConnectButton;
+    private Button mWalkieScanButton;
     private Button mWalkieSpeaklistButton;
     private Button mWalkieServeronButton;
     private Button mWalkieServeroffButton;
@@ -856,7 +857,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(2);
-                sendcommand("logs");
+                sendcommand("logs console");
             }
         });
 
@@ -866,7 +867,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(3);
-                sendcommand("system info");
+                sendcommand("logs info");
             }
         });
 
@@ -876,7 +877,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(4);
-                sendcommand("plans");
+                sendcommand("system plans");
             }
         });
 
@@ -886,6 +887,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(6);
+                sendcommand("system info");
             }
         });
 
@@ -895,6 +897,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(9);
+                sendcommand("system stat");
             }
         });
 
@@ -985,7 +988,13 @@ public class TrycorderFragment extends Fragment
             }
         });
         mLogsConsole = (TextView) view.findViewById(R.id.logs_console);
+        mLogsConsole.setHorizontallyScrolling(true);
+        mLogsConsole.setMovementMethod(new ScrollingMovementMethod());
+
         mLogsInfo = (TextView) view.findViewById(R.id.logs_info);
+        mLogsInfo.setHorizontallyScrolling(true);
+        mLogsInfo.setMovementMethod(new ScrollingMovementMethod());
+
         mStarshipPlans = (ImageView) view.findViewById(R.id.starship_plans);
         mStarshipPlans.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -994,8 +1003,12 @@ public class TrycorderFragment extends Fragment
                 switchplans();
             }
         });
+
         mViewerPhoto = (ImageView) view.findViewById(R.id.photo_view);
+
         mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
+        mLogsSys.setHorizontallyScrolling(true);
+        mLogsSys.setMovementMethod(new ScrollingMovementMethod());
 
         mLogsStat = new LogsStatView(getContext());
         mViewerLayout.addView(mLogsStat,tlayoutParams);
@@ -1131,8 +1144,8 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        mWalkieConnectButton = (Button) view.findViewById(R.id.walkie_connect_button);
-        mWalkieConnectButton.setOnClickListener(new View.OnClickListener() {
+        mWalkieScanButton = (Button) view.findViewById(R.id.walkie_scan_button);
+        mWalkieScanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
@@ -1156,6 +1169,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(8);
+                sendcommand("speak list");
             }
         });
 
@@ -1183,11 +1197,14 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(2);
+                sendcommand("logs console");
             }
         });
 
         // the list of ip - machine that we discover
         mWalkieIpList = (TextView) view.findViewById(R.id.walkie_iplist);
+        mWalkieIpList.setHorizontallyScrolling(true);
+        mWalkieIpList.setMovementMethod(new ScrollingMovementMethod());
 
         // utility class to fetch infos from the system
         mFetcher = new Fetcher(getContext());
@@ -1244,7 +1261,7 @@ public class TrycorderFragment extends Fragment
         mInterCommButton.setTypeface(face3);
         mWalkieSpeakButton.setTypeface(face2);
         mWalkieTalkButton.setTypeface(face2);
-        mWalkieConnectButton.setTypeface(face2);
+        mWalkieScanButton.setTypeface(face2);
         mWalkieSpeaklistButton.setTypeface(face2);
         mWalkieServeronButton.setTypeface(face2);
         mWalkieServeroffButton.setTypeface(face2);
@@ -2453,11 +2470,12 @@ public class TrycorderFragment extends Fragment
 
     // =========================================================================
     // system log talker
-    private StringBuffer logbuffer = new StringBuffer(500);
+    private StringBuffer logbuffer = new StringBuffer(1000);
 
     private void say(String texte) {
         mTextstatus_bottom.setText(texte);
         logbuffer.insert(0, texte + "\n");
+        if(logbuffer.length()>1000) logbuffer.setLength(1000);
         mLogsConsole.setText(logbuffer);
     }
 
@@ -2764,19 +2782,34 @@ public class TrycorderFragment extends Fragment
             switchviewer(0);
             return (true);
         }
-        if (texte.contains("logs")) {
+        if (texte.contains("logs console")) {
             switchbuttonlayout(9);
             switchviewer(2);
             return (true);
         }
-        if (texte.contains("system info")) {
+        if (texte.contains("logs info")) {
             switchbuttonlayout(9);
             switchviewer(3);
             return (true);
         }
-        if (texte.contains("plans")) {
+        if (texte.contains("system plans")) {
             switchbuttonlayout(9);
             switchviewer(4);
+            return (true);
+        }
+        if (texte.contains("system info")) {
+            switchbuttonlayout(9);
+            switchviewer(6);
+            return (true);
+        }
+        if (texte.contains("system stat")) {
+            switchbuttonlayout(9);
+            switchviewer(9);
+            return (true);
+        }
+        if (texte.contains("speak list")) {
+            switchbuttonlayout(2);
+            switchviewer(8);
             return (true);
         }
         return (false);
@@ -3241,7 +3274,8 @@ public class TrycorderFragment extends Fragment
                 return;
             }
         }
-        String newname = name.replaceFirst("\\032"," ");
+        // replace the \032 on android 4.4.4 by a blank space
+        String newname = name.replaceFirst("032"," ").replace('\\',' ');
         mIpList.add(ip);
         mNameList.add(newname);
         listpost();

@@ -92,6 +92,7 @@ public class LogsStatView extends TextView {
             if(position>=10) {
                 position=0;
             }
+            if(position==1) getvalues();
             postInvalidate();
         }
     }
@@ -122,13 +123,11 @@ public class LogsStatView extends TextView {
                     //mCanvas.drawLine(mWidth/10*i,0,mWidth/10*i,mHeight,mPaint3);
                 }
 
-                if(position==1) getvalues();
-
                 String text;
                 text = String.format("Total Mem: %d",memtotal);
                 mCanvas.drawText(text, 0, mHeight/10-8, mPaint);
 
-                text = String.format("Used Mem: %d",memused);
+                text = String.format("Free Mem: %d",memfree);
                 mCanvas.drawText(text, 0, mHeight/10*2-8, mPaint);
 
                 // transfer the bitmap to the view
@@ -140,13 +139,13 @@ public class LogsStatView extends TextView {
 
     // values to update every second on screen
     private long memtotal;
-    private long memused;
+    private long memfree;
 
     private void getvalues() {
         ActivityManager.MemoryInfo outInfo = new ActivityManager.MemoryInfo();
         activityManager.getMemoryInfo(outInfo);
         memtotal=outInfo.totalMem;
-        memused=outInfo.availMem;
+        memfree=outInfo.availMem;
     }
 
 }
