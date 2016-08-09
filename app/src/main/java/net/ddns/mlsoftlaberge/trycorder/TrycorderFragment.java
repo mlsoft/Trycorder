@@ -47,6 +47,8 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -293,6 +295,7 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mSensorLayout;
 
     private LinearLayout mButtonsLayout;
+    private Animation mAnimation;
     private LinearLayout mButtonssensorLayout;
     private LinearLayout mButtonscommLayout;
     private LinearLayout mButtonsshieldLayout;
@@ -338,6 +341,7 @@ public class TrycorderFragment extends Fragment
     private String listenLanguage;
     private String displayLanguage;
     private String deviceName;
+    private boolean isMaster;
     private boolean replaySent;
     private boolean autoBoot;
     private boolean autoStop;
@@ -360,6 +364,7 @@ public class TrycorderFragment extends Fragment
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
         deviceName = sharedPref.getString("pref_key_device_name", "");
+        isMaster = sharedPref.getBoolean("pref_key_ismaster", true);
         replaySent = sharedPref.getBoolean("pref_key_replay_sent", false);
         autoBoot = sharedPref.getBoolean("pref_key_auto_boot", true);
         autoStop = sharedPref.getBoolean("pref_key_auto_stop", false);
@@ -499,6 +504,7 @@ public class TrycorderFragment extends Fragment
                 buttonsound();
                 switchsensorlayout(1);
                 startsensors(1);
+                sendcommand("magnetic");
             }
         });
 
@@ -510,6 +516,7 @@ public class TrycorderFragment extends Fragment
                 buttonsound();
                 switchsensorlayout(2);
                 startsensors(2);
+                sendcommand("orientation");
             }
         });
 
@@ -521,6 +528,7 @@ public class TrycorderFragment extends Fragment
                 buttonsound();
                 switchsensorlayout(3);
                 startsensors(3);
+                sendcommand("gravity");
             }
         });
 
@@ -532,6 +540,7 @@ public class TrycorderFragment extends Fragment
                 buttonsound();
                 switchsensorlayout(4);
                 startsensors(4);
+                sendcommand("temperature");
             }
         });
 
@@ -543,6 +552,7 @@ public class TrycorderFragment extends Fragment
                 buttonsound();
                 switchsensorlayout(0);
                 stopsensors();
+                sendcommand("sensor off");
             }
         });
 
@@ -572,6 +582,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 mCommStatus = 1;
                 opencomm();
+                sendcommand("healing");
             }
         });
         // the close comm button
@@ -581,6 +592,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 mCommStatus = 0;
                 closecomm();
+                sendcommand("healing close");
             }
         });
         // the close comm button
@@ -590,6 +602,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 mCommStatus = 2;
                 intercomm();
+                sendcommand("intercom");
             }
         });
 
@@ -610,6 +623,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 raiseshields();
+                sendcommand("raise shield");
             }
         });
         // the shield down button
@@ -618,6 +632,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 lowershields();
+                sendcommand("lower shield");
             }
         });
 
@@ -639,6 +654,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 firephaser();
+                sendcommand("phaser");
             }
         });
 
@@ -648,6 +664,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 firemissiles();
+                sendcommand("fire");
             }
         });
 
@@ -669,6 +686,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 transporterin();
+                sendcommand("beam me up");
             }
         });
 
@@ -678,6 +696,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 transporterout();
+                sendcommand("beam me down");
             }
         });
 
@@ -699,6 +718,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 tractorpush();
+                sendcommand("tractor push");
             }
         });
 
@@ -708,6 +728,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 tractoroff();
+                sendcommand("tractor off");
             }
         });
 
@@ -717,6 +738,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 tractorpull();
+                sendcommand("tractor pull");
             }
         });
 
@@ -739,6 +761,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 motorimpulse();
+                sendcommand("impulse power");
             }
         });
 
@@ -748,6 +771,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 motoroff();
+                sendcommand("stay here");
             }
         });
 
@@ -757,6 +781,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 motorwarp();
+                sendcommand("warp drive");
             }
         });
 
@@ -779,6 +804,7 @@ public class TrycorderFragment extends Fragment
                 mViewerfront = false;
                 switchviewer(1);
                 switchcam(1);
+                sendcommand("viewer on");
             }
         });
 
@@ -790,6 +816,7 @@ public class TrycorderFragment extends Fragment
                 mViewerfront = true;
                 switchviewer(1);
                 switchcam(2);
+                sendcommand("local viewer");
             }
         });
 
@@ -799,6 +826,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(0);
+                sendcommand("viewer off");
             }
         });
 
@@ -828,6 +856,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(2);
+                sendcommand("logs");
             }
         });
 
@@ -837,6 +866,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(3);
+                sendcommand("system info");
             }
         });
 
@@ -846,6 +876,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchviewer(4);
+                sendcommand("plans");
             }
         });
 
@@ -929,6 +960,9 @@ public class TrycorderFragment extends Fragment
 
         // the buttons layout, to contain my buttons groups
         mButtonsLayout = (LinearLayout) view.findViewById(R.id.buttons_layout);
+        mAnimation = AnimationUtils.loadAnimation(getContext(), R.anim.slidein);
+
+        // the buttons group (one visible at a time)
         mButtonssensorLayout = (LinearLayout) view.findViewById(R.id.buttons_sensor_layout);
         mButtonscommLayout = (LinearLayout) view.findViewById(R.id.buttons_comm_layout);
         mButtonsshieldLayout = (LinearLayout) view.findViewById(R.id.buttons_shield_layout);
@@ -987,15 +1021,15 @@ public class TrycorderFragment extends Fragment
         mViewerWindow = (TextureView) view.findViewById(R.id.viewer_window);
         mViewerWindow.setSurfaceTextureListener(this);
 
-        mFederationlogo.setVisibility(View.VISIBLE);
-        mViewerWindow.setVisibility(View.GONE);
-        mLogsConsole.setVisibility(View.GONE);
-        mLogsInfo.setVisibility(View.GONE);
-        mStarshipPlans.setVisibility(View.GONE);
-        mViewerPhoto.setVisibility(View.GONE);
-        mLogsSys.setVisibility(View.GONE);
-        mLogsStat.setVisibility(View.GONE);
-        mViewerAnimate.setVisibility(View.GONE);
+        //mFederationlogo.setVisibility(View.VISIBLE);
+        //mViewerWindow.setVisibility(View.GONE);
+        //mLogsConsole.setVisibility(View.GONE);
+        //mLogsInfo.setVisibility(View.GONE);
+        //mStarshipPlans.setVisibility(View.GONE);
+        //mViewerPhoto.setVisibility(View.GONE);
+        //mLogsSys.setVisibility(View.GONE);
+        //mLogsStat.setVisibility(View.GONE);
+        //mViewerAnimate.setVisibility(View.GONE);
         mVieweron = false;
 
         // ============== create a sensor display and incorporate in layout ==============
@@ -1266,6 +1300,7 @@ public class TrycorderFragment extends Fragment
         listenLanguage = sharedPref.getString("pref_key_listen_language", "");
         displayLanguage = sharedPref.getString("pref_key_display_language", "");
         deviceName = sharedPref.getString("pref_key_device_name", "Trycorder");
+        isMaster = sharedPref.getBoolean("pref_key_ismaster", true);
         replaySent = sharedPref.getBoolean("pref_key_replay_sent", false);
         autoBoot = sharedPref.getBoolean("pref_key_auto_boot", true);
         autoStop = sharedPref.getBoolean("pref_key_auto_stop", false);
@@ -1328,24 +1363,37 @@ public class TrycorderFragment extends Fragment
     private void switchplans() {
         planno++;
         if (planno >= 6) planno = 0;
+        Animation animation;
         switch (planno) {
             case 0:
                 mStarshipPlans.setImageResource(R.drawable.starship_view);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.clockwise);
+                mStarshipPlans.startAnimation(animation);
                 break;
             case 1:
                 mStarshipPlans.setImageResource(R.drawable.starship_build);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.fadein);
+                mStarshipPlans.startAnimation(animation);
                 break;
             case 2:
                 mStarshipPlans.setImageResource(R.drawable.starship_plan);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.slidein);
+                mStarshipPlans.startAnimation(animation);
                 break;
             case 3:
                 mStarshipPlans.setImageResource(R.drawable.starship_sideview);
+                //animation = AnimationUtils.loadAnimation(getContext(),R.anim.move);
+                //mStarshipPlans.startAnimation(animation);
                 break;
             case 4:
                 mStarshipPlans.setImageResource(R.drawable.starship_topview);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.blink);
+                mStarshipPlans.startAnimation(animation);
                 break;
             case 5:
                 mStarshipPlans.setImageResource(R.drawable.earth_still);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.rotateback);
+                mStarshipPlans.startAnimation(animation);
                 break;
 
         }
@@ -1565,6 +1613,7 @@ public class TrycorderFragment extends Fragment
 
     // =====================================================================================
 
+
     private void switchbuttonlayout(int no) {
         mButtonssensorLayout.setVisibility(View.GONE);
         mButtonscommLayout.setVisibility(View.GONE);
@@ -1576,18 +1625,25 @@ public class TrycorderFragment extends Fragment
         mButtonsviewerLayout.setVisibility(View.GONE);
         mButtonslogsLayout.setVisibility(View.GONE);
         mButtonsmodeLayout.setVisibility(View.GONE);
+        //Animation animation;
         switch (no) {
             case 1:
                 say("Sensors Mode");
                 mButtonssensorLayout.setVisibility(View.VISIBLE);
+                //animation = AnimationUtils.loadAnimation(getContext(),R.anim.clockwise);
+                //mButtonssensorLayout.startAnimation(animation);
                 break;
             case 2:
                 say("Communication Mode");
                 mButtonscommLayout.setVisibility(View.VISIBLE);
+                //animation = AnimationUtils.loadAnimation(getContext(),R.anim.fadein);
+                //mButtonscommLayout.startAnimation(animation);
                 break;
             case 3:
                 say("Shield Mode");
                 mButtonsshieldLayout.setVisibility(View.VISIBLE);
+                //animation = AnimationUtils.loadAnimation(getContext(),R.anim.slidein);
+                //mButtonsshieldLayout.startAnimation(animation);
                 break;
             case 4:
                 say("Fire Mode");
@@ -2531,12 +2587,14 @@ public class TrycorderFragment extends Fragment
                     mTextstatus_top.setText(mSentence);
                     say("Said: " + mSentence);
                     sendtext(mSentence);
+                    if(autoListen) listen();
                     return;
                 }
             }
             mTextstatus_top.setText(dutexte.get(0));
             say("Understood: " + dutexte.get(0));
             sendtext(dutexte.get(0));
+            if(autoListen) listen();
             //if(speakLanguage.equals("FR")) speak("Commande inconnue.");
             //else speak("Unknown command.");
         }
@@ -2579,33 +2637,8 @@ public class TrycorderFragment extends Fragment
             return (true);
         }
         // actions on the trycorder
-        if (texte.contains("intercom")) {
-            switchbuttonlayout(2);
-            intercomm();
-            return (true);
-        }
-        if (texte.contains("phaser")) {
-            switchbuttonlayout(4);
-            firephaser();
-            return (true);
-        }
-        if (texte.contains("fire") || texte.contains("torpedo")) {
-            switchbuttonlayout(4);
-            firemissiles();
-            return (true);
-        }
-        if (texte.contains("shield") && texte.contains("down")) {
-            switchbuttonlayout(3);
-            lowershields();
-            return (true);
-        }
-        if (texte.contains("shield") || texte.contains("raise")) {
-            switchbuttonlayout(3);
-            raiseshields();
-            return (true);
-        }
         if (texte.contains("sensor off")) {
-            switchbuttonlayout(0);
+            switchbuttonlayout(1);
             switchsensorlayout(0);
             stopsensors();
             return (true);
@@ -2636,12 +2669,40 @@ public class TrycorderFragment extends Fragment
         }
         if (texte.contains("hailing") && texte.contains("close")) {
             switchbuttonlayout(2);
+            switchsensorlayout(11);
             closecomm();
             return (true);
         }
         if (texte.contains("hailing") || texte.contains("frequency")) {
             switchbuttonlayout(2);
+            switchsensorlayout(5);
             opencomm();
+            return (true);
+        }
+        if (texte.contains("intercom")) {
+            switchbuttonlayout(2);
+            switchsensorlayout(12);
+            intercomm();
+            return (true);
+        }
+        if (texte.contains("shield") && texte.contains("down")) {
+            switchbuttonlayout(3);
+            lowershields();
+            return (true);
+        }
+        if (texte.contains("shield") || texte.contains("raise")) {
+            switchbuttonlayout(3);
+            raiseshields();
+            return (true);
+        }
+        if (texte.contains("phaser")) {
+            switchbuttonlayout(4);
+            firephaser();
+            return (true);
+        }
+        if (texte.contains("fire") || texte.contains("torpedo")) {
+            switchbuttonlayout(4);
+            firemissiles();
             return (true);
         }
         if (texte.contains("beam me up") || texte.contains("scotty") || texte.contains("transporteur")) {
@@ -2654,14 +2715,68 @@ public class TrycorderFragment extends Fragment
             transporterout();
             return (true);
         }
-        if (texte.contains("viewer")) {
+        if (texte.contains("tractor push")) {
             switchbuttonlayout(6);
+            tractorpush();
+            return (true);
+        }
+        if (texte.contains("tractor off")) {
+            switchbuttonlayout(6);
+            tractoroff();
+            return (true);
+        }
+        if (texte.contains("tractor pull")) {
+            switchbuttonlayout(6);
+            tractorpull();
+            return (true);
+        }
+        if (texte.contains("impulse power")) {
+            switchbuttonlayout(7);
+            motorimpulse();
+            return (true);
+        }
+        if (texte.contains("stay here")) {
+            switchbuttonlayout(7);
+            motoroff();
+            return (true);
+        }
+        if (texte.contains("warp drive")) {
+            switchbuttonlayout(7);
+            motorwarp();
+            return (true);
+        }
+        if (texte.contains("viewer on")) {
+            switchbuttonlayout(8);
+            mViewerfront = false;
             switchviewer(1);
+            switchcam(1);
+            return (true);
+        }
+        if (texte.contains("local viewer")) {
+            switchbuttonlayout(8);
+            mViewerfront = true;
+            switchviewer(1);
+            switchcam(2);
+            return (true);
+        }
+        if (texte.contains("viewer off")) {
+            switchbuttonlayout(8);
+            switchviewer(0);
             return (true);
         }
         if (texte.contains("logs")) {
             switchbuttonlayout(9);
             switchviewer(2);
+            return (true);
+        }
+        if (texte.contains("system info")) {
+            switchbuttonlayout(9);
+            switchviewer(3);
+            return (true);
+        }
+        if (texte.contains("plans")) {
+            switchbuttonlayout(9);
+            switchviewer(4);
             return (true);
         }
         return (false);
@@ -2822,6 +2937,12 @@ public class TrycorderFragment extends Fragment
     private Socket clientSocket = null;
 
     Thread clientThread = null;
+
+    private void sendcommand(String text) {
+        if(isMaster) {
+            sendtext(text);
+        }
+    }
 
     // send a message to the other
     private void sendtext(String text) {
@@ -3120,8 +3241,9 @@ public class TrycorderFragment extends Fragment
                 return;
             }
         }
+        String newname = name.replaceFirst("\\032"," ");
         mIpList.add(ip);
-        mNameList.add(name);
+        mNameList.add(newname);
         listpost();
     }
 

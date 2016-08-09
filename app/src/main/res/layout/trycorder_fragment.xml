@@ -644,7 +644,8 @@
                 android:layout_height="0dp"
                 android:layout_weight="17"
                 android:background="@android:color/black"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:animateLayoutChanges="true">
 
                 <!-- ========== button layout for sensors ============== -->
                 <LinearLayout
@@ -1220,7 +1221,8 @@
                     android:layout_marginLeft="16dp"
                     android:layout_marginRight="16dp"
                     android:layout_weight="8"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:animateLayoutChanges="true">
 
                     <ImageView
                         android:id="@+id/federation_logo"
@@ -1289,7 +1291,8 @@
                         android:layout_height="match_parent"
                         android:clickable="true"
                         android:src="@drawable/starship_view"
-                        android:visibility="gone" />
+                        android:visibility="gone"
+                        android:animateLayoutChanges="true"/>
 
                     <ImageView
                         android:id="@+id/photo_view"

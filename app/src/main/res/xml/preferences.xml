@@ -41,6 +41,11 @@
             android:title="Device Name"
             android:defaultValue="Trycorder"/>
         <CheckBoxPreference
+            android:key="pref_key_ismaster"
+            android:summary="Determine if we are master of commands with the others trycorders"
+            android:title="Is Master"
+            android:defaultValue="true" />
+        <CheckBoxPreference
             android:key="pref_key_replay_sent"
             android:summary="Determine if we replay the sent text locally"
             android:title="Replay Sent"
@@ -49,7 +54,7 @@
             android:key="pref_key_auto_boot"
             android:summary="Determine if we start talk server at boot"
             android:title="Auto Boot"
-            android:defaultValue="true" />
+            android:defaultValue="true"/>
         <CheckBoxPreference
             android:key="pref_key_auto_stop"
             android:summary="Determine if we stop the server at exit"

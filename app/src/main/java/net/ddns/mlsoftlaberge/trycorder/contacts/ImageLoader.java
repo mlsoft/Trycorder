@@ -114,7 +114,7 @@ public abstract class ImageLoader {
     }
 
     /**
-     * If set to true, the image will fade-in once it has been loaded by the background thread.
+     * If set to true, the image will fadein-in once it has been loaded by the background thread.
      */
     public void setImageFadeIn(boolean fadeIn) {
         mFadeInBitmap = fadeIn;
@@ -311,7 +311,7 @@ public abstract class ImageLoader {
      */
     private void setImageBitmap(ImageView imageView, Bitmap bitmap) {
         if (mFadeInBitmap) {
-            // Transition drawable to fade from loading bitmap to final bitmap
+            // Transition drawable to fadein from loading bitmap to final bitmap
             final TransitionDrawable td =
                     new TransitionDrawable(new Drawable[] {
                             new ColorDrawable(android.R.color.transparent),
