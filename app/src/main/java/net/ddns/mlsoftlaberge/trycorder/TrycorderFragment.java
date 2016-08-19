@@ -6,8 +6,10 @@ package net.ddns.mlsoftlaberge.trycorder;
 */
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -33,6 +35,7 @@ import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.speech.RecognitionListener;
@@ -63,6 +66,7 @@ import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.gallery.GalleryActivity;
 import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
+import net.ddns.mlsoftlaberge.trycorder.tryclient.TryclientActivity;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.AudSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.LogsStatView;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
@@ -181,6 +185,7 @@ public class TrycorderFragment extends Fragment
     private LinearLayout mWalkieLayout;
     private Button mWalkieSpeakButton;
     private Button mWalkieTalkButton;
+    private Button mWalkieClientButton;
     private Button mWalkieScanButton;
     private Button mWalkieSpeaklistButton;
     private Button mWalkieServeronButton;
@@ -1144,20 +1149,31 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        mWalkieClientButton = (Button) view.findViewById(R.id.walkie_client_button);
+        mWalkieClientButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                tryclientactivity();
+            }
+        });
+
         mWalkieScanButton = (Button) view.findViewById(R.id.walkie_scan_button);
         mWalkieScanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
+                askscanlist();
+                saylist();
                 // stop all servers
                 //stoptalkserver();
                 //unregisterService();
-                stopdiscoverService();
+                //stopdiscoverService();
                 //stopserver();
                 // restart all servers
                 //initserver();
                 //registerService();
-                startdiscoverService();
+                //startdiscoverService();
                 //inittalkserver();
                 //scantrycorders();
             }
@@ -1179,6 +1195,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 startTrycorderService();
+                bindTrycorderService();
             }
         });
 
@@ -1187,6 +1204,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onClick(View view) {
                 buttonsound();
+                unbindTrycorderService();
                 stopTrycorderService();
             }
         });
@@ -1261,6 +1279,7 @@ public class TrycorderFragment extends Fragment
         mInterCommButton.setTypeface(face3);
         mWalkieSpeakButton.setTypeface(face2);
         mWalkieTalkButton.setTypeface(face2);
+        mWalkieClientButton.setTypeface(face2);
         mWalkieScanButton.setTypeface(face2);
         mWalkieSpeaklistButton.setTypeface(face2);
         mWalkieServeronButton.setTypeface(face2);
@@ -1307,6 +1326,72 @@ public class TrycorderFragment extends Fragment
         mModeInvButton.setTypeface(face2);
     }
 
+    // =====================================================================================
+
+    private boolean mBound=false;
+    private TrycorderService mTrycorderService;
+    private TrycorderService.TryBinder mTryBinder;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (!autoBoot) startTrycorderService();
+        bindTrycorderService();
+    }
+
+    public void bindTrycorderService() {
+        // Bind to Service
+        Intent intent = new Intent(getActivity(), TrycorderService.class);
+        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        unbindTrycorderService();
+        if(autoStop) stopTrycorderService();
+    }
+
+    public void unbindTrycorderService() {
+        // Unbind from the service
+        if (mBound) {
+            getActivity().unbindService(mConnection);
+            mBound = false;
+        }
+    }
+
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            mTryBinder = (TrycorderService.TryBinder) service;
+            mTrycorderService = mTryBinder.getService();
+            mBound = true;
+            askscanlist();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
+
+    // ask the service to give us the list of ip/names
+
+    private void askscanlist() {
+        if(mBound) {
+            mIpList = mTryBinder.getiplist();
+            mNameList = mTryBinder.getnamelist();
+            saylist();
+        }
+    }
+
+    // =====================================================================================
+
     @Override
     public void onResume() {
         super.onResume();
@@ -1343,7 +1428,6 @@ public class TrycorderFragment extends Fragment
         if (mSensormode <= 4) startsensors(mSensormode);
         initspeak();
         initserver();
-        startTrycorderService();
         //registerService();
         //inittalkserver();
         startdiscoverService();
@@ -1365,9 +1449,6 @@ public class TrycorderFragment extends Fragment
         stopsensors();
         switchcam(0);
         mLogsStat.stop();
-        if(autoStop) {
-            stopTrycorderService();
-        }
         //stoptalkserver();
         //unregisterService();
         stopdiscoverService();
@@ -1379,7 +1460,7 @@ public class TrycorderFragment extends Fragment
 
     private void switchplans() {
         planno++;
-        if (planno >= 6) planno = 0;
+        if (planno >= 9) planno = 0;
         Animation animation;
         switch (planno) {
             case 0:
@@ -1410,6 +1491,21 @@ public class TrycorderFragment extends Fragment
             case 5:
                 mStarshipPlans.setImageResource(R.drawable.earth_still);
                 animation = AnimationUtils.loadAnimation(getContext(),R.anim.rotateback);
+                mStarshipPlans.startAnimation(animation);
+                break;
+            case 6:
+                mStarshipPlans.setImageResource(R.drawable.universe);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.slidein);
+                mStarshipPlans.startAnimation(animation);
+                break;
+            case 7:
+                mStarshipPlans.setImageResource(R.drawable.galaxy_forward);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.slidein);
+                mStarshipPlans.startAnimation(animation);
+                break;
+            case 8:
+                mStarshipPlans.setImageResource(R.drawable.galaxy_dorsal);
+                animation = AnimationUtils.loadAnimation(getContext(),R.anim.slidein);
                 mStarshipPlans.startAnimation(animation);
                 break;
 
@@ -1515,6 +1611,13 @@ public class TrycorderFragment extends Fragment
         say("Open Gallery Class");
         if (isChatty) speak("Gallery");
         Intent i = new Intent(getActivity(), GalleryActivity.class);
+        startActivity(i);
+    }
+
+    private void tryclientactivity() {
+        say("Open Tryclient Class");
+        if (isChatty) speak("Client");
+        Intent i = new Intent(getActivity(), TryclientActivity.class);
         startActivity(i);
     }
 
@@ -3134,6 +3237,9 @@ public class TrycorderFragment extends Fragment
         mNameList.clear();
         mNameList.add(deviceName);
 
+        // replace the empty list with a full list from the server to start
+        askscanlist();
+
         mNsdManager = (NsdManager) getContext().getSystemService(Context.NSD_SERVICE);
 
         say("Discover services");
@@ -3293,12 +3399,16 @@ public class TrycorderFragment extends Fragment
 
         @Override
         public void run() {
-            StringBuffer str = new StringBuffer("");
-            for (int i = 0; i < mIpList.size(); ++i) {
-                str.append(mIpList.get(i) + " - " + mNameList.get(i) + "\n");
-            }
-            mWalkieIpList.setText(str.toString());
+            saylist();
         }
+    }
+
+    public void saylist() {
+        StringBuffer str = new StringBuffer("");
+        for (int i = 0; i < mIpList.size(); ++i) {
+            str.append(mIpList.get(i) + " - " + mNameList.get(i) + "\n");
+        }
+        mWalkieIpList.setText(str.toString());
     }
 
     // =====================================================================================
@@ -3377,10 +3487,11 @@ public class TrycorderFragment extends Fragment
 
                         // repeat to myself if i am alone on the net only
                         int j;
-                        if (mIpList.size() < 2) j = 0;
-                        else j = 1;
+                        //if (mIpList.size() < 2) j = 0;
+                        //else j = 1;
+                        j=1;
                         // repeat to each other address from list
-                        for (int i = j; i < mIpList.size(); ++i) {
+                        if(mIpList.size()>1) for (int i = j; i < mIpList.size(); ++i) {
                             // place contents of buffer into the packet
                             packet = new DatagramPacket(buffer, read, mServerAddress.get(i), PORT);
 

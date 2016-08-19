@@ -5,6 +5,7 @@ package net.ddns.mlsoftlaberge.trycorder;
  */
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -16,16 +17,23 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import net.ddns.mlsoftlaberge.trycorder.tryclient.TryclientActivity;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TrycorderService extends Service {
 
@@ -38,17 +46,40 @@ public class TrycorderService extends Service {
 
     private Fetcher mFetcher;
 
-    @Override
-    public IBinder onBind(Intent arg0) {
-        return null;
+    private Handler mHandler;
+
+    private IBinder mBinder=new TryBinder();
+
+    public class TryBinder extends Binder {
+
+        public TrycorderService getService() {
+            return(TrycorderService.this);
+        }
+
+        public List<String> getiplist() {
+            return(mIpList);
+        }
+
+        public List<String> getnamelist() {
+            return(mNameList);
+        }
+
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public IBinder onBind(Intent arg0) {
+        return mBinder;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
         // Let it continue running until it is stopped.
-        Toast.makeText(this, "Trycorder Service Starting ...", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Trycorder Service Created ...", Toast.LENGTH_LONG).show();
 
         mFetcher=new Fetcher(getApplicationContext());
+
+        mHandler=new Handler();
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         deviceName = sharedPref.getString("pref_key_device_name", "Trycorder");
@@ -63,29 +94,59 @@ public class TrycorderService extends Service {
 
         registerService();
 
-        PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
-                new Intent(getApplicationContext(), TrycorderActivity.class),
-                PendingIntent.FLAG_UPDATE_CURRENT);
+        startdiscoverService();
 
-        Notification notification = new Notification.Builder(getApplicationContext())
-                .setContentTitle("Trycorder " + deviceName)
-                .setContentText("Talk server running on "+mFetcher.fetch_ip_address()+":1701")
-                .setContentIntent(pi)
-                .setSmallIcon(R.drawable.trycorder_icon)
-                .build();
+    }
 
-        startForeground(NOTIFICATION_ID, notification);
-
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        startForeground(NOTIFICATION_ID, getNotification(""));
+        Toast.makeText(this, "Trycorder Service Started.", Toast.LENGTH_LONG).show();
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
+        stopdiscoverService();
         unregisterService();
         stoptalkserver();
         stopForeground(true);
         super.onDestroy();
         Toast.makeText(this, "Trycorder Service Destroyed", Toast.LENGTH_LONG).show();
+    }
+
+    // ============================================================================
+    // pass a message to the user in the appropriate way depending on  ...
+    private void say(String msg) {
+        updateNotification(msg);
+        //Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    }
+
+    private Notification getNotification(String text){
+        PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
+                new Intent(getApplicationContext(), TryclientActivity.class),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification mNotification = new Notification.Builder(getApplicationContext())
+                .setContentTitle("Trycorder " + deviceName)
+                .setContentText("Talk Server running on "+mFetcher.fetch_ip_address()+":"+SERVERPORT)
+                .setContentIntent(pi)
+                .setSmallIcon(R.drawable.trycorder_icon)
+                .setStyle(new Notification.BigTextStyle().bigText(text))
+                .build();
+
+        return(mNotification);
+    }
+
+    /**
+     * This is the method that can be called to update the Notification
+     */
+    private void updateNotification(String text) {
+
+        Notification notification = getNotification(text);
+
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.notify(NOTIFICATION_ID, notification);
     }
 
     // =====================================================================================
@@ -199,7 +260,11 @@ public class TrycorderService extends Service {
     }
 
     public void unregisterService() {
-        mNsdManager.unregisterService(mRegistrationListener);
+        try {
+            mNsdManager.unregisterService(mRegistrationListener);
+        } catch (Exception e) {
+            Log.d("unregisterservice","Error "+e);
+        }
     }
 
     public void initializeRegistrationListener() {
@@ -237,10 +302,194 @@ public class TrycorderService extends Service {
         };
     }
 
-    // ============================================================================
-    // pass a message to the user in the appropriate way depending on  ...
-    private void say(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+
+
+    // =======================================================================================
+    // discovery section
+
+    private NsdManager.DiscoveryListener mDiscoveryListener=null;
+    private NsdManager.ResolveListener mResolveListener=null;
+
+    private List<String> mIpList = new ArrayList<String>();
+    private List<String> mNameList = new ArrayList<String>();
+
+    public void startdiscoverService() {
+        if (deviceName.isEmpty()) deviceName = SERVICE_NAME;
+
+        mIpList.clear();
+        mIpList.add(mFetcher.fetch_ip_address());
+        mNameList.clear();
+        mNameList.add(deviceName);
+
+        mNsdManager = (NsdManager) getSystemService(Context.NSD_SERVICE);
+
+        //say("Discover services");
+        initializeResolveListener();
+
+        initializeDiscoveryListener();
+
+        mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+
+    }
+
+    public void stopdiscoverService() {
+        mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+    }
+
+    public void initializeResolveListener() {
+        mResolveListener = new NsdManager.ResolveListener() {
+
+            @Override
+            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                // Called when the resolve fails.  Use the error code to debug.
+                Log.e("discovery", "Resolve failed: " + errorCode);
+                //saypost("Resolve failed: " + serviceInfo.getServiceName() + " Err:" + errorCode);
+            }
+
+            @Override
+            public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                Log.e("discovery", "Resolve Succeeded: " + serviceInfo);
+
+                if (serviceInfo.getServiceName().equals(mServiceName)) {
+                    Log.d("discovery", "Same IP.");
+                    //saypost("Local machine " + mServiceName);
+                    //return;
+                }
+                int port = serviceInfo.getPort();
+                InetAddress host = serviceInfo.getHost();
+                Log.d("discovery", "Host: " + host.toString() + " Port: " + port);
+                //saypost("Resolved " + serviceInfo.getServiceName() +
+                //        " Host: " + host.toString() + " Port: " + port);
+                StringBuffer str = new StringBuffer(host.toString());
+                addiplist(str.substring(1), serviceInfo.getServiceName());
+            }
+        };
+    }
+
+    public void initializeDiscoveryListener() {
+
+        // Instantiate a new DiscoveryListener
+        mDiscoveryListener = new NsdManager.DiscoveryListener() {
+
+            //  Called as soon as service discovery begins.
+            @Override
+            public void onDiscoveryStarted(String regType) {
+                Log.d("discovery", "Service discovery started");
+            }
+
+            @Override
+            public void onServiceFound(NsdServiceInfo service) {
+                // A service was found!  Do something with it.
+                Log.d("discovery", "Service discovery success: " + service);
+                //saypost("Service discovered: " + service.getServiceName());
+                if (!service.getServiceType().equals(SERVICE_TYPE)) {
+                    // Service type is the string containing the protocol and
+                    // transport layer for this service.
+                    Log.d("discovery", "Unknown Service Type: " + service.getServiceType());
+                } else {
+                    if (service.getServiceName().equals(mServiceName)) {
+                        // The name of the service tells the user what they'd be
+                        // connecting to. It could be "Bob's Chat App".
+                        Log.d("discovery", "Same machine: " + mServiceName);
+                        return;
+                    }
+                    Log.d("discovery", "Resolved service: " + service.getServiceName());
+                    //Log.d("discovery", "Resolved service: " + service.getHost());  // empty
+                    //Log.d("discovery", "Resolved service: " + service.getPort());  // empty
+                    try {
+                        mNsdManager.resolveService(service, mResolveListener);
+                    } catch (Exception e) {
+                        Log.d("discovery", "resolve error: " + e.toString());
+                    }
+                }
+            }
+
+            @Override
+            public void onServiceLost(NsdServiceInfo service) {
+                // When the network service is no longer available.
+                // Internal bookkeeping code goes here.
+                Log.e("discovery", "service lost: " + service);
+                //saypost("Lost: " + service.getServiceName());
+            }
+
+            @Override
+            public void onDiscoveryStopped(String serviceType) {
+                Log.i("discovery", "Discovery stopped: " + serviceType);
+            }
+
+            @Override
+            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e("discovery", "Start Discovery failed: Error code: " + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+
+            @Override
+            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                Log.e("discovery", "Stop Discovery failed: Error code: " + errorCode);
+                mNsdManager.stopServiceDiscovery(this);
+            }
+        };
+    }
+
+    private void addiplist(String ip, String name) {
+        for (int i = 0; i < mIpList.size(); ++i) {
+            if (ip.equals(mIpList.get(i))) {
+                listpost();
+                return;
+            }
+        }
+        // replace the \032 on android 4.4.4 by a blank space
+        String newname = name.replaceFirst("032"," ").replace('\\',' ');
+        mIpList.add(ip);
+        mNameList.add(newname);
+        listpost();
+        //saypost("Added "+ip+" - "+newname);
+    }
+
+    public void listpost() {
+        mHandler.post(new listThread());
+    }
+
+    // tread to update the ui
+    class listThread implements Runnable {
+
+        public listThread() {
+        }
+
+        @Override
+        public void run() {
+            saylist();
+        }
+    }
+
+    public void saylist() {
+        StringBuffer str = new StringBuffer("");
+        for (int i = 0; i < mIpList.size(); ++i) {
+            str.append(mIpList.get(i) + " - " + mNameList.get(i) + "\n");
+        }
+        say(str.toString());
+    }
+
+    // post something to say on the main thread (from a secondary thread)
+    public void saypost(String str) {
+        mHandler.post(new sayThread(str));
+    }
+
+    // tread to update the ui
+    class sayThread implements Runnable {
+        private String msg;
+
+        public sayThread(String str) {
+            msg = str;
+            Log.d("saythread", str);
+        }
+
+        @Override
+        public void run() {
+            if (msg != null) {
+                say(msg);
+            }
+        }
     }
 
 }

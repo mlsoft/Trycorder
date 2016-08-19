@@ -58,6 +58,15 @@
         </activity>
 
         <activity
+            android:name=".tryclient.TryclientActivity"
+            android:label="Tryclient"
+            android:parentActivityName=".TrycorderActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".TrycorderActivity" />
+        </activity>
+
+        <activity
             android:name=".gallery.GalleryActivity"
             android:label="Gallery"
             android:parentActivityName=".TrycorderActivity">
@@ -127,7 +136,8 @@
 
         <provider
             android:name=".products.MyProductContentProvider"
-            android:authorities="net.ddns.mlsoftlaberge.trycorder.products"></provider>
+            android:authorities="net.ddns.mlsoftlaberge.trycorder.products">
+        </provider>
 
 
     </application>

@@ -478,9 +478,25 @@
                                     android:layout_marginEnd="@dimen/button_margin"
                                     android:layout_marginStart="@dimen/button_margin"
                                     android:layout_marginTop="@dimen/button_margin"
-                                    android:layout_weight="2"
-                                    android:background="@drawable/trekbutton_orange"
-                                    android:text="Push to TALK"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/trekbutton_red"
+                                    android:text="P.T.T."
+                                    android:textSize="18sp"
+                                    android:textStyle="bold" />
+
+                                <Button
+                                    android:id="@+id/walkie_client_button"
+                                    android:layout_width="0dp"
+                                    android:layout_height="32dp"
+                                    android:layout_gravity="center"
+                                    android:layout_marginBottom="@dimen/button_margin"
+                                    android:layout_marginEnd="@dimen/button_margin"
+                                    android:layout_marginStart="@dimen/button_margin"
+                                    android:layout_marginTop="@dimen/button_margin"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/trekbutton_vert"
+                                    android:maxLines="1"
+                                    android:text="CLIENT"
                                     android:textSize="18sp"
                                     android:textStyle="bold" />
 
