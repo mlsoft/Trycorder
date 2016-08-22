@@ -1,6 +1,10 @@
 package net.ddns.mlsoftlaberge.trycorder;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -24,6 +28,8 @@ public class TrycorderActivity extends FragmentActivity implements
     private TryviewerFragment mTryviewerFragment=null;
     private TrywalkieFragment mTrywalkieFragment=null;
 
+    private int currentMode=0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +41,41 @@ public class TrycorderActivity extends FragmentActivity implements
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.add(android.R.id.content, mTrycorderFragment, TAG);
         ft.commit();
+        currentMode=1;
     }
+
+    // the function who will receive broadcasts from the service
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(currentMode!=1) return;
+            String theEvent = intent.getStringExtra("TRYSERVERCMD");
+            String theText = intent.getStringExtra("TRYSERVERTEXT");
+            if (theEvent.equals("iplist")) {
+                // refresh the ip list
+                mTrycorderFragment.askscanlist();
+            } else if (theEvent.equals("text")) {
+                // text received
+                mTrycorderFragment.displaytext(theText);
+            } else if (theEvent.equals("say")) {
+                // text received
+                mTrycorderFragment.say(theText);
+            }
+        }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver, new IntentFilter(TrycorderService.BROADCAST_ACTION));
+    }
+
+    @Override
+    public void onPause() {
+        unregisterReceiver(broadcastReceiver);
+        super.onPause();
+    }
+
 
     // permits this activity to hide status and action bars, and proceed full screen
     @Override
@@ -96,6 +136,7 @@ public class TrycorderActivity extends FragmentActivity implements
                 ft.commit();
                 break;
         }
+        currentMode=mode;
     }
 
 

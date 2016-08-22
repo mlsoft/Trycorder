@@ -117,12 +117,9 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
     private LinearLayout mWalkieLayout;
     private Button mWalkieSpeakButton;
     private Button mWalkieTalkButton;
-    private Button mWalkieClientButton;
     private Button mWalkieScanButton;
-    private Button mWalkieSpeaklistButton;
     private Button mWalkieServeronButton;
     private Button mWalkieServeroffButton;
-    private Button mWalkieLogslistButton;
     private TextView mWalkieIpList;
 
     // the preferences holder
@@ -262,28 +259,12 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
             }
         });
 
-        mWalkieClientButton = (Button) view.findViewById(R.id.walkie_client_button);
-        mWalkieClientButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                buttonsound();
-            }
-        });
-
         mWalkieScanButton = (Button) view.findViewById(R.id.walkie_scan_button);
         mWalkieScanButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
                 askscanlist();
-            }
-        });
-
-        mWalkieSpeaklistButton = (Button) view.findViewById(R.id.walkie_speaklist_button);
-        mWalkieSpeaklistButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                buttonsound();
             }
         });
 
@@ -304,14 +285,6 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
                 buttonsound();
                 unbindTrycorderService();
                 stopTrycorderService();
-            }
-        });
-
-        mWalkieLogslistButton = (Button) view.findViewById(R.id.walkie_logslist_button);
-        mWalkieLogslistButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                buttonsound();
             }
         });
 
@@ -345,12 +318,9 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
         // top layout
         mWalkieSpeakButton.setTypeface(face2);
         mWalkieTalkButton.setTypeface(face2);
-        mWalkieClientButton.setTypeface(face2);
         mWalkieScanButton.setTypeface(face2);
-        mWalkieSpeaklistButton.setTypeface(face2);
         mWalkieServeronButton.setTypeface(face2);
         mWalkieServeroffButton.setTypeface(face2);
-        mWalkieLogslistButton.setTypeface(face2);
         mWalkieIpList.setTypeface(face3);
         // bottom layout
         mLogsConsole.setTypeface(face2);
@@ -411,7 +381,7 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
 
     // ask the service to give us the list of ip/names
 
-    private void askscanlist() {
+    public void askscanlist() {
         if(mBound) {
             mIpList = mTryBinder.getiplist();
             mNameList = mTryBinder.getnamelist();
@@ -515,7 +485,7 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
     // tell something in the bottom status line
     private StringBuffer logbuffer = new StringBuffer(500);
 
-    private void say(String texte) {
+    public void say(String texte) {
         mTextstatus_bottom.setText(texte);
         logbuffer.insert(0, texte + "\n");
         mLogsConsole.setText(logbuffer);
@@ -895,14 +865,19 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
         @Override
         public void run() {
             if (msg != null) {
-                mTextstatus_top.setText(msg);
-                say("Received: " + msg);
-                if(matchvoice(msg)==false) {
-                    speak(msg);
-                }
+                displaytext(msg);
             }
         }
     }
+
+    public void displaytext(String msg) {
+        mTextstatus_top.setText(msg);
+        say("Received: " + msg);
+        if(matchvoice(msg)==false) {
+            speak(msg);
+        }
+    }
+
 
     // ====================================================================================
     // client part

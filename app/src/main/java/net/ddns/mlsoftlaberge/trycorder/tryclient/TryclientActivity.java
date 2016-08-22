@@ -2,6 +2,10 @@ package net.ddns.mlsoftlaberge.trycorder.tryclient;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -10,6 +14,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 
 import net.ddns.mlsoftlaberge.trycorder.R;
+import net.ddns.mlsoftlaberge.trycorder.TrycorderService;
 
 
 public class TryclientActivity extends FragmentActivity implements TryclientFragment.OnTryclientInteractionListener {
@@ -26,7 +31,7 @@ public class TryclientActivity extends FragmentActivity implements TryclientFrag
         // ask the permissions
         askpermissions();
         // create the 1 initial fragment
-        mTryclientFragment=new TryclientFragment();
+        mTryclientFragment = new TryclientFragment();
         // start the fragment full screen
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.add(android.R.id.content, mTryclientFragment, "Tryclient");
@@ -36,6 +41,51 @@ public class TryclientActivity extends FragmentActivity implements TryclientFrag
     @Override
     public void onTryclientModeChange(int mode) {
         finish();
+    }
+
+//    @Override
+//    public void onNewIntent(Intent intent) {
+//        String theEvent = intent.getStringExtra("TRYSERVERCMD");
+//        if (theEvent.equals("iplist")) {
+//            // refresh the ip list
+//            mTryclientFragment.askscanlist();
+//        } else if (theEvent.equals("text")) {
+//            // text received
+//            String theText = intent.getStringExtra("TRYSERVERTEXT");
+//            mTryclientFragment.displaytext(theText);
+//        }
+//    }
+
+    // the function who will receive broadcasts from the service
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String theEvent = intent.getStringExtra("TRYSERVERCMD");
+            String theText = intent.getStringExtra("TRYSERVERTEXT");
+            if (theEvent.equals("iplist")) {
+                // refresh the ip list
+                mTryclientFragment.askscanlist();
+            } else if (theEvent.equals("text")) {
+                // text received
+                mTryclientFragment.displaytext(theText);
+            } else if (theEvent.equals("say")) {
+                // text received
+                mTryclientFragment.say(theText);
+            }
+
+        }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        registerReceiver(broadcastReceiver, new IntentFilter(TrycorderService.BROADCAST_ACTION));
+    }
+
+    @Override
+    public void onPause() {
+        unregisterReceiver(broadcastReceiver);
+        super.onPause();
     }
 
     // ============================================================================================
@@ -95,5 +145,6 @@ public class TryclientActivity extends FragmentActivity implements TryclientFrag
                     }, 1);
         }
     }
+
 
 }

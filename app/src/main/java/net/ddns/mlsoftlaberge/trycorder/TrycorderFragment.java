@@ -135,6 +135,9 @@ public class TrycorderFragment extends Fragment
 
     // ======================================================================================
 
+    public static final int SERVERPORT = 1701;  // Network Common Channel - NCC-1701
+    Handler mHandler=new Handler();
+
     // handles to camera and textureview
     private Camera mCamera = null;
     private TextureView mViewerWindow;
@@ -1335,7 +1338,7 @@ public class TrycorderFragment extends Fragment
     @Override
     public void onStart() {
         super.onStart();
-        if (!autoBoot) startTrycorderService();
+        startTrycorderService();
         bindTrycorderService();
     }
 
@@ -1382,7 +1385,7 @@ public class TrycorderFragment extends Fragment
 
     // ask the service to give us the list of ip/names
 
-    private void askscanlist() {
+    public void askscanlist() {
         if(mBound) {
             mIpList = mTryBinder.getiplist();
             mNameList = mTryBinder.getnamelist();
@@ -1426,11 +1429,12 @@ public class TrycorderFragment extends Fragment
         switchsensorlayout(mSensormode);
         switchviewer(mViewermode);
         if (mSensormode <= 4) startsensors(mSensormode);
-        initspeak();
-        initserver();
+        //initspeak();
+        //initserver();
         //registerService();
         //inittalkserver();
-        startdiscoverService();
+        askscanlist();
+        //startdiscoverService();
         //scantrycorders();
     }
 
@@ -1451,8 +1455,8 @@ public class TrycorderFragment extends Fragment
         mLogsStat.stop();
         //stoptalkserver();
         //unregisterService();
-        stopdiscoverService();
-        stopserver();
+        //stopdiscoverService();
+        //stopserver();
         super.onPause();
     }
 
@@ -2575,7 +2579,7 @@ public class TrycorderFragment extends Fragment
     // system log talker
     private StringBuffer logbuffer = new StringBuffer(1000);
 
-    private void say(String texte) {
+    public void say(String texte) {
         mTextstatus_bottom.setText(texte);
         logbuffer.insert(0, texte + "\n");
         if(logbuffer.length()>1000) logbuffer.setLength(1000);
@@ -2584,7 +2588,22 @@ public class TrycorderFragment extends Fragment
 
     // =========================================================================
     // usage of text-to-speech to speak a sensence
-    private TextToSpeech tts = null;
+    // by the trycorderservice
+
+    public void setspeaklang(String lng) {
+        mTrycorderService.setspeaklang(lng);
+    }
+
+    public void speak(String texte) {
+        mTrycorderService.speak(texte);
+    }
+
+    public void speak(String texte, String lng) {
+        mTrycorderService.speak(texte,lng);
+    }
+
+
+    /*    private TextToSpeech tts = null;
 
     private void initspeak() {
         if (tts == null) {
@@ -2621,7 +2640,7 @@ public class TrycorderFragment extends Fragment
         tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
         say("Speaked: " + texte);
     }
-
+*/
     // ========================================================================================
     // functions to control the speech process
 
@@ -2945,9 +2964,9 @@ public class TrycorderFragment extends Fragment
     // network operations.   ===   Hi Elvis!
     // =====================================================================================
 
-    public static final int SERVERPORT = 1701;  // Network Common Channel - NCC-1701
 
-    Handler updateConversationHandler;
+/*
+
 
     private ServerSocket serverSocket = null;
 
@@ -2957,7 +2976,7 @@ public class TrycorderFragment extends Fragment
     private void initserver() {
         say("Initialize the network server");
         // create the handler to receive events from communication thread
-        updateConversationHandler = new Handler();
+        //mHandler = new Handler();
         // start the server thread
         serverThread = new Thread(new ServerThread());
         serverThread.start();
@@ -3035,7 +3054,7 @@ public class TrycorderFragment extends Fragment
                     String read = bufinput.readLine();
                     if (read == null) break;
                     Log.d("commthreadrun", "update conversation");
-                    updateConversationHandler.post(new updateUIThread(read));
+                    mHandler.post(new updateUIThread(read));
 
                 } catch (IOException e) {
                     Log.d("commthreadrun", "exception " + e.toString());
@@ -3058,12 +3077,17 @@ public class TrycorderFragment extends Fragment
         @Override
         public void run() {
             if (msg != null) {
-                mTextstatus_top.setText(msg);
-                say("Received: " + msg);
-                if (matchvoice(msg) == false) {
-                    speak(msg);
-                }
+                displaytext(msg);
             }
+        }
+    }
+*/
+
+    public void displaytext(String msg) {
+        mTextstatus_top.setText(msg);
+        say("Received: " + msg);
+        if (matchvoice(msg) == false) {
+            speak(msg);
         }
     }
 
@@ -3353,7 +3377,7 @@ public class TrycorderFragment extends Fragment
 
     // post something to say on the main thread (from a secondary thread)
     public void saypost(String str) {
-        updateConversationHandler.post(new sayThread(str));
+        mHandler.post(new sayThread(str));
     }
 
     // tread to update the ui
@@ -3388,7 +3412,7 @@ public class TrycorderFragment extends Fragment
     }
 
     public void listpost() {
-        updateConversationHandler.post(new listThread());
+        mHandler.post(new listThread());
     }
 
     // tread to update the ui
