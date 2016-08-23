@@ -383,8 +383,8 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
 
     public void askscanlist() {
         if(mBound) {
-            mIpList = mTryBinder.getiplist();
-            mNameList = mTryBinder.getnamelist();
+            mIpList = mTrycorderService.getiplist();
+            mNameList = mTrycorderService.getnamelist();
             saylist();
         }
     }
@@ -438,7 +438,7 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
         // start the speak server
         initspeak();
         // start the network listener server
-        initserver();
+        //initserver();
         // start the service if not started
         if(!autoBoot) startTrycorderService();
     }
@@ -450,7 +450,7 @@ public class TryclientFragment extends Fragment implements RecognitionListener {
         editor.putBoolean("pref_key_run_status", mRunStatus);
         editor.commit();
         // stop the listener server
-        stopserver();
+        //stopserver();
         // stop the service when needed
         if(autoStop) stopTrycorderService();
         super.onPause();

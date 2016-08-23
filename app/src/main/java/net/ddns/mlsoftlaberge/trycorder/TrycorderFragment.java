@@ -108,7 +108,6 @@ import java.util.Locale;
  */
 public class TrycorderFragment extends Fragment
         implements TextureView.SurfaceTextureListener,
-        RecognitionListener,
         Camera.PictureCallback {
 
     public TrycorderFragment() {
@@ -1387,8 +1386,8 @@ public class TrycorderFragment extends Fragment
 
     public void askscanlist() {
         if(mBound) {
-            mIpList = mTryBinder.getiplist();
-            mNameList = mTryBinder.getnamelist();
+            mIpList = mTrycorderService.getiplist();
+            mNameList = mTrycorderService.getnamelist();
             saylist();
         }
     }
@@ -2643,7 +2642,7 @@ public class TrycorderFragment extends Fragment
 */
     // ========================================================================================
     // functions to control the speech process
-
+/*
     // handles for the conversation functions
     private SpeechRecognizer mSpeechRecognizer = null;
     private Intent mSpeechRecognizerIntent = null;
@@ -2739,6 +2738,27 @@ public class TrycorderFragment extends Fragment
             //else speak("Unknown command.");
         }
     }
+
+*/
+
+    private void listen() {
+        mTextstatus_top.setText("");
+        mTrycorderService.listen();
+    }
+
+    public void understood(String text) {
+        mTextstatus_top.setText(text);
+        if(matchvoice(text)) {
+            say("Said: " + text);
+            sendtext(text);
+            if(autoListen) listen();
+            return;
+        }
+        say("Understood: " + text);
+        sendtext(text);
+        if(autoListen) listen();
+    }
+
 
 
     // ==============================================================================
@@ -2963,11 +2983,7 @@ public class TrycorderFragment extends Fragment
     // =====================================================================================
     // network operations.   ===   Hi Elvis!
     // =====================================================================================
-
-
 /*
-
-
     private ServerSocket serverSocket = null;
 
     Thread serverThread = null;
@@ -3081,6 +3097,7 @@ public class TrycorderFragment extends Fragment
             }
         }
     }
+
 */
 
     public void displaytext(String msg) {
@@ -3094,10 +3111,6 @@ public class TrycorderFragment extends Fragment
     // ====================================================================================
     // client part
 
-    private Socket clientSocket = null;
-
-    Thread clientThread = null;
-
     private void sendcommand(String text) {
         if(isMaster) {
             sendtext(text);
@@ -3108,9 +3121,20 @@ public class TrycorderFragment extends Fragment
     private void sendtext(String text) {
         // start the client thread
         say("Send: " + text);
+        mTrycorderService.sendtext(text);
+    }
+
+/*    // send a message to the other
+    private void sendtext(String text) {
+        // start the client thread
+        say("Send: " + text);
         clientThread = new Thread(new ClientThread(text));
         clientThread.start();
     }
+
+    private Socket clientSocket = null;
+
+    private Thread clientThread = null;
 
     class ClientThread implements Runnable {
 
@@ -3175,10 +3199,11 @@ public class TrycorderFragment extends Fragment
         }
 
     }
+*/
 
     // =====================================================================================
     // register my service with NSD
-
+/*
     private String mServiceName=null;
     private NsdManager mNsdManager=null;
     private NsdManager.RegistrationListener mRegistrationListener=null;
@@ -3243,15 +3268,15 @@ public class TrycorderFragment extends Fragment
             }
         };
     }
-
+*/
     // =======================================================================================
     // discovery section
-
-    private NsdManager.DiscoveryListener mDiscoveryListener=null;
-    private NsdManager.ResolveListener mResolveListener=null;
-
     private List<String> mIpList = new ArrayList<String>();
     private List<String> mNameList = new ArrayList<String>();
+
+/*
+    private NsdManager.DiscoveryListener mDiscoveryListener=null;
+    private NsdManager.ResolveListener mResolveListener=null;
 
     public void startdiscoverService() {
         if (deviceName.isEmpty()) deviceName = SERVICE_NAME;
@@ -3426,6 +3451,7 @@ public class TrycorderFragment extends Fragment
             saylist();
         }
     }
+*/
 
     public void saylist() {
         StringBuffer str = new StringBuffer("");
@@ -3438,6 +3464,17 @@ public class TrycorderFragment extends Fragment
     // =====================================================================================
     // voice capture and send on udp
 
+    private void startstreamingaudio() {
+        say("start streaming audio");
+        mTrycorderService.startstreamingaudio();
+    }
+
+    private void stopstreamingaudio() {
+        say("stop streaming audio");
+        mTrycorderService.stopstreamingaudio();
+    }
+
+    /*
     private int RECORDING_RATE = 44100;
     private int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
     private int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
@@ -3536,10 +3573,14 @@ public class TrycorderFragment extends Fragment
         // start the thread
         streamThread.start();
     }
+*/
 
     // =====================================================================================
     // voice receive on udp and playback
+
+/*
     private Thread talkServerThread = null;
+
 
     private void inittalkserver() {
         say("Start talk server thread");
@@ -3607,6 +3648,7 @@ public class TrycorderFragment extends Fragment
         }
 
     }
+*/
 
     // ===================================================================================
 
@@ -3630,7 +3672,7 @@ public class TrycorderFragment extends Fragment
 
     // ====================================================================================
     // port scanner part
-
+/*
     private Socket scanSocket = null;
 
     Thread scanThread = null;
@@ -3672,7 +3714,7 @@ public class TrycorderFragment extends Fragment
             try {
                 Log.d("scanthread", "try to connect to a server " + destip);
                 InetAddress serverAddr = InetAddress.getByName(destip);
-                clientSocket = new Socket(serverAddr, SERVERPORT);
+                scanSocket = new Socket(serverAddr, SERVERPORT);
                 Log.d("scanthread", "server connected " + destip);
             } catch (UnknownHostException e) {
                 Log.d("scanthread", e.toString());
@@ -3688,7 +3730,7 @@ public class TrycorderFragment extends Fragment
             // try to close the socket of the client
             try {
                 Log.d("scanthread", "closing socket");
-                clientSocket.close();
+                scanSocket.close();
                 Log.d("scanthread", "socket closed");
             } catch (Exception e) {
                 Log.d("scanthread", e.toString());
@@ -3698,6 +3740,6 @@ public class TrycorderFragment extends Fragment
         }
 
     }
-
+*/
 
 }

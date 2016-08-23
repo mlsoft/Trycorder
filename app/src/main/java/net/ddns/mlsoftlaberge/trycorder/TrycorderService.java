@@ -14,13 +14,19 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.Icon;
 import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.media.MediaRecorder;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
@@ -30,19 +36,23 @@ import net.ddns.mlsoftlaberge.trycorder.tryclient.TryclientActivity;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class TrycorderService extends Service {
+public class TrycorderService extends Service implements RecognitionListener {
 
     private int NOTIFICATION_ID = 1701;
     private int SERVERPORT = 1701;
@@ -65,14 +75,14 @@ public class TrycorderService extends Service {
             return(TrycorderService.this);
         }
 
-        public List<String> getiplist() {
-            return(mIpList);
-        }
+    }
 
-        public List<String> getnamelist() {
-            return(mNameList);
-        }
+    public List<String> getiplist() {
+        return(mIpList);
+    }
 
+    public List<String> getnamelist() {
+        return(mNameList);
     }
 
     @Override
@@ -151,7 +161,7 @@ public class TrycorderService extends Service {
     // prepare a notification with the text
     private Notification getNotification(String text){
         PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
-                new Intent(getApplicationContext(), TryclientActivity.class),
+                new Intent(getApplicationContext(), TrycorderActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new Notification.Builder(getApplicationContext())
@@ -216,6 +226,220 @@ public class TrycorderService extends Service {
         setspeaklang(lng);
         tts.speak(texte, TextToSpeech.QUEUE_ADD, null);
         say("Speaked: "+texte);
+    }
+
+    // ========================================================================================
+    // functions to control the speech process
+
+    // handles for the conversation functions
+    private SpeechRecognizer mSpeechRecognizer = null;
+    private Intent mSpeechRecognizerIntent = null;
+
+    public void listen() {
+        if (mSpeechRecognizer == null) {
+            // ============== initialize the audio listener and talker ==============
+
+            //AudioManager mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+
+            mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+            mSpeechRecognizer.setRecognitionListener(this);
+            mSpeechRecognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, "net.ddns.mlsoftlaberge.trycorder");
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 5);
+            //mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, false);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 50);
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 20);
+
+            // produce a FC on android 4.0.3
+            //mAudioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
+        }
+
+        if (listenLanguage.equals("FR")) {
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "fr-FR");
+        } else if (listenLanguage.equals("EN")) {
+            mSpeechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US");
+        } else {
+            // automatic
+        }
+        mSpeechRecognizer.startListening(mSpeechRecognizerIntent);
+        //mTextstatus_top.setText("");
+        say("Speak");
+    }
+
+    // =================================================================================
+    // listener for the speech recognition service
+    // ========================================================================================
+    // functions to listen to the voice recognition callbacks
+
+    @Override
+    public void onBeginningOfSpeech() {
+    }
+
+    @Override
+    public void onBufferReceived(byte[] buffer) {
+    }
+
+    @Override
+    public void onEndOfSpeech() {
+    }
+
+    @Override
+    public void onError(int error) {
+    }
+
+    @Override
+    public void onEvent(int eventType, Bundle params) {
+    }
+
+    @Override
+    public void onPartialResults(Bundle partialResults) {
+    }
+
+    @Override
+    public void onReadyForSpeech(Bundle params) {
+    }
+
+    @Override
+    public void onRmsChanged(float rmsdB) {
+    }
+
+    @Override
+    public void onResults(Bundle results) {
+        ArrayList<String> dutexte = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        if (dutexte != null && dutexte.size() > 0) {
+            for (int i = 0; i < dutexte.size(); ++i) {
+                String mSentence = dutexte.get(i);
+                if (matchvoice(mSentence)) {
+                    //mTextstatus_top.setText(mSentence);
+                    //say("Said: " + mSentence);
+                    //sendtext(mSentence);
+                    //if(autoListen) listen();
+                    informActivity("listen",mSentence);
+                    return;
+                }
+            }
+            //mTextstatus_top.setText(dutexte.get(0));
+            //say("Understood: " + dutexte.get(0));
+            //sendtext(dutexte.get(0));
+            //if(autoListen) listen();
+            informActivity("listen",dutexte.get(0));
+            //if(speakLanguage.equals("FR")) speak("Commande inconnue.");
+            //else speak("Unknown command.");
+        }
+    }
+
+    private boolean matchvoice(String textein) {
+        String texte = textein.toLowerCase();
+        if (texte.contains("french") || texte.contains("français")) return(true);
+        if (texte.contains("english") || texte.contains("anglais")) return(true);
+        if (texte.contains("martin") || texte.contains("master")) return(true);
+        if (texte.contains("computer") || texte.contains("ordinateur")) return(true);
+        if (texte.contains("fuck") || texte.contains("shit")) return(true);
+        if (texte.contains("sensor off")) return(true);
+        if (texte.contains("sensor") || texte.contains("magnetic")) return(true);
+        if (texte.contains("orientation") || texte.contains("direction")) return(true);
+        if (texte.contains("gravity") || texte.contains("vibration")) return(true);
+        if (texte.contains("temperature") || texte.contains("pressure") || texte.contains("light")) return(true);
+        if (texte.contains("hailing") && texte.contains("close")) return(true);
+        if (texte.contains("hailing") || texte.contains("frequency")) return(true);
+        if (texte.contains("intercom")) return(true);
+        if (texte.contains("shield") && texte.contains("down")) return(true);
+        if (texte.contains("shield") || texte.contains("raise")) return(true);
+        if (texte.contains("phaser")) return(true);
+        if (texte.contains("fire") || texte.contains("torpedo")) return(true);
+        if (texte.contains("beam me up") || texte.contains("scotty") || texte.contains("transporteur")) return(true);
+        if (texte.contains("beam me down")) return(true);
+        if (texte.contains("tractor push")) return(true);
+        if (texte.contains("tractor off")) return(true);
+        if (texte.contains("tractor pull")) return(true);
+        if (texte.contains("impulse power")) return(true);
+        if (texte.contains("stay here")) return(true);
+        if (texte.contains("warp drive")) return(true);
+        if (texte.contains("viewer on")) return(true);
+        if (texte.contains("local viewer")) return(true);
+        if (texte.contains("viewer off")) return(true);
+        if (texte.contains("logs console")) return(true);
+        if (texte.contains("logs info")) return(true);
+        if (texte.contains("system plans")) return(true);
+        if (texte.contains("system info")) return(true);
+        if (texte.contains("system stat")) return(true);
+        if (texte.contains("speak list")) return(true);
+        return(false);
+    }
+
+    // ===================================================================================
+    // send a message to the other machines
+
+    public void sendtext(String text) {
+        // start the client thread
+        //say("Send: " + text);
+        clientThread = new Thread(new ClientThread(text));
+        clientThread.start();
+    }
+
+    private Socket clientSocket = null;
+
+    private Thread clientThread = null;
+
+    class ClientThread implements Runnable {
+
+        private String mesg;
+
+        public ClientThread(String str) {
+            mesg = str;
+        }
+
+        @Override
+        public void run() {
+            if(mIpList.size()<2) return;
+            for (int i = 1; i < mIpList.size(); ++i) {
+                clientsend(mIpList.get(i));
+            }
+        }
+
+        private void clientsend(String destip) {
+            // try to connect to a socket
+            try {
+                Log.d("clientthread", "try to connect to a server " + destip);
+                InetAddress serverAddr = InetAddress.getByName(destip);
+                clientSocket = new Socket(serverAddr, SERVERPORT);
+                Log.d("clientthread", "server connected " + destip);
+            } catch (UnknownHostException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            }
+            // try to send the message
+            try {
+                Log.d("clientthread", "sending data");
+                PrintWriter out = new PrintWriter(new BufferedWriter(
+                        new OutputStreamWriter(clientSocket.getOutputStream())), true);
+                out.println(mesg);
+                Log.d("clientthread", "data sent");
+            } catch (UnknownHostException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            } catch (Exception e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            }
+            // try to close the socket of the client
+            try {
+                Log.d("clientthread", "closing socket");
+                clientSocket.close();
+                Log.d("clientthread", "socket closed");
+            } catch (Exception e) {
+                Log.d("clientthread", e.toString());
+                e.printStackTrace();
+            }
+        }
+
     }
 
     // =====================================================================================
@@ -345,6 +569,109 @@ public class TrycorderService extends Service {
 
 
     // =====================================================================================
+    // voice capture and send on udp
+
+    private int RECORDING_RATE = 44100;
+    private int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
+    private int FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+
+    private int BUFFER_SIZE = AudioRecord.getMinBufferSize(RECORDING_RATE, CHANNEL, FORMAT);
+
+    private AudioRecord recorder;
+
+    private boolean currentlySendingAudio = false;
+
+    public void startstreamingaudio() {
+        say("start streaming audio");
+        currentlySendingAudio = true;
+        startStreaming();
+    }
+
+    public void stopstreamingaudio() {
+        say("stop streaming audio");
+        currentlySendingAudio = false;
+        try {
+            recorder.release();
+        } catch (Exception e) {
+            Log.d("stop streaming", "stop streaming error");
+        }
+    }
+
+    private void startStreaming() {
+
+        Log.i("startstreaming", "Starting the background thread to stream the audio data");
+
+        Thread streamThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+
+                    Log.d("streamaudio", "Obtaining server address");
+                    String SERVER;
+                    int PORT = SERVERPORT;
+
+                    Log.d("streamaudio", "Creating the datagram socket");
+                    DatagramSocket socket = new DatagramSocket();
+
+                    Log.d("streamaudio", "Creating the buffer of size " + BUFFER_SIZE);
+                    byte[] buffer = new byte[BUFFER_SIZE];
+
+                    List<InetAddress> mServerAddress = new ArrayList<>();
+                    mServerAddress.clear();
+                    for (int i = 0; i < mIpList.size(); ++i) {
+                        SERVER = mIpList.get(i);
+                        Log.d("streamaudio", "Connecting to " + SERVER + ":" + PORT);
+                        mServerAddress.add(InetAddress.getByName(SERVER));
+                        Log.d("streamaudio", "Connected to " + SERVER + ":" + PORT);
+                    }
+
+                    Log.d("streamaudio", "Creating the reuseable DatagramPacket");
+                    DatagramPacket packet;
+
+                    Log.d("streamaudio", "Creating the AudioRecord");
+                    recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+                            RECORDING_RATE, CHANNEL, FORMAT, BUFFER_SIZE * 10);
+
+                    Log.d("streamaudio", "AudioRecord recording...");
+                    recorder.startRecording();
+
+                    while (currentlySendingAudio == true) {
+
+                        Log.d("streamloop", "Reading data from recorder");
+                        // read the data into the buffer
+                        int read = recorder.read(buffer, 0, buffer.length);
+
+                        // repeat to myself if i am alone on the net only
+                        int j;
+                        //if (mIpList.size() < 2) j = 0;
+                        //else j = 1;
+                        j=1;
+                        // repeat to each other address from list
+                        if(mIpList.size()>1) for (int i = j; i < mIpList.size(); ++i) {
+                            // place contents of buffer into the packet
+                            packet = new DatagramPacket(buffer, read, mServerAddress.get(i), PORT);
+
+                            Log.d("streamloop", "Sending packet : " + read + " to " + mIpList.get(i));
+                            // send the packet
+                            socket.send(packet);
+                        }
+                    }
+
+                    Log.d("streamaudio", "AudioRecord finished recording");
+
+                } catch (Exception e) {
+                    Log.e("streamaudio", "Exception: " + e);
+                }
+            }
+        });
+
+        // start the thread
+        streamThread.start();
+    }
+
+
+    // =====================================================================================
     // voice receive on udp and playback
     private Thread talkServerThread = null;
 
@@ -409,9 +736,9 @@ public class TrycorderService extends Service {
                     byte[] buffer = receivePacket.getData();
                     int offset = receivePacket.getOffset();
                     int len = receivePacket.getLength();
-                    //systime=System.currentTimeMillis();
-                    //if((systime-lasttime)>1000) say("Speaking ...");
-                    //lasttime=systime;
+                    systime=System.currentTimeMillis();
+                    if((systime-lasttime)>1000) saypost("Speaking ...");
+                    lasttime=systime;
                     Log.d("talkloop", "received bytes : " + offset + " - " + len);
                     track.write(buffer, offset, len);
                 } catch (Exception e) {

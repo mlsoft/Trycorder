@@ -60,6 +60,9 @@ public class TrycorderActivity extends FragmentActivity implements
             } else if (theEvent.equals("say")) {
                 // text received
                 mTrycorderFragment.say(theText);
+            } else if (theEvent.equals("listen")) {
+                // text received
+                mTrycorderFragment.understood(theText);
             }
         }
     };
