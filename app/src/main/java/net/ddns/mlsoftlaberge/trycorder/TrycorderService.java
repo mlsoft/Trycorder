@@ -32,7 +32,6 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import net.ddns.mlsoftlaberge.trycorder.tryclient.TryclientActivity;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 
 import java.io.BufferedReader;
@@ -311,21 +310,11 @@ public class TrycorderService extends Service implements RecognitionListener {
             for (int i = 0; i < dutexte.size(); ++i) {
                 String mSentence = dutexte.get(i);
                 if (matchvoice(mSentence)) {
-                    //mTextstatus_top.setText(mSentence);
-                    //say("Said: " + mSentence);
-                    //sendtext(mSentence);
-                    //if(autoListen) listen();
                     informActivity("listen",mSentence);
                     return;
                 }
             }
-            //mTextstatus_top.setText(dutexte.get(0));
-            //say("Understood: " + dutexte.get(0));
-            //sendtext(dutexte.get(0));
-            //if(autoListen) listen();
             informActivity("listen",dutexte.get(0));
-            //if(speakLanguage.equals("FR")) speak("Commande inconnue.");
-            //else speak("Unknown command.");
         }
     }
 
@@ -582,13 +571,11 @@ public class TrycorderService extends Service implements RecognitionListener {
     private boolean currentlySendingAudio = false;
 
     public void startstreamingaudio() {
-        say("start streaming audio");
         currentlySendingAudio = true;
         startStreaming();
     }
 
     public void stopstreamingaudio() {
-        say("stop streaming audio");
         currentlySendingAudio = false;
         try {
             recorder.release();
@@ -1028,6 +1015,5 @@ public class TrycorderService extends Service implements RecognitionListener {
         intentForActivity.putExtra("TRYSERVERTEXT", text);
         sendBroadcast(intentForActivity);
     }
-
 
 }

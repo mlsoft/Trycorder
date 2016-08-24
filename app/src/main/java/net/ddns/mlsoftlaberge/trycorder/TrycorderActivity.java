@@ -18,15 +18,13 @@ import android.view.View;
 public class TrycorderActivity extends FragmentActivity implements
         TrycorderFragment.OnTrycorderInteractionListener,
         TryviewerFragment.OnTryviewerInteractionListener,
-        TrygalleryFragment.OnTrygalleryInteractionListener,
-        TrywalkieFragment.OnTrywalkieInteractionListener {
+        TrygalleryFragment.OnTrygalleryInteractionListener {
 
     private static String TAG = "Trycorder";
 
     private TrycorderFragment mTrycorderFragment=null;
     private TrygalleryFragment mTrygalleryFragment=null;
     private TryviewerFragment mTryviewerFragment=null;
-    private TrywalkieFragment mTrywalkieFragment=null;
 
     private int currentMode=0;
 
@@ -110,11 +108,6 @@ public class TrycorderActivity extends FragmentActivity implements
         switchfragment(mode);
     }
 
-    @Override
-    public void onTrywalkieModeChange(int mode) {
-        switchfragment(mode);
-    }
-
     private void switchfragment(int mode) {
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         switch(mode) {
@@ -131,11 +124,6 @@ public class TrycorderActivity extends FragmentActivity implements
             case 3:
                 if(mTryviewerFragment==null) mTryviewerFragment=new TryviewerFragment();
                 ft.replace(android.R.id.content, mTryviewerFragment, TAG);
-                ft.commit();
-                break;
-            case 4:
-                if(mTrywalkieFragment==null) mTrywalkieFragment=new TrywalkieFragment();
-                ft.replace(android.R.id.content, mTrywalkieFragment, TAG);
                 ft.commit();
                 break;
         }
