@@ -123,7 +123,7 @@ public class GraSensorView extends TextView implements SensorEventListener {
                     }
                     // fill the 3 elements in the table
                     for (int i = 0; i < 3; ++i) {
-                        final float v = mYOffset + event.values[i] * mScale;
+                        final float v = mYOffset + event.values[i] * mScale*20;
                         mValues[nbValues + (i * MAXVALUES)] = v;
                     }
                     nbValues++;

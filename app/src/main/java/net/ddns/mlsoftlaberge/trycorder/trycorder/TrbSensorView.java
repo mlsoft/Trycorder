@@ -108,9 +108,13 @@ public class TrbSensorView extends TextView {
                     // compute positions
                     float px=mWidth/2;
                     float dx=position;
-                    mCanvas.drawLine(px,mHeight,px-dx,0,mPaint2);
                     mCanvas.drawLine(px,mHeight,px,0,mPaint2);
+                    mCanvas.drawLine(px,mHeight,px-dx,0,mPaint2);
                     mCanvas.drawLine(px,mHeight,px+dx,0,mPaint2);
+                    mCanvas.drawLine(px,mHeight,px-(dx/2),0,mPaint2);
+                    mCanvas.drawLine(px,mHeight,px+(dx/2),0,mPaint2);
+                    mCanvas.drawLine(px,mHeight,px-(dx/4),0,mPaint2);
+                    mCanvas.drawLine(px,mHeight,px+(dx/4),0,mPaint2);
                 }
                 // transfer the bitmap to the view
                 viewcanvas.drawBitmap(mBitmap, 0, 0, null);
