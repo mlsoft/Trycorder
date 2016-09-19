@@ -288,6 +288,7 @@ public class TrycorderFragment extends Fragment
     private Button mModeButton;
     private Button mModePhotogalButton;
     private Button mModeVideogalButton;
+    private Button mModeSensorButton;
     private Button mModeCrewButton;
     private Button mModeInvButton;
 
@@ -927,6 +928,15 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        mModeSensorButton = (Button) view.findViewById(R.id.mode_sensor_button);
+        mModeSensorButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchtrycordermode(4);
+            }
+        });
+
         mModeCrewButton = (Button) view.findViewById(R.id.mode_contact_button);
         mModeCrewButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1273,6 +1283,7 @@ public class TrycorderFragment extends Fragment
 
         mModePhotogalButton.setTypeface(face2);
         mModeVideogalButton.setTypeface(face2);
+        mModeSensorButton.setTypeface(face2);
         mModeCrewButton.setTypeface(face2);
         mModeInvButton.setTypeface(face2);
     }

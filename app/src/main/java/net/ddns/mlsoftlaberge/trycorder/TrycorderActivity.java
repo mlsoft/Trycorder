@@ -17,6 +17,7 @@ import android.view.View;
  */
 public class TrycorderActivity extends FragmentActivity implements
         TrycorderFragment.OnTrycorderInteractionListener,
+        TrysensorFragment.OnTrysensorInteractionListener,
         TryviewerFragment.OnTryviewerInteractionListener,
         TrygalleryFragment.OnTrygalleryInteractionListener {
 
@@ -25,6 +26,7 @@ public class TrycorderActivity extends FragmentActivity implements
     private TrycorderFragment mTrycorderFragment=null;
     private TrygalleryFragment mTrygalleryFragment=null;
     private TryviewerFragment mTryviewerFragment=null;
+    private TrysensorFragment mTrysensorFragment=null;
 
     private int currentMode=0;
 
@@ -46,21 +48,21 @@ public class TrycorderActivity extends FragmentActivity implements
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(currentMode!=1) return;
             String theEvent = intent.getStringExtra("TRYSERVERCMD");
             String theText = intent.getStringExtra("TRYSERVERTEXT");
             if (theEvent.equals("iplist")) {
                 // refresh the ip list
-                mTrycorderFragment.askscanlist();
+                if(currentMode==1) mTrycorderFragment.askscanlist();
             } else if (theEvent.equals("text")) {
                 // text received
-                mTrycorderFragment.displaytext(theText);
+                if(currentMode==1) mTrycorderFragment.displaytext(theText);
             } else if (theEvent.equals("say")) {
                 // text received
-                mTrycorderFragment.say(theText);
+                if(currentMode==1) mTrycorderFragment.say(theText);
             } else if (theEvent.equals("listen")) {
                 // text received
-                mTrycorderFragment.understood(theText);
+                if(currentMode==1) mTrycorderFragment.understood(theText);
+                if(currentMode==4) mTrysensorFragment.understood(theText);
             }
         }
     };
@@ -108,6 +110,11 @@ public class TrycorderActivity extends FragmentActivity implements
         switchfragment(mode);
     }
 
+    @Override
+    public void onTrysensorModeChange(int mode) {
+        switchfragment(mode);
+    }
+
     private void switchfragment(int mode) {
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         switch(mode) {
@@ -124,6 +131,11 @@ public class TrycorderActivity extends FragmentActivity implements
             case 3:
                 if(mTryviewerFragment==null) mTryviewerFragment=new TryviewerFragment();
                 ft.replace(android.R.id.content, mTryviewerFragment, TAG);
+                ft.commit();
+                break;
+            case 4:
+                if(mTrysensorFragment==null) mTrysensorFragment=new TrysensorFragment();
+                ft.replace(android.R.id.content, mTrysensorFragment, TAG);
                 ft.commit();
                 break;
         }
