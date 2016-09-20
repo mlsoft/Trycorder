@@ -6,49 +6,46 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
+import android.hardware.Camera;
+import android.hardware.SensorManager;
+import android.location.LocationManager;
 import android.media.MediaPlayer;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.AudSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.GraSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.MagSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.OriSensorView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.TemSensorView;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+
 
 /**
  * Created by mlsoft on 16-06-26.
  */
-public class TrysensorFragment extends Fragment {
+public class TrysensorFragment extends Fragment
+        implements TextureView.SurfaceTextureListener {
+
+
 
     public TrysensorFragment() {
     }
@@ -102,6 +99,39 @@ public class TrysensorFragment extends Fragment {
 
     // the main contents layout in the center
     private LinearLayout mCenterLayout;
+
+    private LinearLayout mSensor1Layout;
+    private LinearLayout mSensor2Layout;
+    private LinearLayout mSensor3Layout;
+    private LinearLayout mSensor4Layout;
+    private LinearLayout mSensor5Layout;
+    private LinearLayout mSensor6Layout;
+
+
+    // handle for the gps
+    private LocationManager mLocationManager = null;
+
+    // the handle to the sensors
+    private SensorManager mSensorManager = null;
+
+    // the new scope class
+    private MagSensorView mMagSensorView;
+
+    // the new scope class
+    private OriSensorView mOriSensorView;
+
+    // the new scope class
+    private GraSensorView mGraSensorView;
+
+    // the new scope class
+    private TemSensorView mTemSensorView;
+
+    // the new scope class
+    private AudSensorView mAudSensorView;
+
+    // a texture to view camera
+    private TextureView mViewerWindow;
+    private Camera mCamera=null;
 
     // utility class to fetch system infos
     private Fetcher mFetcher;
@@ -206,6 +236,68 @@ public class TrysensorFragment extends Fragment {
         // the center layout to show contents
         mCenterLayout = (LinearLayout) view.findViewById(R.id.center_layout);
 
+        mSensor1Layout = (LinearLayout) view.findViewById(R.id.sensor1_layout);
+        mSensor2Layout = (LinearLayout) view.findViewById(R.id.sensor2_layout);
+        mSensor3Layout = (LinearLayout) view.findViewById(R.id.sensor3_layout);
+        mSensor4Layout = (LinearLayout) view.findViewById(R.id.sensor4_layout);
+        mSensor5Layout = (LinearLayout) view.findViewById(R.id.sensor5_layout);
+        mSensor6Layout = (LinearLayout) view.findViewById(R.id.sensor6_layout);
+
+        // ==============================================================================
+        // create layout params for the created views
+        final LinearLayout.LayoutParams tlayoutParams =
+                new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT);
+
+        // ==============================================================================
+        // a sensor manager to obtain sensors data
+        mSensorManager = (SensorManager) getActivity().getSystemService(getActivity().SENSOR_SERVICE);
+
+        // a gps manager to obtain gps data
+        mLocationManager = (LocationManager) getActivity().getSystemService(getActivity().LOCATION_SERVICE);
+
+        // ============== create a sensor display and incorporate in layout ==============
+
+        // my sensorview that display the sensors data
+        mMagSensorView = new MagSensorView(getContext(), mSensorManager);
+        // add my sensorview to the layout 1
+        mSensor1Layout.addView(mMagSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mOriSensorView = new OriSensorView(getContext(), mSensorManager, mLocationManager);
+        mOriSensorView.setClickable(true);
+        mOriSensorView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                googlemapactivity();
+                buttonsound();
+            }
+        });
+        // add my sensorview to the layout 2
+        mSensor2Layout.addView(mOriSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mGraSensorView = new GraSensorView(getContext(), mSensorManager);
+        // add my sensorview to the layout 1
+        mSensor3Layout.addView(mGraSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mTemSensorView = new TemSensorView(getContext(), mSensorManager);
+        // add my sensorview to the layout 1
+        mSensor4Layout.addView(mTemSensorView, tlayoutParams);
+
+        // my sensorview that display the sensors data
+        mAudSensorView = new AudSensorView(getContext());
+        // add my sensorview to the layout 1
+        mSensor5Layout.addView(mAudSensorView, tlayoutParams);
+
+        // create and activate a textureview to contain camera display
+        mViewerWindow = new TextureView(getContext());
+        mViewerWindow.setSurfaceTextureListener(this);
+        // add my sensorview to the layout 1
+        mSensor6Layout.addView(mViewerWindow, tlayoutParams);
+
+
         return view;
 
     }
@@ -306,6 +398,13 @@ public class TrysensorFragment extends Fragment {
         // override the languages for french
         speakLanguage = "FR";
         listenLanguage = "FR";
+        // start the sensors
+        mRunStatus=true;
+        mMagSensorView.start();
+        mGraSensorView.start();
+        mAudSensorView.start();
+        mOriSensorView.start();
+        mTemSensorView.start();
     }
 
     @Override
@@ -314,7 +413,12 @@ public class TrysensorFragment extends Fragment {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean("pref_key_run_status", mRunStatus);
         editor.commit();
-        // stop the listener server
+        // stop the sensors
+        mMagSensorView.stop();
+        mGraSensorView.stop();
+        mAudSensorView.stop();
+        mOriSensorView.stop();
+        mTemSensorView.stop();
         super.onPause();
     }
 
@@ -340,6 +444,80 @@ public class TrysensorFragment extends Fragment {
         say("Settings");
         Intent i = new Intent(getActivity(), SettingsActivity.class);
         startActivity(i);
+    }
+
+    // =========================================================================================
+    // map activity to see where we are on the map of this planet
+
+    public void googlemapactivity() {
+        float longitude = mOriSensorView.getLongitude();
+        float latitude = mOriSensorView.getLatitude();
+
+        //final Intent viewIntent = new Intent(Intent.ACTION_VIEW, constructGeoUri(view.getContentDescription().toString()));
+        String geopath = "geo:" + String.valueOf(latitude) + "," + String.valueOf(longitude);
+        Uri geouri = Uri.parse(geopath);
+        say("Open planetary mapping");
+        say(geopath);
+        final Intent viewIntent = new Intent(Intent.ACTION_VIEW, geouri);
+        // A PackageManager instance is needed to verify that there's a default app
+        // that handles ACTION_VIEW and a geo Uri.
+        final PackageManager packageManager = getActivity().getPackageManager();
+        // Checks for an activity that can handle this intent. Preferred in this
+        // case over Intent.createChooser() as it will still let the user choose
+        // a default (or use a previously set default) for geo Uris.
+        if (packageManager.resolveActivity(
+                viewIntent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
+            // Toast.makeText(getActivity(),
+            //        R.string.yes_intent_found, Toast.LENGTH_SHORT).show();
+            startActivity(viewIntent);
+        } else {
+            // If no default is found, displays a message that no activity can handle
+            // the view button.
+            Toast.makeText(getActivity(), "No application for mapping.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // ========================================================================================
+    // functions to listen to the surface texture view
+
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
+        try {
+            mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_FRONT);
+            mCamera.setPreviewTexture(mViewerWindow.getSurfaceTexture());
+            Camera.Parameters parameters = mCamera.getParameters();
+            parameters.set("orientation", "portrait");
+            parameters.set("scene-mode", "portrait");
+            parameters.set("rotation", "270");
+            mCamera.setParameters(parameters);
+            mCamera.setDisplayOrientation(90);
+            mCamera.startPreview();
+        } catch (IOException ioe) {
+            say("Something bad happened with camera");
+        } catch (Exception sex) {
+            say("camera permission refused");
+        }
+    }
+
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        // Ignored, Camera does all the work for us
+    }
+
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        if (mCamera != null) {
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
+        return true;
+    }
+
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        // Invoked every time there's a new Camera preview frame
     }
 
     // =========================================================================
