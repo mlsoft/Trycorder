@@ -27,7 +27,7 @@ public class OriSensorView extends TextView implements SensorEventListener, Loca
     private float longitude=0.0f;
     private float latitude=0.0f;
 
-    private Paint paint;
+    private Paint mPaint;
     private float position = 0;
 
     private Location location = null;
@@ -46,13 +46,13 @@ public class OriSensorView extends TextView implements SensorEventListener, Loca
     }
 
     private void init() {
-        // initialize the paint object
-        paint = new Paint();
-        paint.setAntiAlias(true);
-        paint.setStrokeWidth(2);
-        paint.setTextSize(24);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(Color.WHITE);
+        // initialize the mPaint object
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setStrokeWidth(2);
+        mPaint.setTextSize(24);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setColor(Color.WHITE);
     }
 
     public float getLongitude() {
@@ -115,7 +115,18 @@ public class OriSensorView extends TextView implements SensorEventListener, Loca
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas mCanvas) {
+        int mWidth = getMeasuredWidth();
+        int mHeight = getMeasuredHeight();
+        // draw the square
+        mPaint.setColor(Color.MAGENTA);
+        mPaint.setStrokeWidth(2.0f);
+        mCanvas.drawLine(0,0,mWidth,0,mPaint);
+        mCanvas.drawLine(0,0,0,mHeight,mPaint);
+        mCanvas.drawLine(mWidth-1,mHeight-1,mWidth-1,0,mPaint);
+        mCanvas.drawLine(mWidth-1,mHeight-1,0,mHeight-1,mPaint);
+
+        mPaint.setColor(Color.WHITE);
         int xPoint = getMeasuredWidth() / 2;
         int yPoint = getMeasuredHeight() / 2;
         if (yPoint > xPoint) {
@@ -125,18 +136,18 @@ public class OriSensorView extends TextView implements SensorEventListener, Loca
         }
 
         float radius = (float) (Math.min(xPoint, yPoint) * 0.9);
-        canvas.drawCircle(xPoint, yPoint, radius, paint);
-        // canvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), paint);
+        mCanvas.drawCircle(xPoint, yPoint, radius, mPaint);
+        // mCanvas.drawRect(0, 0, getMeasuredWidth(), getMeasuredHeight(), mPaint);
 
         // 3.1416 is a good approximation for the circle
-        canvas.drawLine(xPoint,
+        mCanvas.drawLine(xPoint,
                 yPoint,
                 (float) (xPoint + radius
                         * Math.sin((double) (-position) / 180 * 3.1416)),
                 (float) (yPoint - radius
-                        * Math.cos((double) (-position) / 180 * 3.1416)), paint);
+                        * Math.cos((double) (-position) / 180 * 3.1416)), mPaint);
 
-        canvas.drawText("ORI: " + String.valueOf(position), xPoint * 2.0f, yPoint * 2.0f - 32.0f, paint);
+        mCanvas.drawText("ORI: " + String.valueOf(position), xPoint * 2.0f, yPoint * 2.0f - 32.0f, mPaint);
 
         // draw the longitude and latitude
         if (location != null) {
@@ -145,11 +156,11 @@ public class OriSensorView extends TextView implements SensorEventListener, Loca
             // save it to public accesssible values
             latitude=lat;
             longitude=lng;
-            canvas.drawText("LAT: " + String.valueOf(lat), xPoint * 2.0f, 32.0f, paint);
-            canvas.drawText("LON: " + String.valueOf(lng), xPoint * 2.0f, 64.0f, paint);
+            mCanvas.drawText("LAT: " + String.valueOf(lat), xPoint * 2.0f, 32.0f, mPaint);
+            mCanvas.drawText("LON: " + String.valueOf(lng), xPoint * 2.0f, 64.0f, mPaint);
         } else {
-            canvas.drawText("LAT: " + "Not avalaible", xPoint * 2.0f, 32.0f, paint);
-            canvas.drawText("LON: " + "Not avalaible", xPoint * 2.0f, 64.0f, paint);
+            mCanvas.drawText("LAT: " + "Not avalaible", xPoint * 2.0f, 32.0f, mPaint);
+            mCanvas.drawText("LON: " + "Not avalaible", xPoint * 2.0f, 64.0f, mPaint);
         }
     }
 

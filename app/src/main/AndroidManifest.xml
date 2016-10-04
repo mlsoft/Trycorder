@@ -49,6 +49,15 @@
         </receiver>
 
         <activity
+            android:name=".tryclient.TryclientActivity"
+            android:label="Tryclient"
+            android:parentActivityName=".TrycorderActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".TrycorderActivity" />
+        </activity>
+
+        <activity
             android:name=".settings.SettingsActivity"
             android:label="Settings"
             android:parentActivityName=".TrycorderActivity">

@@ -115,7 +115,23 @@ public class AudSensorView extends TextView {
                 // clear the surface
                 mCanvas.drawColor(Color.BLACK);
                 // draw the horizontal line
+                mPaint.setColor(Color.WHITE);
+                mPaint.setStrokeWidth(1.0f);
                 mCanvas.drawLine(0,mHeight/2,mWidth,mHeight/2,mPaint);
+                // draw the square
+                mPaint.setColor(Color.MAGENTA);
+                mPaint.setStrokeWidth(2.0f);
+                mCanvas.drawLine(0,0,mWidth,0,mPaint);
+                mCanvas.drawLine(0,0,0,mHeight,mPaint);
+                mCanvas.drawLine(mWidth-1,mHeight-1,mWidth-1,0,mPaint);
+                mCanvas.drawLine(mWidth-1,mHeight-1,0,mHeight-1,mPaint);
+                // draw the text
+                mPaint.setColor(Color.GREEN);
+                mPaint.setStrokeWidth(2.0f);
+                mPaint.setAntiAlias(true);
+                mPaint.setTextSize(20);
+                mPaint.setStyle(Paint.Style.STROKE);
+                mCanvas.drawText("Audio",10,20,mPaint);
                 // draw the sound wave
                 int posx;
                 int posy;

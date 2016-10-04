@@ -91,6 +91,20 @@ public class MagSensorView extends TextView implements SensorEventListener {
                 mPaint.setColor(0xffaaaaaa);
                 mPaint.setStrokeWidth(1.0f);
                 mCanvas.drawLine(0, mYOffset, mWidth, mYOffset, mPaint);
+                // draw the square
+                mPaint.setColor(Color.MAGENTA);
+                mPaint.setStrokeWidth(2.0f);
+                mCanvas.drawLine(0,0,mWidth,0,mPaint);
+                mCanvas.drawLine(0,0,0,mHeight,mPaint);
+                mCanvas.drawLine(mWidth-1,mHeight-1,mWidth-1,0,mPaint);
+                mCanvas.drawLine(mWidth-1,mHeight-1,0,mHeight-1,mPaint);
+                // draw the text
+                mPaint.setColor(Color.GREEN);
+                mPaint.setStrokeWidth(2.0f);
+                mPaint.setAntiAlias(true);
+                mPaint.setTextSize(20);
+                mPaint.setStyle(Paint.Style.STROKE);
+                mCanvas.drawText("Magnetic",10,20,mPaint);
                 // draw the 100 values x 3 rows
                 for (int i = 0; i < nbValues - 1; ++i) {
                     for (int j = 0; j < 3; ++j) {

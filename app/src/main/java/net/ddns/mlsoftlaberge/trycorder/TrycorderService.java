@@ -32,6 +32,7 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import net.ddns.mlsoftlaberge.trycorder.tryclient.TryclientActivity;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 
 import java.io.BufferedReader;
@@ -160,7 +161,7 @@ public class TrycorderService extends Service implements RecognitionListener {
     // prepare a notification with the text
     private Notification getNotification(String text){
         PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0,
-                new Intent(getApplicationContext(), TrycorderActivity.class),
+                new Intent(getApplicationContext(), TryclientActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new Notification.Builder(getApplicationContext())

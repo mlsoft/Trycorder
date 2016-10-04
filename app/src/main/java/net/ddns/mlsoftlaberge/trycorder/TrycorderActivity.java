@@ -5,8 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
@@ -30,6 +32,8 @@ public class TrycorderActivity extends FragmentActivity implements
 
     private int currentMode=0;
 
+    private SharedPreferences sharedPref;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +46,11 @@ public class TrycorderActivity extends FragmentActivity implements
         ft.add(android.R.id.content, mTrycorderFragment, TAG);
         ft.commit();
         currentMode=1;
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        int lastmode = sharedPref.getInt("pref_key_last_mode", 0);
+        if(lastmode>1) {
+            switchfragment(lastmode);
+        }
     }
 
     // the function who will receive broadcasts from the service
@@ -79,6 +88,13 @@ public class TrycorderActivity extends FragmentActivity implements
         super.onPause();
     }
 
+    @Override
+    public void onStop() {
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt("pref_key_last_mode", currentMode);
+        editor.commit();
+        super.onStop();
+    }
 
     // permits this activity to hide status and action bars, and proceed full screen
     @Override

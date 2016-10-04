@@ -93,6 +93,13 @@ public class TemSensorView extends TextView implements SensorEventListener {
             if (mBitmap != null) {
                 // clear the surface
                 mCanvas.drawColor(Color.BLACK);
+                // draw the square
+                mPaint.setColor(Color.MAGENTA);
+                mPaint.setStrokeWidth(2.0f);
+                mCanvas.drawLine(0,0,mWidth,0,mPaint);
+                mCanvas.drawLine(0,0,0,mHeight,mPaint);
+                mCanvas.drawLine(mWidth-1,mHeight-1,mWidth-1,0,mPaint);
+                mCanvas.drawLine(mWidth-1,mHeight-1,0,mHeight-1,mPaint);
                 // draw the ambient temperature
                 drawSensor("Press(Kpa)", lastPresValue, 0.0f, 1200.0f, 0, 0, mWidth / 3.0f, mHeight);
 
@@ -116,6 +123,7 @@ public class TemSensorView extends TextView implements SensorEventListener {
 
     private void drawSensor(String label, float value, float minvalue, float maxvalue,
                             float px, float py, float nx, float ny) {
+        mPaint.setColor(Color.WHITE);
         // draw a proportionnal large red line for the value
         float linelen = (ny - 64.0f) * ((value - minvalue) / (maxvalue - minvalue));
         mCanvas.drawRect(px + (nx / 3.0f), py + ny - 32 - linelen, px + (nx / 3.0f * 2.0f), py + ny - 32, mPaint2);
