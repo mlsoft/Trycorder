@@ -65,6 +65,7 @@ import android.widget.Toast;
 import net.ddns.mlsoftlaberge.trycorder.contacts.ContactsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.products.ProductsListActivity;
 import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
+import net.ddns.mlsoftlaberge.trycorder.tryclient.TryclientActivity;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.AudSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.LogsStatView;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
@@ -286,11 +287,12 @@ public class TrycorderFragment extends Fragment
     private Button mLogsStatButton;
 
     private Button mModeButton;
+    private Button mModeCrewButton;
+    private Button mModeInvButton;
     private Button mModePhotogalButton;
     private Button mModeVideogalButton;
     private Button mModeSensorButton;
-    private Button mModeCrewButton;
-    private Button mModeInvButton;
+    private Button mModeClientButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -326,6 +328,9 @@ public class TrycorderFragment extends Fragment
     private ImageView mStarshipPlans;
     private TextView mLogsSys;
     private LogsStatView mLogsStat;
+
+    // the mode for the mode-mode buttons window
+    private LinearLayout mModeWindow;
 
     // the mode animation for motor layout
     private FrameLayout mViewerAnimate;
@@ -907,6 +912,7 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchbuttonlayout(10);
+                switchviewer(10);
             }
         });
 
@@ -934,6 +940,15 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 buttonsound();
                 switchtrycordermode(4);
+            }
+        });
+
+        mModeClientButton = (Button) view.findViewById(R.id.mode_client_button);
+        mModeClientButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                tryclientactivity();
             }
         });
 
@@ -1003,6 +1018,8 @@ public class TrycorderFragment extends Fragment
         });
 
         mViewerPhoto = (ImageView) view.findViewById(R.id.photo_view);
+
+        mModeWindow = (LinearLayout) view.findViewById(R.id.mode_window);
 
         mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
         mLogsSys.setHorizontallyScrolling(true);
@@ -1284,6 +1301,7 @@ public class TrycorderFragment extends Fragment
         mModePhotogalButton.setTypeface(face2);
         mModeVideogalButton.setTypeface(face2);
         mModeSensorButton.setTypeface(face2);
+        mModeClientButton.setTypeface(face2);
         mModeCrewButton.setTypeface(face2);
         mModeInvButton.setTypeface(face2);
     }
@@ -1541,6 +1559,14 @@ public class TrycorderFragment extends Fragment
         say("Settings");
         if (isChatty) speak("Settings");
         Intent i = new Intent(getActivity(), SettingsActivity.class);
+        startActivity(i);
+    }
+
+    // settings activity incorporation in the display
+    public void tryclientactivity() {
+        say("Tryclient");
+        if (isChatty) speak("Client");
+        Intent i = new Intent(getActivity(), TryclientActivity.class);
         startActivity(i);
     }
 
@@ -2254,6 +2280,7 @@ public class TrycorderFragment extends Fragment
         mLogsSys.setVisibility(View.GONE);
         mLogsStat.setVisibility(View.GONE);
         mViewerAnimate.setVisibility(View.GONE);
+        mModeWindow.setVisibility(View.GONE);
         mLogsStat.stop();
         switchcam(0);
         switch (no) {
@@ -2335,6 +2362,11 @@ public class TrycorderFragment extends Fragment
                 say("Logs Stat");
                 mLogsStat.setVisibility(View.VISIBLE);
                 mLogsStat.start();
+                mVieweron = false;
+                break;
+            case 10:
+                say("Mode Window");
+                mModeWindow.setVisibility(View.VISIBLE);
                 mVieweron = false;
                 break;
         }
