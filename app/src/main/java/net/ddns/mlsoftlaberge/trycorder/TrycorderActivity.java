@@ -20,6 +20,7 @@ import android.view.View;
 public class TrycorderActivity extends FragmentActivity implements
         TrycorderFragment.OnTrycorderInteractionListener,
         TrysensorFragment.OnTrysensorInteractionListener,
+        TryvisionFragment.OnTryvisionInteractionListener,
         TryviewerFragment.OnTryviewerInteractionListener,
         TrygalleryFragment.OnTrygalleryInteractionListener {
 
@@ -29,6 +30,7 @@ public class TrycorderActivity extends FragmentActivity implements
     private TrygalleryFragment mTrygalleryFragment=null;
     private TryviewerFragment mTryviewerFragment=null;
     private TrysensorFragment mTrysensorFragment=null;
+    private TryvisionFragment mTryvisionFragment=null;
 
     private int currentMode=0;
 
@@ -131,6 +133,11 @@ public class TrycorderActivity extends FragmentActivity implements
         switchfragment(mode);
     }
 
+    @Override
+    public void onTryvisionModeChange(int mode) {
+        switchfragment(mode);
+    }
+
     private void switchfragment(int mode) {
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         switch(mode) {
@@ -152,6 +159,18 @@ public class TrycorderActivity extends FragmentActivity implements
             case 4:
                 if(mTrysensorFragment==null) mTrysensorFragment=new TrysensorFragment();
                 ft.replace(android.R.id.content, mTrysensorFragment, TAG);
+                ft.commit();
+                break;
+            case 5:
+                if(mTryvisionFragment==null) mTryvisionFragment=new TryvisionFragment();
+                mTryvisionFragment.setmode(1);
+                ft.replace(android.R.id.content, mTryvisionFragment, TAG);
+                ft.commit();
+                break;
+            case 6:
+                if(mTryvisionFragment==null) mTryvisionFragment=new TryvisionFragment();
+                mTryvisionFragment.setmode(2);
+                ft.replace(android.R.id.content, mTryvisionFragment, TAG);
                 ft.commit();
                 break;
         }

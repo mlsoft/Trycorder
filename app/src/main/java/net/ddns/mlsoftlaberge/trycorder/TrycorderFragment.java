@@ -23,25 +23,14 @@ import android.graphics.Typeface;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioRecord;
-import android.media.AudioTrack;
 import android.media.FaceDetector;
 import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 import android.net.Uri;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -80,26 +69,13 @@ import net.ddns.mlsoftlaberge.trycorder.trycorder.TemSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.TraSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.TrbSensorView;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 
 /**
@@ -293,6 +269,8 @@ public class TrycorderFragment extends Fragment
     private Button mModeVideogalButton;
     private Button mModeSensorButton;
     private Button mModeClientButton;
+    private Button mModeVisionNightButton;
+    private Button mModeVisionDayButton;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -952,6 +930,24 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        mModeVisionNightButton = (Button) view.findViewById(R.id.mode_vision_night_button);
+        mModeVisionNightButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchtrycordermode(5);
+            }
+        });
+
+        mModeVisionDayButton = (Button) view.findViewById(R.id.mode_vision_day_button);
+        mModeVisionDayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                switchtrycordermode(6);
+            }
+        });
+
         mModeCrewButton = (Button) view.findViewById(R.id.mode_contact_button);
         mModeCrewButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1298,10 +1294,14 @@ public class TrycorderFragment extends Fragment
         mLogsInfo.setTypeface(face2);
         //mLogsSys.setTypeface(face);
 
+        // in window mode buttons
         mModePhotogalButton.setTypeface(face2);
         mModeVideogalButton.setTypeface(face2);
         mModeSensorButton.setTypeface(face2);
         mModeClientButton.setTypeface(face2);
+        mModeVisionNightButton.setTypeface(face2);
+        mModeVisionDayButton.setTypeface(face2);
+        // top mode buttons
         mModeCrewButton.setTypeface(face2);
         mModeInvButton.setTypeface(face2);
     }
@@ -2198,7 +2198,7 @@ public class TrycorderFragment extends Fragment
     // functions to listen to the surface texture view
 
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        mCamera = null;
+        //mCamera = null;
         if (mViewerfront == false) {
             switchcam(1);
         } else {
