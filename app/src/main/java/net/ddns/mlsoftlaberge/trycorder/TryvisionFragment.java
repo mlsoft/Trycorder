@@ -226,6 +226,13 @@ public class TryvisionFragment extends Fragment
         mViewerWindow.setSurfaceTextureListener(this);
         // add my sensorview to the layout 1
         mSensor1Layout.addView(mViewerWindow, tlayoutParams);
+        mSensor1Layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                rotatecam();
+            }
+        });
 
 
         return view;
@@ -373,6 +380,14 @@ public class TryvisionFragment extends Fragment
         switchcam(mVisionMode);
     }
 
+    private void rotatecam() {
+        mVisionMode++;
+        if(mVisionMode>9) {
+            mVisionMode=1;
+        }
+        switchcam(mVisionMode);
+    }
+
     private void switchcam(int mode) {
         if (mCamera != null) {
             mCamera.stopPreview();
@@ -386,15 +401,43 @@ public class TryvisionFragment extends Fragment
             parameters.set("orientation", "portrait");
             parameters.set("scene-mode", "portrait");
             parameters.set("rotation", "90");
-            if(mode==1) {
-                // night vision parameters
-                //parameters.set("effect","mono");
-                parameters.setColorEffect(Camera.Parameters.EFFECT_MONO);
-                //parameters.setColorEffect(Camera.Parameters.EFFECT_SEPIA);
-            }
-            if(mode==2) {
-                // day vision parameters
-                parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
+            switch(mode) {
+                case 1:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_MONO);
+                    break;
+                case 2:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_NEGATIVE);
+                    break;
+                case 3:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_SEPIA);
+                    break;
+                case 4:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_AQUA);
+                    break;
+                case 5:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_BLACKBOARD);
+                    break;
+                case 6:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_POSTERIZE);
+                    break;
+                case 7:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_SOLARIZE);
+                    break;
+                case 8:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_WHITEBOARD);
+                    break;
+                case 9:
+                    // night vision parameters
+                    parameters.setColorEffect(Camera.Parameters.EFFECT_NONE);
+                    break;
             }
             mCamera.setParameters(parameters);
             mCamera.setDisplayOrientation(90);
