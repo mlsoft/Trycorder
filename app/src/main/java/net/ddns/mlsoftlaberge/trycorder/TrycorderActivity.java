@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
@@ -21,6 +22,7 @@ public class TrycorderActivity extends FragmentActivity implements
         TrycorderFragment.OnTrycorderInteractionListener,
         TrysensorFragment.OnTrysensorInteractionListener,
         TryvisionFragment.OnTryvisionInteractionListener,
+        TryviscamFragment.OnTryviscamInteractionListener,
         TryviewerFragment.OnTryviewerInteractionListener,
         TrygalleryFragment.OnTrygalleryInteractionListener {
 
@@ -31,6 +33,7 @@ public class TrycorderActivity extends FragmentActivity implements
     private TryviewerFragment mTryviewerFragment=null;
     private TrysensorFragment mTrysensorFragment=null;
     private TryvisionFragment mTryvisionFragment=null;
+    private TryviscamFragment mTryviscamFragment=null;
 
     private int currentMode=0;
 
@@ -138,6 +141,11 @@ public class TrycorderActivity extends FragmentActivity implements
         switchfragment(mode);
     }
 
+    @Override
+    public void onTryviscamModeChange(int mode) {
+        switchfragment(mode);
+    }
+
     private void switchfragment(int mode) {
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         switch(mode) {
@@ -168,10 +176,12 @@ public class TrycorderActivity extends FragmentActivity implements
                 ft.commit();
                 break;
             case 6:
-                if(mTryvisionFragment==null) mTryvisionFragment=new TryvisionFragment();
-                mTryvisionFragment.setmode(2);
-                ft.replace(android.R.id.content, mTryvisionFragment, TAG);
-                ft.commit();
+                if(Build.VERSION.SDK_INT>=21) {
+                    if (mTryviscamFragment == null) mTryviscamFragment = new TryviscamFragment();
+                    mTryviscamFragment.setmode(1);
+                    ft.replace(android.R.id.content, mTryviscamFragment, TAG);
+                    ft.commit();
+                }
                 break;
         }
         currentMode=mode;
