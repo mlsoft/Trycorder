@@ -178,7 +178,8 @@ public class TrycorderActivity extends FragmentActivity implements
             case 6:
                 if(Build.VERSION.SDK_INT>=21) {
                     if (mTryviscamFragment == null) mTryviscamFragment = new TryviscamFragment();
-                    mTryviscamFragment.setmode(1);
+                    mTryviscamFragment.seteffect(1);
+                    mTryviscamFragment.setscene(1);
                     ft.replace(android.R.id.content, mTryviscamFragment, TAG);
                     ft.commit();
                 }

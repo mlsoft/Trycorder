@@ -172,7 +172,7 @@
                 android:weightSum="8">
 
                 <Button
-                    android:id="@+id/photo_button"
+                    android:id="@+id/effect_button"
                     android:layout_width="0dp"
                     android:layout_height="32dp"
                     android:layout_gravity="bottom"
@@ -181,12 +181,12 @@
                     android:layout_weight="4"
                     android:background="@drawable/trekbutton_yellow_center"
                     android:maxLines="1"
-                    android:text="PHOTO"
+                    android:text="EFFECT"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <Button
-                    android:id="@+id/mode_button"
+                    android:id="@+id/scene_button"
                     android:layout_width="0dp"
                     android:layout_height="32dp"
                     android:layout_gravity="bottom"
@@ -195,7 +195,7 @@
                     android:layout_weight="4"
                     android:background="@drawable/trekbutton_gray_right"
                     android:maxLines="1"
-                    android:text="MODE"
+                    android:text="SCENE"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 

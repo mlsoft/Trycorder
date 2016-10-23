@@ -19,11 +19,7 @@ package net.ddns.mlsoftlaberge.trycorder;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -34,7 +30,6 @@ import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.graphics.Typeface;
-import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -89,14 +84,37 @@ import java.util.concurrent.TimeUnit;
 @TargetApi(21)
 public class TryviscamFragment extends Fragment  {
 
-    private int mVisionMode=1;
+    private int mVisionEffect=1;
+    private int mVisionScene=1;
 
     public TryviscamFragment() {
     }
 
-    public void setmode(int mode) {
-        mVisionMode=mode;
+    public void seteffect(int mode) {
+        mVisionEffect=mode;
     }
+    public void setscene(int mode) {
+        mVisionScene=mode;
+    }
+
+    private void rotateeffect() {
+        mVisionEffect++;
+        if(mVisionEffect>9) {
+            mVisionEffect=1;
+        }
+        closeCamera();
+        openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+    }
+
+    private void rotatescene() {
+        mVisionScene++;
+        if(mVisionScene>2) {
+            mVisionScene=1;
+        }
+        closeCamera();
+        openCamera(mTextureView.getWidth(), mTextureView.getHeight());
+    }
+
     // ======================================================================================
     public interface OnTryviscamInteractionListener {
         public void onTryviscamModeChange(int mode);
@@ -147,6 +165,17 @@ public class TryviscamFragment extends Fragment  {
         mTextstatus_bottom.setText(texte);
     }
 
+    private void saypost(final String text) {
+        final Activity activity = getActivity();
+        if (activity != null) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    say(text);
+                }
+            });
+        }
+    }
     // ======================================================================================
     /**
      * Conversion from screen rotation to JPEG orientation.
@@ -312,12 +341,12 @@ public class TryviscamFragment extends Fragment  {
      * This a callback object for the {@link ImageReader}. "onImageAvailable" will be called when a
      * still image is ready to be saved.
      */
-    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener
-            = new ImageReader.OnImageAvailableListener() {
+    private final ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
 
         @Override
         public void onImageAvailable(ImageReader reader) {
             mBackgroundHandler.post(new ImageSaver(reader.acquireNextImage(), mFile));
+            saypost("Picture saved");
         }
 
     };
@@ -515,10 +544,10 @@ public class TryviscamFragment extends Fragment  {
     private ImageButton mBackbottomButton;
 
     // the button to stop it all
-    private Button mPhotoButton;
+    private Button mEffectButton;
 
     // the button for settings
-    private Button mModeButton;
+    private Button mSceneButton;
 
     // the main contents layout in the center
     private LinearLayout mCenterLayout;
@@ -603,32 +632,24 @@ public class TryviscamFragment extends Fragment  {
         });
 
         // the stop button
-        mPhotoButton = (Button) view.findViewById(R.id.photo_button);
-        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+        mEffectButton = (Button) view.findViewById(R.id.effect_button);
+        mEffectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 buttonsound();
-                takePicture();
+                rotateeffect();
             }
         });
 
         // the settings button
-        mModeButton = (Button) view.findViewById(R.id.mode_button);
-        mModeButton.setOnTouchListener(new View.OnTouchListener() {
+        mSceneButton = (Button) view.findViewById(R.id.scene_button);
+        mSceneButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        buttonsound();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        //buttonsound();
-                        break;
-                }
-                return false;
+            public void onClick(View view) {
+                buttonsound();
+                rotatescene();
             }
         });
-
 
         mTextstatus_bottom = (TextView) view.findViewById(R.id.textstatus_bottom);
         mTextstatus_bottom.setText("Ready");
@@ -655,6 +676,7 @@ public class TryviscamFragment extends Fragment  {
             @Override
             public void onClick(View view) {
                 buttonsound();
+                takePicture();
             }
         });
 
@@ -673,8 +695,8 @@ public class TryviscamFragment extends Fragment  {
         mSettingsButton.setTypeface(face2);
         mTextstatus_top.setTypeface(face);
         // bottom buttons
-        mPhotoButton.setTypeface(face2);
-        mModeButton.setTypeface(face2);
+        mEffectButton.setTypeface(face2);
+        mSceneButton.setTypeface(face2);
         mTextstatus_bottom.setTypeface(face3);
     }
 
@@ -949,6 +971,10 @@ public class TryviscamFragment extends Fragment  {
                                 // Auto focus should be continuous for camera preview.
                                 mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                                         CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
+
+                                // vision mode according to mode selection buttons
+                                setVisionMode(mPreviewRequestBuilder);
+
                                 // Flash is automatically enabled when necessary.
                                 setAutoFlash(mPreviewRequestBuilder);
 
@@ -970,6 +996,74 @@ public class TryviscamFragment extends Fragment  {
             );
         } catch (CameraAccessException e) {
             e.printStackTrace();
+        }
+    }
+
+    // set parameters in builder for effects and modes
+    private void setVisionMode(CaptureRequest.Builder builder) {
+        String sayeffect="";
+
+        // set effect for preview
+        switch(mVisionEffect) {
+            case 1:
+                sayeffect="View Normal";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_OFF);
+                break;
+            case 2:
+                sayeffect="View Mono";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_MONO);
+                break;
+            case 3:
+                sayeffect="View Negative";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_NEGATIVE);
+                break;
+            case 4:
+                sayeffect="View Blackboard";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_BLACKBOARD);
+                break;
+            case 5:
+                sayeffect="View Whiteboard";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_WHITEBOARD);
+                break;
+            case 6:
+                sayeffect="View Sepia";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_SEPIA);
+                break;
+            case 7:
+                sayeffect="View Solarize";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_SOLARIZE);
+                break;
+            case 8:
+                sayeffect="View Posterize";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_POSTERIZE);
+                break;
+            case 9:
+                sayeffect="View Aqua";
+                builder.set(CaptureRequest.CONTROL_EFFECT_MODE,
+                        CaptureRequest.CONTROL_EFFECT_MODE_AQUA);
+                break;
+        }
+
+        // set scene-mode for preview
+        switch(mVisionScene) {
+            case 1:
+                saypost(sayeffect+", Portrait");
+                builder.set(CaptureRequest.CONTROL_SCENE_MODE,
+                        CaptureRequest.CONTROL_SCENE_MODE_PORTRAIT);
+                break;
+            case 2:
+                saypost(sayeffect+", Night Portrait");
+                builder.set(CaptureRequest.CONTROL_SCENE_MODE,
+                        CaptureRequest.CONTROL_SCENE_MODE_NIGHT_PORTRAIT);
+                break;
         }
     }
 
@@ -1067,6 +1161,8 @@ public class TryviscamFragment extends Fragment  {
             captureBuilder.set(CaptureRequest.CONTROL_AF_MODE,
                     CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             setAutoFlash(captureBuilder);
+
+            setVisionMode(captureBuilder);
 
             // Orientation
             int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
