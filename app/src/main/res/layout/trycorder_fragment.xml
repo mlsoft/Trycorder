@@ -1407,6 +1407,13 @@
 
                         </LinearLayout>
 
+                        <SeekBar
+                            android:layout_width="match_parent"
+                            android:layout_height="32dp"
+                            android:id="@+id/mode_volume"
+                            android:background="@drawable/trekbutton_yellow"
+                            android:text="Volume" />
+
                     </LinearLayout>
 
                 </LinearLayout>
