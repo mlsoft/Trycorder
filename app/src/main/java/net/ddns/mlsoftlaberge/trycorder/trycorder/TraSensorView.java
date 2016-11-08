@@ -54,6 +54,11 @@ public class TraSensorView extends TextView {
         mode=no;
     }
 
+    public void setposition(int no) {
+        position=no;
+        invalidate();
+    }
+
     // ======= timer section =======
     private Timer timer=null;
     private MyTimer myTimer;

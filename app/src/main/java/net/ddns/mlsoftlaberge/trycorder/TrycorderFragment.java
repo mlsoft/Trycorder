@@ -47,6 +47,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,6 +58,7 @@ import net.ddns.mlsoftlaberge.trycorder.settings.SettingsActivity;
 import net.ddns.mlsoftlaberge.trycorder.tryclient.TryclientActivity;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.AudSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.LogsStatView;
+import net.ddns.mlsoftlaberge.trycorder.trycorder.VerticalSeekBar;
 import net.ddns.mlsoftlaberge.trycorder.utils.Fetcher;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.FirSensorView;
 import net.ddns.mlsoftlaberge.trycorder.trycorder.GIFView;
@@ -228,10 +230,17 @@ public class TrycorderFragment extends Fragment
     private Button mPhaserButton;
     private Button mTorpedoButton;
 
-    // the button to fire at ennemys
+    // the button to transport
     private Button mTransporterButton;
     private Button mTransportInButton;
     private Button mTransportOutButton;
+
+    // the window for transporter controls
+    private TextView mTranspSeekTextup;
+    private TextView mTranspSeekTextdown;
+    private VerticalSeekBar mTranspSeek1Button;
+    private VerticalSeekBar mTranspSeek2Button;
+    private VerticalSeekBar mTranspSeek3Button;
 
     // the button to fire at ennemys
     private Button mTractorButton;
@@ -265,12 +274,15 @@ public class TrycorderFragment extends Fragment
     private Button mModeButton;
     private Button mModeCrewButton;
     private Button mModeInvButton;
+
     private Button mModePhotogalButton;
     private Button mModeVideogalButton;
     private Button mModeSensorButton;
     private Button mModeClientButton;
     private Button mModeVisionNightButton;
     private Button mModeVisionDayButton;
+    private SeekBar mModeSeekbutton;
+    private TextView mModeSeektext;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -309,6 +321,9 @@ public class TrycorderFragment extends Fragment
 
     // the mode for the mode-mode buttons window
     private LinearLayout mModeWindow;
+
+    // the mode for the transp-seek buttons window
+    private LinearLayout mTranspSeekWindow;
 
     // the mode animation for motor layout
     private FrameLayout mViewerAnimate;
@@ -662,6 +677,7 @@ public class TrycorderFragment extends Fragment
                 buttonsound();
                 switchbuttonlayout(5);
                 switchsensorlayout(8);
+                switchviewer(11);
             }
         });
 
@@ -684,6 +700,51 @@ public class TrycorderFragment extends Fragment
                 sendcommand("beam me down");
             }
         });
+
+        mTranspSeekTextup = (TextView) view.findViewById(R.id.transpseek_textup);
+        mTranspSeekTextdown = (TextView) view.findViewById(R.id.transpseek_textdown);
+
+        mTranspSeek1Button = (VerticalSeekBar) view.findViewById(R.id.transpseek1_button);
+        mTranspSeek1Button.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+            int mode = 0;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                progress = progresValue;
+                mTranspSeekTextup.setText("Transport: " + progress + "/" + seekBar.getMax());
+                if(mode==2) mTraSensorView.setposition(progress);
+                else mTraSensorView.setposition(255-progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                if(progress==0) {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
+                    mediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    mTraSensorView.setmode(2);
+                    mode=2;
+                } else {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
+                    mediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    mTraSensorView.setmode(1);
+                    mode=1;
+                }
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if(mode==2) mTraSensorView.setposition(progress);
+                else mTraSensorView.setposition(255-progress);
+                if(progress==0 || progress==255) {
+                    mTranspSeekTextdown.setText("Transport Complete: " + progress + "/" + seekBar.getMax());
+                } else {
+                    mTranspSeekTextdown.setText("Transport Failed: " + progress + "/" + seekBar.getMax());
+                }
+            }
+        });
+
+
 
         // ===================== transporter buttons group ============================
         // the tractor button
@@ -894,6 +955,24 @@ public class TrycorderFragment extends Fragment
             }
         });
 
+        mModeCrewButton = (Button) view.findViewById(R.id.mode_contact_button);
+        mModeCrewButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                accesscrew();
+            }
+        });
+
+        mModeInvButton = (Button) view.findViewById(R.id.mode_product_button);
+        mModeInvButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                buttonsound();
+                accessinventory();
+            }
+        });
+
         mModePhotogalButton = (Button) view.findViewById(R.id.mode_photogal_button);
         mModePhotogalButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -948,21 +1027,27 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        mModeCrewButton = (Button) view.findViewById(R.id.mode_contact_button);
-        mModeCrewButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                buttonsound();
-                accesscrew();
-            }
-        });
+        mModeSeektext = (TextView) view.findViewById(R.id.mode_seektext);
+        mModeSeekbutton = (SeekBar) view.findViewById(R.id.mode_seekbutton);
+        mModeSeekbutton.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
 
-        mModeInvButton = (Button) view.findViewById(R.id.mode_product_button);
-        mModeInvButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                buttonsound();
-                accessinventory();
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                progress = progresValue;
+                mModeSeektext.setText("Seek: " + progress + "/" + seekBar.getMax());
+                //Toast.makeText(getApplicationContext(), "Changing seekbar's progress", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                //Toast.makeText(getApplicationContext(), "Started tracking seekbar", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mModeSeektext.setText("Covered: " + progress + "/" + seekBar.getMax());
+                //Toast.makeText(getApplicationContext(), "Stopped tracking seekbar", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -1016,6 +1101,8 @@ public class TrycorderFragment extends Fragment
         mViewerPhoto = (ImageView) view.findViewById(R.id.photo_view);
 
         mModeWindow = (LinearLayout) view.findViewById(R.id.mode_window);
+
+        mTranspSeekWindow = (LinearLayout) view.findViewById(R.id.transpseek_window);
 
         mLogsSys = (TextView) view.findViewById(R.id.logs_sys);
         mLogsSys.setHorizontallyScrolling(true);
@@ -2281,6 +2368,7 @@ public class TrycorderFragment extends Fragment
         mLogsStat.setVisibility(View.GONE);
         mViewerAnimate.setVisibility(View.GONE);
         mModeWindow.setVisibility(View.GONE);
+        mTranspSeekWindow.setVisibility(View.GONE);
         mLogsStat.stop();
         switchcam(0);
         switch (no) {
@@ -2367,6 +2455,11 @@ public class TrycorderFragment extends Fragment
             case 10:
                 say("Mode Window");
                 mModeWindow.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
+            case 11:
+                say("Transporter Seek Window");
+                mTranspSeekWindow.setVisibility(View.VISIBLE);
                 mVieweron = false;
                 break;
         }

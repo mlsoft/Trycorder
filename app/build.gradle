@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    buildToolsVersion "23.0.0"
 
     defaultConfig {
         applicationId "net.ddns.mlsoftlaberge.trycorder"
         minSdkVersion 16
         targetSdkVersion 23
         versionCode 3
-        versionName "3.8.2"
+        versionName "3.8.5"
     }
     buildTypes {
         release {
