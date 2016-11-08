@@ -712,7 +712,7 @@ public class TrycorderFragment extends Fragment
             @Override
             public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
                 progress = progresValue;
-                mTranspSeekTextup.setText("Transport: " + progress + "/" + seekBar.getMax());
+                mTranspSeekTextup.setText("Transport 1: " + progress + "/" + seekBar.getMax());
                 if(mode==2) mTraSensorView.setposition(progress);
                 else mTraSensorView.setposition(255-progress);
             }
@@ -737,14 +737,92 @@ public class TrycorderFragment extends Fragment
                 if(mode==2) mTraSensorView.setposition(progress);
                 else mTraSensorView.setposition(255-progress);
                 if(progress==0 || progress==255) {
-                    mTranspSeekTextdown.setText("Transport Complete: " + progress + "/" + seekBar.getMax());
+                    mTranspSeekTextdown.setText("Transport 1 Complete: " + progress + "/" + seekBar.getMax());
                 } else {
-                    mTranspSeekTextdown.setText("Transport Failed: " + progress + "/" + seekBar.getMax());
+                    mTranspSeekTextdown.setText("Transport 1 Failed: " + progress + "/" + seekBar.getMax());
                 }
             }
         });
 
+        mTranspSeek2Button = (VerticalSeekBar) view.findViewById(R.id.transpseek2_button);
+        mTranspSeek2Button.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+            int mode = 0;
 
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                progress = progresValue;
+                mTranspSeekTextup.setText("Transport 2: " + progress + "/" + seekBar.getMax());
+                if(mode==2) mTraSensorView.setposition(progress);
+                else mTraSensorView.setposition(255-progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                if(progress==0) {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
+                    mediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    mTraSensorView.setmode(2);
+                    mode=2;
+                } else {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
+                    mediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    mTraSensorView.setmode(1);
+                    mode=1;
+                }
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if(mode==2) mTraSensorView.setposition(progress);
+                else mTraSensorView.setposition(255-progress);
+                if(progress==0 || progress==255) {
+                    mTranspSeekTextdown.setText("Transport 2 Complete: " + progress + "/" + seekBar.getMax());
+                } else {
+                    mTranspSeekTextdown.setText("Transport 2 Failed: " + progress + "/" + seekBar.getMax());
+                }
+            }
+        });
+
+        mTranspSeek3Button = (VerticalSeekBar) view.findViewById(R.id.transpseek3_button);
+        mTranspSeek3Button.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+            int mode = 0;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                progress = progresValue;
+                mTranspSeekTextup.setText("Transport 3: " + progress + "/" + seekBar.getMax());
+                if(mode==2) mTraSensorView.setposition(progress);
+                else mTraSensorView.setposition(255-progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                if(progress==0) {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1a);
+                    mediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    mTraSensorView.setmode(2);
+                    mode=2;
+                } else {
+                    MediaPlayer mediaPlayer = MediaPlayer.create(getActivity().getBaseContext(), R.raw.beam1b);
+                    mediaPlayer.start(); // no need to call prepare(); create() does that for you
+                    mTraSensorView.setmode(1);
+                    mode=1;
+                }
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if(mode==2) mTraSensorView.setposition(progress);
+                else mTraSensorView.setposition(255-progress);
+                if(progress==0 || progress==255) {
+                    mTranspSeekTextdown.setText("Transport 3 Complete: " + progress + "/" + seekBar.getMax());
+                } else {
+                    mTranspSeekTextdown.setText("Transport 3 Failed: " + progress + "/" + seekBar.getMax());
+                }
+            }
+        });
 
         // ===================== transporter buttons group ============================
         // the tractor button

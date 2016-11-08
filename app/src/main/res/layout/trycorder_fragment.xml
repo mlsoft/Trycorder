@@ -1312,12 +1312,11 @@
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
                                 android:layout_weight="1"
-                                android:minWidth="60dp"
-                                android:maxWidth="60dp"
                                 android:layout_marginLeft="4dp"
                                 android:layout_marginRight="4dp"
                                 android:background="@drawable/trekbutton_yellow"
-                                android:thumb="@drawable/trekbutton_red"
+                                android:thumb="@android:drawable/btn_default"
+                                android:thumbTint="@android:color/holo_red_light"
                                 android:max="255" />
 
                             <net.ddns.mlsoftlaberge.trycorder.trycorder.VerticalSeekBar
@@ -1328,6 +1327,8 @@
                                 android:layout_marginLeft="4dp"
                                 android:layout_marginRight="4dp"
                                 android:background="@drawable/trekbutton_yellow"
+                                android:thumb="@android:drawable/btn_default"
+                                android:thumbTint="@android:color/holo_red_light"
                                 android:max="255" />
 
                             <net.ddns.mlsoftlaberge.trycorder.trycorder.VerticalSeekBar
@@ -1338,6 +1339,8 @@
                                 android:layout_marginLeft="4dp"
                                 android:layout_marginRight="4dp"
                                 android:background="@drawable/trekbutton_yellow"
+                                android:thumb="@android:drawable/btn_default"
+                                android:thumbTint="@android:color/holo_red_light"
                                 android:max="255" />
 
                         </LinearLayout>
