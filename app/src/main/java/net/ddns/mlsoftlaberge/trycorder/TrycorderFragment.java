@@ -230,6 +230,12 @@ public class TrycorderFragment extends Fragment
     private Button mPhaserButton;
     private Button mTorpedoButton;
 
+    // the window with fire controls
+    private TextView mFireDirectionText;
+    private SeekBar mFireDirectionButton;
+    private TextView mFireForceText;
+    private SeekBar mFireForceButton;
+
     // the button to transport
     private Button mTransporterButton;
     private Button mTransportInButton;
@@ -242,13 +248,13 @@ public class TrycorderFragment extends Fragment
     private VerticalSeekBar mTranspSeek2Button;
     private VerticalSeekBar mTranspSeek3Button;
 
-    // the button to fire at ennemys
+    // the button to control tractor beam
     private Button mTractorButton;
     private Button mTractorPullButton;
     private Button mTractorOffButton;
     private Button mTractorPushButton;
 
-    // the button to fire at ennemys
+    // the button to control the motors
     private Button mMotorButton;
     private Button mMotorImpulseButton;
     private Button mMotorOffButton;
@@ -281,8 +287,6 @@ public class TrycorderFragment extends Fragment
     private Button mModeClientButton;
     private Button mModeVisionNightButton;
     private Button mModeVisionDayButton;
-    private SeekBar mModeSeekbutton;
-    private TextView mModeSeektext;
 
     // the button to control sound-effects
     private Button mSoundButton;
@@ -321,6 +325,9 @@ public class TrycorderFragment extends Fragment
 
     // the mode for the mode-mode buttons window
     private LinearLayout mModeWindow;
+
+    // the mode for the fire controls buttons window
+    private LinearLayout mFireControlWindow;
 
     // the mode for the transp-seek buttons window
     private LinearLayout mTranspSeekWindow;
@@ -645,6 +652,7 @@ public class TrycorderFragment extends Fragment
                 buttonsound();
                 switchbuttonlayout(4);
                 switchsensorlayout(7);
+                switchviewer(12);
             }
         });
 
@@ -665,6 +673,42 @@ public class TrycorderFragment extends Fragment
             public void onClick(View view) {
                 firemissiles();
                 sendcommand("fire");
+            }
+        });
+
+        mFireDirectionText = (TextView) view.findViewById(R.id.firedirection_text);
+        mFireDirectionButton = (SeekBar) view.findViewById(R.id.firedirection_button);
+        mFireDirectionButton.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                mFireDirectionText.setText("" + (progresValue-50));
+                mFirSensorView.setdirection(progresValue-50);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        mFireForceText = (TextView) view.findViewById(R.id.fireforce_text);
+        mFireForceButton = (SeekBar) view.findViewById(R.id.fireforce_button);
+        mFireForceButton.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                mFireForceText.setText("" + progresValue + "/" + seekBar.getMax());
+                mFirSensorView.setforce(progresValue);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
             }
         });
 
@@ -1105,30 +1149,6 @@ public class TrycorderFragment extends Fragment
             }
         });
 
-        mModeSeektext = (TextView) view.findViewById(R.id.mode_seektext);
-        mModeSeekbutton = (SeekBar) view.findViewById(R.id.mode_seekbutton);
-        mModeSeekbutton.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            int progress = 0;
-
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
-                progress = progresValue;
-                mModeSeektext.setText("Seek: " + progress + "/" + seekBar.getMax());
-                //Toast.makeText(getApplicationContext(), "Changing seekbar's progress", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                //Toast.makeText(getApplicationContext(), "Started tracking seekbar", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                mModeSeektext.setText("Covered: " + progress + "/" + seekBar.getMax());
-                //Toast.makeText(getApplicationContext(), "Stopped tracking seekbar", Toast.LENGTH_SHORT).show();
-            }
-        });
-
         // ================== get handles on the 3 layout containers ===================
         // the sensor layout, to contain my sensorview
         mSensorLayout = (LinearLayout) view.findViewById(R.id.sensor_layout);
@@ -1179,6 +1199,8 @@ public class TrycorderFragment extends Fragment
         mViewerPhoto = (ImageView) view.findViewById(R.id.photo_view);
 
         mModeWindow = (LinearLayout) view.findViewById(R.id.mode_window);
+
+        mFireControlWindow = (LinearLayout) view.findViewById(R.id.firecontrol_window);
 
         mTranspSeekWindow = (LinearLayout) view.findViewById(R.id.transpseek_window);
 
@@ -1578,6 +1600,8 @@ public class TrycorderFragment extends Fragment
         askscanlist();
         //startdiscoverService();
         //scantrycorders();
+        mFireDirectionButton.setProgress(50);
+        mFireForceButton.setProgress(10);
     }
 
     @Override
@@ -2293,7 +2317,7 @@ public class TrycorderFragment extends Fragment
     }
 
     private void startfirsensors() {
-        mFirSensorView.resetcount();
+        mFirSensorView.startfire();
         if (mSoundStatus) startmusic();
     }
 
@@ -2447,6 +2471,7 @@ public class TrycorderFragment extends Fragment
         mViewerAnimate.setVisibility(View.GONE);
         mModeWindow.setVisibility(View.GONE);
         mTranspSeekWindow.setVisibility(View.GONE);
+        mFireControlWindow.setVisibility(View.GONE);
         mLogsStat.stop();
         switchcam(0);
         switch (no) {
@@ -2538,6 +2563,11 @@ public class TrycorderFragment extends Fragment
             case 11:
                 say("Transporter Seek Window");
                 mTranspSeekWindow.setVisibility(View.VISIBLE);
+                mVieweron = false;
+                break;
+            case 12:
+                say("Fire Control Window");
+                mFireControlWindow.setVisibility(View.VISIBLE);
                 mVieweron = false;
                 break;
         }

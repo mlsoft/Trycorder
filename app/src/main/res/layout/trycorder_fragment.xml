@@ -1285,11 +1285,207 @@
 
 
                     <LinearLayout
+                        android:id="@+id/firecontrol_window"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:visibility="visible"
+                            android:weightSum="3">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="left"
+                                android:text="Direction"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:id="@+id/firedirection_text"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="0"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="right"
+                                android:text=""
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
+
+                        <SeekBar
+                            android:id="@+id/firedirection_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="32dp"
+                            android:layout_marginLeft="4dp"
+                            android:layout_marginRight="4dp"
+                            android:background="@drawable/trekbutton_green"
+                            android:max="100"
+                            android:thumb="@android:drawable/btn_default"
+                            android:thumbTint="@android:color/holo_blue_dark" />
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:visibility="visible"
+                            android:weightSum="3">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="left"
+                                android:text="Left"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="Center"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="right"
+                                android:text="Right"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:paddingLeft="4dp"
+                            android:paddingRight="4dp"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/trek_horizontalline" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:visibility="visible"
+                            android:weightSum="3">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="left"
+                                android:text="Force"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:id="@+id/fireforce_text"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="0"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="right"
+                                android:text=""
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
+
+                        <SeekBar
+                            android:id="@+id/fireforce_button"
+                            android:layout_width="match_parent"
+                            android:layout_height="32dp"
+                            android:layout_marginLeft="4dp"
+                            android:layout_marginRight="4dp"
+                            android:background="@drawable/trekbutton_orange"
+                            android:max="100"
+                            android:thumb="@android:drawable/btn_default"
+                            android:thumbTint="@android:color/holo_red_dark" />
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:visibility="visible"
+                            android:weightSum="3">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="left"
+                                android:text="Low"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="center"
+                                android:text="Medium"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="right"
+                                android:text="Max"
+                                android:textColor="@android:color/white"
+                                android:textSize="18sp" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:paddingLeft="4dp"
+                            android:paddingRight="4dp"
+                            android:scaleType="fitXY"
+                            android:src="@drawable/trek_horizontalline" />
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/transpseek_window"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:visibility="visible">
+                        android:visibility="gone">
 
                         <TextView
                             android:id="@+id/transpseek_textup"
@@ -1311,37 +1507,37 @@
                                 android:id="@+id/transpseek1_button"
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
-                                android:layout_weight="1"
                                 android:layout_marginLeft="4dp"
                                 android:layout_marginRight="4dp"
+                                android:layout_weight="1"
                                 android:background="@drawable/trekbutton_yellow"
+                                android:max="255"
                                 android:thumb="@android:drawable/btn_default"
-                                android:thumbTint="@android:color/holo_red_light"
-                                android:max="255" />
+                                android:thumbTint="@android:color/holo_red_light" />
 
                             <net.ddns.mlsoftlaberge.trycorder.trycorder.VerticalSeekBar
                                 android:id="@+id/transpseek2_button"
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
-                                android:layout_weight="1"
                                 android:layout_marginLeft="4dp"
                                 android:layout_marginRight="4dp"
+                                android:layout_weight="1"
                                 android:background="@drawable/trekbutton_yellow"
+                                android:max="255"
                                 android:thumb="@android:drawable/btn_default"
-                                android:thumbTint="@android:color/holo_red_light"
-                                android:max="255" />
+                                android:thumbTint="@android:color/holo_red_light" />
 
                             <net.ddns.mlsoftlaberge.trycorder.trycorder.VerticalSeekBar
                                 android:id="@+id/transpseek3_button"
                                 android:layout_width="0dp"
                                 android:layout_height="match_parent"
-                                android:layout_weight="1"
                                 android:layout_marginLeft="4dp"
                                 android:layout_marginRight="4dp"
+                                android:layout_weight="1"
                                 android:background="@drawable/trekbutton_yellow"
+                                android:max="255"
                                 android:thumb="@android:drawable/btn_default"
-                                android:thumbTint="@android:color/holo_red_light"
-                                android:max="255" />
+                                android:thumbTint="@android:color/holo_red_light" />
 
                         </LinearLayout>
 
@@ -1357,12 +1553,13 @@
 
                     </LinearLayout>
 
+
                     <LinearLayout
                         android:id="@+id/mode_window"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:visibility="gone">
+                        android:visibility="visible">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -1373,7 +1570,7 @@
                             <Button
                                 android:id="@+id/mode_photogal_button"
                                 android:layout_width="0dp"
-                                android:layout_height="32dp"
+                                android:layout_height="48dp"
                                 android:layout_gravity="center"
                                 android:layout_marginBottom="@dimen/button_margin"
                                 android:layout_marginEnd="@dimen/button_margin"
@@ -1389,7 +1586,7 @@
                             <Button
                                 android:id="@+id/mode_videogal_button"
                                 android:layout_width="0dp"
-                                android:layout_height="32dp"
+                                android:layout_height="48dp"
                                 android:layout_gravity="center"
                                 android:layout_marginBottom="@dimen/button_margin"
                                 android:layout_marginEnd="@dimen/button_margin"
@@ -1412,7 +1609,7 @@
                             <Button
                                 android:id="@+id/mode_sensor_button"
                                 android:layout_width="0dp"
-                                android:layout_height="32dp"
+                                android:layout_height="48dp"
                                 android:layout_gravity="center"
                                 android:layout_marginBottom="@dimen/button_margin"
                                 android:layout_marginEnd="@dimen/button_margin"
@@ -1428,7 +1625,7 @@
                             <Button
                                 android:id="@+id/mode_client_button"
                                 android:layout_width="0dp"
-                                android:layout_height="32dp"
+                                android:layout_height="48dp"
                                 android:layout_gravity="center"
                                 android:layout_marginBottom="@dimen/button_margin"
                                 android:layout_marginEnd="@dimen/button_margin"
@@ -1451,7 +1648,7 @@
                             <Button
                                 android:id="@+id/mode_vision_night_button"
                                 android:layout_width="0dp"
-                                android:layout_height="32dp"
+                                android:layout_height="48dp"
                                 android:layout_gravity="center"
                                 android:layout_marginBottom="@dimen/button_margin"
                                 android:layout_marginEnd="@dimen/button_margin"
@@ -1467,7 +1664,7 @@
                             <Button
                                 android:id="@+id/mode_vision_day_button"
                                 android:layout_width="0dp"
-                                android:layout_height="32dp"
+                                android:layout_height="48dp"
                                 android:layout_gravity="center"
                                 android:layout_marginBottom="@dimen/button_margin"
                                 android:layout_marginEnd="@dimen/button_margin"
@@ -1480,21 +1677,6 @@
                                 android:textStyle="bold" />
 
                         </LinearLayout>
-
-                        <SeekBar
-                            android:id="@+id/mode_seekbutton"
-                            android:layout_width="match_parent"
-                            android:layout_height="32dp"
-                            android:background="@drawable/trekbutton_yellow"
-                            android:max="100" />
-
-                        <TextView
-                            android:id="@+id/mode_seektext"
-                            android:layout_width="match_parent"
-                            android:layout_height="32dp"
-                            android:text="Seek"
-                            android:textColor="@android:color/white"
-                            android:textSize="24sp" />
 
                     </LinearLayout>
 
